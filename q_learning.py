@@ -6,7 +6,6 @@ def q_learning(env, lr, y, num_episodes):
     #Initialize table with all zeros
     #Q = np.ones([env.observation_space.n,env.action_space.n]) #optimism in the face of uncertainty (1/2)
     Q = np.zeros([env.observation_space.n,env.action_space.n])
-    print(env.observation_space.n)
     
     #create lists to contain total rewards
     rList = []
@@ -37,7 +36,7 @@ def q_learning(env, lr, y, num_episodes):
             if d == True:
                 break
             rList.append(rAll)
-            
+        print(Q)
         policy = []
         for l in Q:
             if l[0] == l[1] == l[2] == l[3] == 0.0:
@@ -119,7 +118,7 @@ def tuning_nb_episodes(env, lr, y):
 def running_q_learning_n_times(n):
     scores=[]
     for k in range(n):
-        print(n)
+        print(k)
         policy = q_learning(env, lr, y, num_episodes)
         score = evaluate_policy(env, policy, gamma=1, n=10000)
         scores.append(score)
@@ -128,7 +127,7 @@ def running_q_learning_n_times(n):
 if __name__ == '__main__':
     #env = gym.make('FrozenLake8x8-v0')
     env = gym.make('FrozenLake-v0')
-
+    print(env.P)
     # Set learning parameters
     lr = 0.05
     y = .99
@@ -137,5 +136,5 @@ if __name__ == '__main__':
     #tuning_gamma(env,lr, num_episodes)
     #tuning_lr(env, y, num_episodes)
     #tuning_nb_episodes(env, lr, y)
-    running_q_learning_n_times(100)
+    #running_q_learning_n_times(100)
 
