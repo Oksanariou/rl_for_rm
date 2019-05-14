@@ -6,7 +6,6 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-
 class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
@@ -22,8 +21,8 @@ class DQNAgent:
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(24, activation='relu'))
+        model.add(Dense(10, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(10, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model
@@ -49,26 +48,55 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-def compute_q_table(env, agent):
+def compute_q_table(env, network):
     q_table = []
     for s in range(env.observation_space.n):
         state = np.zeros(1, int)
         state[0] = s
         state = np.reshape(state, [1, state_size])
-        q_table.append(agent.model.predict(state)[0])
+        q_table.append(network.predict(state)[0])
     return q_table
+
+def q_to_policy(Q):
+    policy = []
+    for l in Q:
+        if l[0] == l[1] == l[2] == 0.0:
+            policy.append(5)
+        else:
+            for k in range(0, len(l)):
+                if l[k] == max(l):
+                    policy.append(k)
+                    break
+    return policy
+
+def run_episode(env, policy):
+    """ Runs an episode and returns the total reward """
+    obs = env.reset()
+    total_reward = 0
+    while True:
+        obs, reward, done, _ = env.step(int(policy[obs]))
+        total_reward += reward
+        if done:
+            break
+    return total_reward
+
+def evaluate_policy(env, policy, n_eval):
+    """ Runs n episodes and returns the average of the n total rewards"""
+    scores = [run_episode(env, policy) for _ in range(n_eval)]
+    return np.mean(scores)
 
 if __name__ == "__main__":
     #env = gym.make('CartPole-v1')
     #state_size = env.observation_space.shape[0]
-    env = gym.make('FrozenLake-v0')
+    #env = gym.make('FrozenLake-v0')
+    env = gym.make('gym_RM:RM-v0')
     state_size = 1
 
     action_size = env.action_space.n
     agent = DQNAgent(state_size, action_size)
     done = False
     batch_size = 32
-    EPISODES = 300
+    EPISODES = 500
 
     for e in range(EPISODES):
         state = env.reset()
@@ -86,5 +114,7 @@ if __name__ == "__main__":
                 agent.replay(batch_size)
 
     trained_network = agent.model
-
-    print (compute_q_table(env, agent))
+    Q_table = compute_q_table(env, trained_network)
+    policy = q_to_policy(Q_table)
+    print(policy)
+    print(evaluate_policy(env, policy, 100))

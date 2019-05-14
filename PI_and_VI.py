@@ -7,6 +7,7 @@ import numpy as np
 import gym
 from gym import wrappers
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import time
 
 def run_episode(env, policy, gamma = 1.0, render = False):
@@ -47,10 +48,9 @@ def extract_policy_VI(v, gamma = 1.0):
         q_sa = np.zeros(env.action_space.n)
         for a in range(env.action_space.n):
             for next_sr in env.P[s][a]:
-                print(env.P)
                 # next_sr is a tuple of (probability, next state, reward, done)
                 p, s_, r, _ = next_sr
-                q_sa[a] += (p * (r + gamma * v[s_]))
+                q_sa[a] += (p * (r + v[s_]))
         policy[s] = np.argmax(q_sa)
     return policy
 
@@ -82,13 +82,12 @@ def policy_iteration(env, gamma = 1.0):
             print ('Policy-Iteration converged at step %d.' %(i+1))
             break
         policy = new_policy
-    print(policy)
     return policy
 
 def value_iteration(env, gamma = 1.0):
     """ Value-iteration algorithm """
     v = np.zeros(env.nS)  # initialize value-function
-    max_iterations = 100000
+    max_iterations = 1000000
     eps = 1e-20
     for i in range(max_iterations):
         prev_v = np.copy(v)
@@ -205,18 +204,58 @@ def visualize_policy(policy):
             visu += 'U'
     print(visu)
 
+def plot_rev(X):
+    D, R = [], []
+    alpha = 0.8
+    for p in X:
+        D.append(10 * np.exp(-alpha * ((p / X[-1]) - 1)))
+        R.append(p*10 * np.exp(-alpha * ((p / X[-1]) - 1)))
+    plt.plot(X, D, 'b+', X, R, 'r+')
+    plt.title("Demand and Revenue as a function of price")
+    plt.xlabel("Prices")
+    plt.legend(['Demand','Revenue'])
+    plt.grid()
+    return plt.show()
+
+def visualisation_value(V, T, C):
+    V = V.reshape(T, C)
+    print(V)
+    plt.title("Values of the states")
+    plt.xlabel('Capacity')
+    plt.ylabel('Number of micro-times')
+    plt.imshow(V)
+    plt.colorbar()
+
+    return plt.show()
+
+def visualisation_policy(P, T, C):
+    P = P.reshape(T, C)
+    plt.imshow(P)
+    plt.title("Prices coming from the optimal policy")
+    plt.xlabel('Capacity')
+    plt.ylabel('Number of micro-times')
+    plt.colorbar()
+
+    return plt.show()
+
 if __name__ == '__main__':
-    env_name  = 'FrozenLake-v0'
+    #env_name  = 'FrozenLake-v0'
     #env_name  = 'FrozenLake8x8-v0'
     gamma = 1
-    env = gym.make(env_name)
+    #env = gym.make(env_name)
+    env = gym.make('gym_RM:RM-v0')
     env = env.unwrapped
+    T, C = 100, 10
+    v = value_iteration(env, gamma)
+    policy = extract_policy_VI(v, gamma)
+    #visualisation_value(v, T, C)
+    visualisation_policy(policy, T, C)
 
-    pol = policy_iteration(env, gamma)
-    visualize_policy(pol)
+    #visualize_policy(pol)
     #extract_policy_VI(v, gamma)
     #tuning_gamma(env)
     #average_time(env, gamma, 100)
     #gamma_time(env)
+    print(evaluate_policy(env, policy, 100))
 
-
+    X = [100, 80, 50]

@@ -36,7 +36,7 @@ def q_learning(env, lr, y, num_episodes):
             if d == True:
                 break
             rList.append(rAll)
-        print(Q)
+        """
         policy = []
         for l in Q:
             if l[0] == l[1] == l[2] == l[3] == 0.0:
@@ -46,7 +46,8 @@ def q_learning(env, lr, y, num_episodes):
                     if l[k] == max(l):
                         policy.append(k)
                         break
-    return policy
+        """
+    return Q
 
 def run_episode(env, policy, gamma = 1.0, render = False):
     """ Runs an episode and returns the total reward """
@@ -124,15 +125,31 @@ def running_q_learning_n_times(n):
         scores.append(score)
     print(np.mean(scores))
 
+def extract_policy(Q):
+    policy = []
+    for l in Q:
+        if l[0] == l[1] == l[2] == 0.0:
+            policy.append(5)
+        else:
+            for k in range(0, len(l)):
+                if l[k] == max(l):
+                    policy.append(k)
+                    break
+    return policy
+
 if __name__ == '__main__':
     #env = gym.make('FrozenLake8x8-v0')
-    env = gym.make('FrozenLake-v0')
+    env = gym.make('gym_RM:RM-v0')
     print(env.P)
     # Set learning parameters
     lr = 0.05
     y = .99
-    num_episodes = 5000
-    
+    num_episodes = 2000
+
+    Q = q_learning(env, lr, y, num_episodes)
+    policy = extract_policy(Q)
+    print(policy)
+    print(evaluate_policy(env, policy, gamma=1.0, n=100))
     #tuning_gamma(env,lr, num_episodes)
     #tuning_lr(env, y, num_episodes)
     #tuning_nb_episodes(env, lr, y)
