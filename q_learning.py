@@ -137,6 +137,16 @@ def extract_policy(Q):
                     break
     return policy
 
+def visualisation_policy(P, T, C):
+    P = P.reshape(T, C)
+    plt.imshow(P)
+    plt.title("Prices coming from the optimal policy")
+    plt.xlabel('Number of bookings')
+    plt.ylabel('Number of micro-times')
+    plt.colorbar()
+
+    return plt.show()
+
 if __name__ == '__main__':
     #env = gym.make('FrozenLake8x8-v0')
     env = gym.make('gym_RM:RM-v0')
@@ -144,11 +154,12 @@ if __name__ == '__main__':
     # Set learning parameters
     lr = 0.05
     y = .99
-    num_episodes = 2000
+    num_episodes = 200000
 
     Q = q_learning(env, lr, y, num_episodes)
-    policy = extract_policy(Q)
-    print(policy)
+    policy = np.array(extract_policy(Q))
+    T, C = 150, 50
+    visualisation_policy(policy, T, C)
     print(evaluate_policy(env, policy, gamma=1.0, n=100))
     #tuning_gamma(env,lr, num_episodes)
     #tuning_lr(env, y, num_episodes)

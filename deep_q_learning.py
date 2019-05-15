@@ -2,10 +2,13 @@
 import random
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+
+
 class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
@@ -85,6 +88,16 @@ def evaluate_policy(env, policy, n_eval):
     scores = [run_episode(env, policy) for _ in range(n_eval)]
     return np.mean(scores)
 
+def visualisation_policy(P, T, C):
+    P = P.reshape(T, C)
+    plt.imshow(P)
+    plt.title("Prices coming from the optimal policy")
+    plt.xlabel('Number of bookings')
+    plt.ylabel('Number of micro-times')
+    plt.colorbar()
+
+    return plt.show()
+
 if __name__ == "__main__":
     #env = gym.make('CartPole-v1')
     #state_size = env.observation_space.shape[0]
@@ -101,7 +114,7 @@ if __name__ == "__main__":
     for e in range(EPISODES):
         state = env.reset()
         state = np.reshape(state, [1, state_size])
-        for time in range(100):
+        for time in range(1000):
             action = agent.act(state)
             next_state, reward, done, _ = env.step(action)
             next_state = np.reshape(next_state, [1, state_size])
@@ -115,6 +128,6 @@ if __name__ == "__main__":
 
     trained_network = agent.model
     Q_table = compute_q_table(env, trained_network)
-    policy = q_to_policy(Q_table)
-    print(policy)
-    print(evaluate_policy(env, policy, 100))
+    policy = np.array(q_to_policy(Q_table))
+    T, C = 150, 50
+    visualisation_policy(policy, T, C)

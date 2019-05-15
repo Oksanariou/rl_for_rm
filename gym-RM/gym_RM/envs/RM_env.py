@@ -7,12 +7,12 @@ class RMEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, T = 100, C = 10):
+    def __init__(self, T = 300, C = 50):
         self.T = T #Number of micro-times
         self.C = C #Total capacity
 
-        nA = 3 #Number of actions (prices)
-        p1, p2, p3 = 100, 80, 50 #The three different prices
+        nA = 5 #Number of actions (prices)
+        p1, p2, p3, p4, p5 = 170, 140, 110, 80, 50 #The three different prices
         nS = T*C #number of states
 
         #Initial state distribution, used in the reset function
@@ -40,7 +40,7 @@ class RMEnv(discrete.DiscreteEnv):
             """Returns:
                 - the probability that a person will buy the ticket at the price p
                 - the reward that the agent gets if the person buys the ticket"""
-            alpha = 0.8
+            alpha = 0.4
             lamb = 0.2
             if a == 0:
                 p = p1
@@ -48,7 +48,11 @@ class RMEnv(discrete.DiscreteEnv):
                 p = p2
             elif a == 2:
                 p = p3
-            proba = lamb*np.exp(-alpha*((p/p3)-1))
+            elif a == 3:
+                p = p4
+            elif a == 4:
+                p = p5
+            proba = lamb*np.exp(-alpha*((p/p5)-1))
             reward = p
             return proba, reward
 
