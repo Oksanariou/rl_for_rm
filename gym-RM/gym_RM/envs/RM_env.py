@@ -7,12 +7,12 @@ class RMEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, T = 300, C = 50):
+    def __init__(self, T = 500, C = 50):
         self.T = T #Number of micro-times
         self.C = C #Total capacity
 
-        nA = 5 #Number of actions (prices)
-        p1, p2, p3, p4, p5 = 170, 140, 110, 80, 50 #The three different prices
+        A = [k for k in range(50, 231, 20)] #10 different prices
+        nA = len(A) #number of actions
         nS = T*C #number of states
 
         #Initial state distribution, used in the reset function
@@ -40,20 +40,10 @@ class RMEnv(discrete.DiscreteEnv):
             """Returns:
                 - the probability that a person will buy the ticket at the price p
                 - the reward that the agent gets if the person buys the ticket"""
-            alpha = 0.4
+            alpha = 0.66
             lamb = 0.2
-            if a == 0:
-                p = p1
-            elif a == 1:
-                p = p2
-            elif a == 2:
-                p = p3
-            elif a == 3:
-                p = p4
-            elif a == 4:
-                p = p5
-            proba = lamb*np.exp(-alpha*((p/p5)-1))
-            reward = p
+            proba = lamb*np.exp(-alpha*((a/A[0])-1))
+            reward = a
             return proba, reward
 
         def proba_not_buy(a):
@@ -68,8 +58,9 @@ class RMEnv(discrete.DiscreteEnv):
         for t in range(T):
             for x in range(C):
                 s = to_s(t, x)
-                for a in range(nA):
-                    li = P[s][a]
+                for k in range(nA):
+                    a = A[k]
+                    li = P[s][k]
                     if t == T-1 or x == C-1: #Terminal states, the game ends
                         li.append((1.0, s, 0, True))
                     else:
