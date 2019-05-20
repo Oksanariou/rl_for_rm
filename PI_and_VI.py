@@ -146,8 +146,8 @@ def q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, e
             s = s_prime
             if d == True:
                 break
-            if (epsilon > epsilon_min):
-                epsilon *= epsilon_decay
+        if (epsilon > epsilon_min):
+            epsilon *= epsilon_decay
 
     return Q
 
@@ -193,21 +193,22 @@ class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=2000)
-        self.gamma = 0.99    # discount rate
+        self.memory = deque([], maxlen=64)
+        self.gamma = 0.95    # discount rate
         self.epsilon = 1.0  # exploration rate
-        self.epsilon_min = 0.6
-        self.epsilon_decay = 0.999
-        self.learning_rate = 0.001
+        self.epsilon_min = 0.01
+        self.epsilon_decay = 0.99995
+        self.learning_rate = 0.002
         self.model = self._build_model()
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(state_size, input_dim=self.state_size, activation='relu'))
         model.add(Dense(24, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        model.summary()
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -224,83 +225,73 @@ class DQNAgent:
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
-                target = (reward + self.gamma * np.amax(self.model.predict(next_state)[0]))
+                target = reward + self.gamma * \
+                         np.max(self.model.predict(next_state))
             target_f = self.model.predict(state)
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+def one_hot_state(state, state_space):
+    state_m = np.zeros((1, state_space))
+    state_m[0][state] = 1
+    return state_m
+
 def compute_q_table(env, network):
     q_table = []
     for s in range(env.observation_space.n):
         state = np.zeros(1, int)
-        state[0] = s
-        state = np.reshape(state, [1, state_size])
-        q_table.append(network.predict(state)[0])
+        state_one_hot = one_hot_state(state, state_size)
+        q_table.append(network.predict(state_one_hot)[0])
     return q_table
 
 if __name__ == '__main__':
     gamma = 0.99
     #env = gym.make('gym_RM:RM-v0')
     env = gym.make('FrozenLake-v0')
-    env = env.unwrapped
+    #env = env.unwrapped
+    #env = gym.make('CartPole-v1')
     T, C = 500, 50
 
-    v = value_iteration(env, gamma, 100000, 1e-20)
-
-    policy = extract_policy(v, gamma)
-    print(policy)
     #visualisation_value(v, T, C)
-    #policy = policy_iteration(env, gamma, 100000, 1e-20)
-
     #visualize_policy_RM(policy, T, C)
-    visualize_policy_FL(policy)
-    average_n_episodes(env, policy, 100)
-    print(average_n_episodes(env, policy, 100))
 
     #X = [k for k in range(50, 231, 20)]
     #plot_rev(X, 0.66, C)
 
-    #Q-LEARNING - Optimal parameters for the original frozen lake environment
 
-    alpha = 0.05
-    nb_episodes, nb_steps = 5000, 500
-    epsilon = 1
-    epsilon_min = 0.01
-    epsilon_decay = 0.99995
-    visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
-    q_table = q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay)
-    policy = q_to_policy_FL(q_table)
-    visualize_policy_FL(policy)
-    print(average_n_episodes(env, policy, 100))
 
     #DQL
 
-    state_size = 1
+    #state_size = 1
+    state_size = env.observation_space.n
+    print(state_size)
+    #state_size = env.observation_space.shape[0]
     action_size = env.action_space.n
     agent = DQNAgent(state_size, action_size)
-    done = False
     batch_size = 32
-    EPISODES = 100
+    EPISODES = 5000
 
     for e in range(EPISODES):
         state = env.reset()
-        state = np.reshape(state, [1, state_size])
-        for time in range(100):
-            action = agent.act(state)
-            next_state, reward, done, _ = env.step(action)
-            next_state = np.reshape(next_state, [1, state_size])
-            agent.remember(state, action, reward, next_state, done)
-            state = next_state
+        done = False
+        while not done:
+            state_one_hot = one_hot_state(state, state_size)
+            action = agent.act(state_one_hot)
+            state2, reward, done, info = env.step(action)
+            state2_one_hot = one_hot_state(state2, state_size)
+            agent.remember(state_one_hot, action, reward, state2_one_hot, done)
+            state = state2
             if done:
-                print("episode: {}/{}, score: {}, e: {:.2}".format(e, EPISODES, time, agent.epsilon))
+                print("episode: {}/{}, e: {:.2}".format(e, EPISODES, agent.epsilon))
                 break
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
 
     trained_network = agent.model
     Q_table = compute_q_table(env, trained_network)
+    print(Q_table)
     policy = q_to_policy_FL(Q_table)
     visualize_policy_FL(policy)
     print(average_n_episodes(env, policy, 100))
