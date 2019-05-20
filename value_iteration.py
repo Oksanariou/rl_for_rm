@@ -1,3 +1,5 @@
+import numpy as np
+
 def value_iteration(env, gamma, max_iter, epsilon):
     U = np.zeros(env.nS)
     for i in range(max_iter):
@@ -13,7 +15,7 @@ def value_iteration(env, gamma, max_iter, epsilon):
             break
     return U
 
-def extract_policy(U, gamma):
+def extract_policy(env, U, gamma):
     policy = np.zeros(env.nS)
     for s in range(env.nS):
         list_sum = np.zeros(env.nA)
