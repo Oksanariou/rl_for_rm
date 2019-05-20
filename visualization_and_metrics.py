@@ -73,7 +73,7 @@ def visualisation_value_RM(V, T, C):
     plt.colorbar()
     return plt.show()
 
-def extract_policy_RM(U):
+def extract_policy_RM(env, U, gamma):
     policy = np.zeros(env.nS)
     for s in range(env.nS):
         list_sum = np.zeros(env.nA)
@@ -81,7 +81,7 @@ def extract_policy_RM(U):
             for p, s_prime, r, _ in env.P[s][a]:
                 list_sum[a] += p*(r+gamma*U[s_prime])
         policy[s] = np.argmax(list_sum)
-        policy[s] = 50 + 20*policy[s]
+        #policy[s] = 50 + 20*policy[s]
     return policy
 
 def visualize_policy_RM(P, T, C):
@@ -103,4 +103,7 @@ def q_to_policy_RM(Q):
                 if l[k] == max(l):
                     policy.append(k)
                     break
+    for s in range(len(policy)):
+        policy[s] = 50 + 20*policy[s]
+
     return np.array(policy)
