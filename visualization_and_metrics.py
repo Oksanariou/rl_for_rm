@@ -76,12 +76,15 @@ def visualisation_value_RM(V, T, C):
 def extract_policy_RM(env, U, gamma):
     policy = np.zeros(env.nS)
     for s in range(env.nS):
-        list_sum = np.zeros(env.nA)
-        for a in range(env.nA):
-            for p, s_prime, r, _ in env.P[s][a]:
-                list_sum[a] += p*(r+gamma*U[s_prime])
-        policy[s] = np.argmax(list_sum)
-        #policy[s] = 50 + 20*policy[s]
+        if U[s] == 0.00000000e+00:
+            policy[s] == 0
+        else:
+            list_sum = np.zeros(env.nA)
+            for a in range(env.nA):
+                for p, s_prime, r, _ in env.P[s][a]:
+                    list_sum[a] += p*(r+gamma*U[s_prime])
+            policy[s] = np.argmax(list_sum)
+            policy[s] = 50 + 20*policy[s]
     return policy
 
 def visualize_policy_RM(P, T, C):
@@ -96,14 +99,14 @@ def visualize_policy_RM(P, T, C):
 def q_to_policy_RM(Q):
     policy = []
     for l in Q:
-        if l[0] == l[1] == l[2] == l[3] == l[4] == l[5] == l[6] == l[7] == l[8] == l[9] == 0.0:
-            policy.append(10)
-        else:
+        #if l[0] == l[1] == l[2] == l[3] == l[4] == l[5] == l[6] == l[7] == l[8] == l[9] == 0.0:
+            #policy.append(10)
+        #else:
             for k in range(0, len(l)):
                 if l[k] == max(l):
                     policy.append(k)
                     break
-    for s in range(len(policy)):
-        policy[s] = 50 + 20*policy[s]
+    #for s in range(len(policy)):
+        #policy[s] = 50 + 20*policy[s]
 
     return np.array(policy)

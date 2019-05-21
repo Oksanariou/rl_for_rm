@@ -7,7 +7,7 @@ class RMEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, T = 500, C = 50):
+    def __init__(self, T = 50, C = 10):
         self.T = T #Number of micro-times
         self.C = C #Total capacity
 
@@ -40,7 +40,7 @@ class RMEnv(discrete.DiscreteEnv):
             """Returns:
                 - the probability that a person will buy the ticket at the price p
                 - the reward that the agent gets if the person buys the ticket"""
-            alpha = 0.66
+            alpha = 0.4
             lamb = 0.2
             proba = lamb*np.exp(-alpha*((a/A[0])-1))
             reward = a

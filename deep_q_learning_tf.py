@@ -33,9 +33,7 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay):
             while j < nb_steps:
                 j += 1
                 # Choose an action by greedily (with e chance of random action) from the Q-network
-                print(np.identity(state_size)[s:s + 1])
                 a, allQ = sess.run([predict, Qout], feed_dict={inputs1: np.identity(state_size)[s:s + 1]})
-                print(allQ)
                 if np.random.rand(1) < epsilon:
                     a[0] = env.action_space.sample()
                 # Get new state and reward from environment

@@ -65,6 +65,7 @@ if __name__ == "__main__":
     #state_size = env.observation_space.shape[0]
     env = gym.make('FrozenLake-v0')
     #env = gym.make('gym_RM:RM-v0')
+    T, C = 50, 10
     state_size = 1
 
     action_size = env.action_space.n
@@ -77,7 +78,7 @@ if __name__ == "__main__":
         state = env.reset()
         state = np.reshape(state, [1, state_size])
         rAll = 0
-        for time in range(100):
+        for time in range(1000):
             action = agent.act(state)
             next_state, reward, done, _ = env.step(action)
             next_state = np.reshape(next_state, [1, state_size])
@@ -102,7 +103,6 @@ if __name__ == "__main__":
     trained_network = agent.model
     Q_table = compute_q_table(env, trained_network)
     policy = np.array(q_to_policy_FL(Q_table))
-    T, C = 150, 50
     #visualize_policy_RM(policy, T, C)
     visualize_policy_FL(policy)
     plt.plot(rList)

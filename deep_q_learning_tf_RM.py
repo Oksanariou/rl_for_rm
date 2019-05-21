@@ -6,16 +6,26 @@ def state_nb_to_state_coordinates(C, s):
     x = s - t*C
     return np.array([[t,x]])
 
-def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, C):
+def state_one_hot_encoded(T, C, s):
+    matrix = np.zeros((T, C), float)
+    t = s//C
+    x = s - t * C
+    matrix[t,x] = 1.
+    return matrix
+
+def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, T, C):
     state_size = env.observation_space.n
     action_size = env.action_space.n
 
-    inputs1 = tf.placeholder(shape=(1,2), dtype=tf.float32)
-    w1 = tf.Variable(tf.random_uniform([20, 2], 0, 0.01))
-    y1 = tf.matmul(w1, tf.transpose(inputs1))
-    wo = tf.Variable(tf.random_uniform([action_size, 20], 0, 0.01))
-    Qout = tf.matmul(tf.transpose(y1), tf.transpose(wo))
-    print(Qout)
+    inputs1 = tf.placeholder(shape=[T,C], dtype=tf.float32)
+    flattened = tf.contrib.layers.flatten(inputs1)
+    W = tf.Variable(tf.random_uniform([T*C, action_size], 0, 0.01))
+    Qout = tf.matmul(flattened, W)
+    #w1 = tf.Variable(tf.random_uniform([50, 2], 0, 0.01))
+    #y1 = tf.matmul(w1, tf.transpose(inputs1))
+    #wo = tf.Variable(tf.random_uniform([action_size, 50], 0, 0.01))
+    #Qout = tf.matmul(tf.transpose(y1), tf.transpose(wo))
+    #print(Qout)
     predict = tf.argmax(Qout, 1)
 
     nextQ = tf.placeholder(shape=[1, action_size], dtype=tf.float32)
@@ -35,7 +45,7 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, 
             print(i)
             # Reset environment and get first new observation
             s_1D = env.reset()
-            s = state_nb_to_state_coordinates(C, s_1D)
+            s = state_one_hot_encoded(T, C, s_1D)
             rAll = 0
             d = False
             j = 0
@@ -47,7 +57,7 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, 
                     a[0] = env.action_space.sample()
                 # Get new state and reward from environment
                 s1_1D, r, d, _ = env.step(a[0])
-                s1 = state_nb_to_state_coordinates(C, s1_1D)
+                s1 = state_one_hot_encoded(T, C, s1_1D)
                 #WITHOUT EXPERIENCE REPLAY
 
                 # Obtain the Q' values by feeding the new state through our network
@@ -57,7 +67,8 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, 
                 targetQ = allQ
                 targetQ[0, a[0]] = r + gamma * maxQ1
                 # Train our network using target and predicted Q values
-                sess.run(updateModel, feed_dict={inputs1: s, nextQ: targetQ})
+                _, W1 = sess.run([updateModel, W],
+                                 feed_dict={inputs1: s, nextQ: targetQ})
 
                 """
                 #WITH EXPERIENCE REPLAY
@@ -83,7 +94,7 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, 
             rList.append(rAll)
         Q_table = []
         for s_1D in range(state_size):
-            s = state_nb_to_state_coordinates(C,s_1D)
+            s = state_one_hot_encoded(T, C,s_1D)
             Q = sess.run(Qout, feed_dict={inputs1: s})
             Q_table.append(Q[0])
     return Q_table, rList

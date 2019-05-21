@@ -6,6 +6,7 @@ def q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, e
     Q = np.zeros([env.observation_space.n, env.action_space.n])
     rList = []
     for i in range(nb_episodes):
+        print(i)
         rAll = 0
         s = env.reset()  # Initial observation
         for j in range(nb_steps):
@@ -26,3 +27,9 @@ def q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, e
             epsilon *= epsilon_decay
         rList.append(rAll)
     return Q, rList
+
+def q_to_v(env, Q_table):
+    V = []
+    for q in Q_table:
+        V.append(max(q))
+    return np.array(V)

@@ -5,11 +5,8 @@ def value_iteration(env, gamma, max_iter, epsilon):
     for i in range(max_iter):
         prev_U = np.copy(U)
         for s in range(env.nS):
-            list_sum = np.zeros(env.nA)
-            for a in range(env.nA):
-                for p, s_prime, r, _ in env.P[s][a]:
-                    list_sum[a] += p*(r + gamma*prev_U[s_prime])
-            U[s] = max(list_sum)
+            q_sa = [sum([p*(r + prev_U[s_]) for p, s_, r, _ in env.P[s][a]]) for a in range(env.nA)]
+            U[s] = max(q_sa)
         if (np.sum(np.fabs(prev_U - U)) <= epsilon):
             print("Converged at "+str(i))
             break
