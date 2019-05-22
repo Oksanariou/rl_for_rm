@@ -23,12 +23,14 @@ def value_iteration(env, max_iter, epsilon):
 
 def extract_policy(env, U, gamma):
     policy = np.zeros(env.nS)
-    for s in range(env.nS):
+    for state_idx in range(env.nS):
+        state = env.to_coordinate(state_idx)
+
         list_sum = np.zeros(env.nA)
         for a in range(env.nA):
-            for p, s_prime, r, _ in env.P[s][a]:
-                list_sum[a] += p * (r + gamma * U[s_prime])
-        policy[s] = np.argmax(list_sum)
+            for p, s_prime, r, _ in env.P[state][a]:
+                list_sum[a] += p * (r + gamma * U[env.to_idx(*s_prime)])
+        policy[state_idx] = np.argmax(list_sum)
         # policy[s] = 50 + 20 * policy[s]
 
     return policy
