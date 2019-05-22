@@ -1,83 +1,132 @@
-from gym.envs.toy_text import discrete
+import gym
 import numpy as np
-from gym import error, spaces, utils
+from gym import spaces
 from gym.utils import seeding
 
-class RMEnv(discrete.DiscreteEnv):
+default_micro_times = 500
+default_capacity = 50
+default_actions = tuple(k for k in range(50, 231, 20))
+default_alpha = 0.66
+default_lambda = 0.2
 
+
+class RMEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, T = 50, C = 10):
-        self.T = T #Number of micro-times
-        self.C = C #Total capacity
+    def __init__(self, micro_times=default_micro_times, capacity=default_capacity, actions=default_actions,
+                 alpha=default_alpha, lamb=default_lambda):
 
-        A = [k for k in range(50, 231, 20)] #10 different prices
-        nA = len(A) #number of actions
-        nS = T*C #number of states
+        super(RMEnv, self).__init__()
 
-        #Initial state distribution, used in the reset function
-        isd = np.zeros(nS, float)
-        isd[0] = 1.
-        # for k in range(len(isd)):
-        #     isd[k] = 1/len(isd)
+        self.T = micro_times
+        self.C = capacity
+        self.nS = micro_times * capacity  # number of states
 
-        P = {s: {a: [] for a in range(nA)} for s in range(nS)} #Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
+        self.A = actions
+        self.nA = len(self.A)  # number of actions
 
-        def to_s(t, x):
-            """Returns a state number"""
-            return t*C + x
+        self.alpha = alpha
+        self.lamb = lamb
 
-        def inc_buy(t, x):
-            """Returns the next state when the person buys the ticket"""
-            t = min(t+1, T-1)
-            x = min(x+1, C-1)
-            return (t, x)
+        self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
+        self.action_space = spaces.Discrete(self.nA)
+        self.reward_range = [min(self.A), max(self.A)]
 
-        def inc_not_buy(t, x):
-            """Returns the next state when the person does not buys the ticket"""
-            t = min(t + 1, T - 1)
-            return(t, x)
+        self.seed()
 
-        def proba_buy(a):
-            """Returns:
-                - the probability that a person will buy the ticket at the price p
-                - the reward that the agent gets if the person buys the ticket"""
-            alpha = 0.4
-            lamb = 0.2
-            proba = lamb*np.exp(-alpha*((a/A[0])-1))
-            reward = a
-            return proba, reward
+        self.s = (0, 0)
 
-        def proba_not_buy(a):
-            """Returns:
-                - the probability that a person will not buy the ticket at the price p
-                - the reward that the agent gets if the person does not buy the ticket"""
-            reward = 0
-            p, r = proba_buy(a)
-            return 1-p, reward
+        self.P = self.init_transitions(self.T, self.C, self.A, self.nA, self.nS)
 
-        #Filling the transitions dictionnary P
+    def init_transitions(self, T, C, A, nA, nS):
+
+        # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
+        P = {(t, x): {a: [] for a in range(nA)} for t in range(T) for x in range(C)}
+
+        # Filling the transitions dictionnary P
         for t in range(T):
             for x in range(C):
-                s = to_s(t, x)
+                s = (t, x)
                 for k in range(nA):
                     a = A[k]
                     li = P[s][k]
-                    if t == T-1 or x == C-1: #Terminal states, the game ends
+                    if t == T - 1 or x == C - 1:  # Terminal states, the game ends
                         li.append((1.0, s, 0, True))
                     else:
-                        for b in range(2): #If the agent is in a state s with the action a then there are two possible states where he might end in
-                            if b == 0: #The person buys the ticket
-                                new_t, new_x = inc_buy(t, x)
-                                new_state = to_s(new_t, new_x)
-                                p, r = proba_buy(a)
+                        for b in range(
+                                2):  # If the agent is in a state s with the action a then there are two possible states where he might end in
+                            if b == 0:  # The person buys the ticket
+                                new_t, new_x = self.inc_buy(t, x)
+                                new_state = (new_t, new_x)
+                                p, r = self.proba_buy(a)
                                 done = False
                                 li.append((p, new_state, r, done))
-                            else: #The person does not buy the ticket
-                                new_t, new_x = inc_not_buy(t, x)
-                                new_state = to_s(new_t, new_x)
-                                p, r = proba_not_buy(a)
+                            else:  # The person does not buy the ticket
+                                new_t, new_x = self.inc_not_buy(t, x)
+                                new_state = (new_t, new_x)
+                                p, r = self.proba_not_buy(a)
                                 done = False
                                 li.append((p, new_state, r, done))
 
-        super(RMEnv, self).__init__(nS, nA, P, isd)
+        return P
+
+    def to_coordinate(self, state_idx):
+        t = int(int(state_idx) / self.C)
+        x = int(state_idx - t * self.C)
+        return t, x
+
+    def to_idx(self, t, x):
+        return t * self.C + x
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def reset(self):
+        # self.s = self.observation_space.sample()
+        self.s = (0, 0)
+
+        return self.s
+
+    def step(self, a):
+        transitions = self.P[self.s][a]
+        transition_idx = self.categorical_sample([t[0] for t in transitions])
+        p, s, r, d = transitions[transition_idx]
+        self.s = s
+        return s, r, d, {"prob": p}
+
+    def inc_buy(self, t, x):
+        """Returns the next state when the person buys the ticket"""
+        t = min(t + 1, self.T - 1)
+        x = min(x + 1, self.C - 1)
+        return t, x
+
+    def inc_not_buy(self, t, x):
+        """Returns the next state when the person does not buys the ticket"""
+        t = min(t + 1, self.T - 1)
+        return t, x
+
+    def proba_buy(self, a):
+        """Returns:
+            - the probability that a person will buy the ticket at the price p
+            - the reward that the agent gets if the person buys the ticket"""
+        proba = self.lamb * np.exp(-self.alpha * ((a / self.A[0]) - 1))
+        reward = a
+        return proba, reward
+
+    def proba_not_buy(self, a):
+        """Returns:
+            - the probability that a person will not buy the ticket at the price p
+            - the reward that the agent gets if the person does not buy the ticket"""
+        reward = 0
+        p, r = self.proba_buy(a)
+        return 1 - p, reward
+
+    def categorical_sample(self, prob_n):
+        """
+        Sample from categorical distribution
+        Each row specifies class probabilities
+        """
+        prob_n = np.asarray(prob_n)
+        csprob_n = np.cumsum(prob_n)
+        return (csprob_n > self.np_random.rand()).argmax()

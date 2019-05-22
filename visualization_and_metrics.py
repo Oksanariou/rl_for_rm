@@ -88,7 +88,7 @@ def extract_policy_RM(env, U, gamma):
     return policy
 
 def visualize_policy_RM(P, T, C):
-    P = P.reshape(T, C)
+    P = np.reshape(P, (T, C))
     plt.imshow(P, aspect='auto')
     plt.title("Prices coming from the optimal policy")
     plt.xlabel('Number of bookings')

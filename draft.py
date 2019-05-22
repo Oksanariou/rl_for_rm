@@ -47,17 +47,16 @@ if __name__ == '__main__':
     visualize_policy_RM(policy, T, C)
     print("Average reward over 50000 episodes : " + str(average_n_episodes(env, policy, 50000)))
     """
-    """
+
     max_iter = 100000
     epsilon = 1e-20
     gamma = 0.99
 
-    v = value_iteration(env, gamma, max_iter, epsilon)
-    visualisation_value_RM(v, T, C)
+    v = value_iteration(env, max_iter, epsilon)
+    visualisation_value_RM(v, env.T, env.C)
     policy = extract_policy_RM(env, v, gamma)
     visualize_policy_RM(policy, T, C)
     print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
-    """
 
     prices = [k for k in range(50, 231, 20)]
     alpha = 0.4
