@@ -24,7 +24,6 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay):
     with tf.Session() as sess:
         sess.run(init)
         for i in range(nb_episodes):
-            print(i)
             # Reset environment and get first new observation
             s = env.reset()
             rAll = 0

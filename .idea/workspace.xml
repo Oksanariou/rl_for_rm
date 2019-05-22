@@ -2,17 +2,32 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="81b35c7e-fe2a-40c7-801b-e2b96eeafd16" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/compare_optimal_policies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notebooks/RL_benchmark_frozen_lake.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Notebooks/RL_benchmark_frozen_lake.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Notebooks/RL_overview.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Notebooks/RL_overview.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Notebooks/RM_game.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Notebooks/RM_game.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deep_q_learning_keras.py" beforeDir="false" afterPath="$PROJECT_DIR$/deep_q_learning_keras.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Policy/DP.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Policy/episodes = 1000.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Policy/episodes = 5000.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Values/DP.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Values/episodes = 1000.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Values/episodes = 5000.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Policy/DP.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Policy/episodes=10000, eps=0.995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Policy/episodes=100000, eps=0.99995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Policy/episodes=1000000, eps=0.999995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Policy/episodes=50000, eps=0.9995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Values/DP.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Values/values_episodes=10000, eps=0.995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Values/values_episodes=100000, eps=0.99995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Values/values_episodes=1000000, eps=0.999995.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RM game - Convergence/Q-Learning/Values/values_episodes=50000, eps=0.9995.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/deep_q_learning_tf.py" beforeDir="false" afterPath="$PROJECT_DIR$/deep_q_learning_tf.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/deep_q_learning_tf_RM.py" beforeDir="false" afterPath="$PROJECT_DIR$/deep_q_learning_tf_RM.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/draft.py" beforeDir="false" afterPath="$PROJECT_DIR$/draft.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dynamic_programming.py" beforeDir="false" afterPath="$PROJECT_DIR$/dynamic_programming.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/q_learning.py" beforeDir="false" afterPath="$PROJECT_DIR$/q_learning.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/value_iteration.py" beforeDir="false" afterPath="$PROJECT_DIR$/value_iteration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/visualization_and_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/visualization_and_metrics.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -36,6 +51,11 @@
                 <provider selected="true" editor-type-id="jupyter-editor" />
               </entry>
             </file>
+            <file pinned="false" current-in-tab="false">
+              <entry file="file://$PROJECT_DIR$/Notebooks/RL_overview.ipynb">
+                <provider selected="true" editor-type-id="jupyter-editor" />
+              </entry>
+            </file>
           </leaf>
         </state>
       </content>
@@ -43,11 +63,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/draft.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="557">
-              <caret line="35" selection-start-line="35" selection-end-line="35" />
+            <state relative-caret-position="238">
+              <caret line="14" selection-start-line="14" selection-end-line="14" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -56,55 +76,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/value_iteration.py">
+        <entry file="file://$PROJECT_DIR$/dynamic_programming.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="3" column="4" selection-start-line="3" selection-start-column="4" selection-end-line="3" selection-end-column="24" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/deep_q_learning_tf_RM.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" selection-start-line="8" selection-end-line="13" selection-end-column="17" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/deep_q_learning_keras.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="183">
-              <caret line="68" column="18" selection-start-line="68" selection-start-column="18" selection-end-line="68" selection-end-column="18" />
-              <folding>
-                <element signature="e#24#37#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Oksana/imitation_learning/network.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="183">
-              <caret line="26" column="52" selection-start-line="26" selection-start-column="52" selection-end-line="26" selection-end-column="52" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/deep_q_learning_tf.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="15" column="66" selection-start-line="15" selection-start-column="66" selection-end-line="15" selection-end-column="66" />
+            <state relative-caret-position="425">
+              <caret line="25" column="28" selection-start-line="25" selection-start-column="28" selection-end-line="25" selection-end-column="28" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -115,8 +90,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/visualization_and_metrics.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="302">
-              <caret line="79" column="26" selection-start-line="79" selection-start-column="26" selection-end-line="79" selection-end-column="26" />
+            <state>
+              <caret column="18" selection-start-column="18" selection-end-column="18" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/deep_q_learning_tf_RM.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-629">
+              <caret line="2" column="34" selection-start-line="2" selection-start-column="34" selection-end-line="2" selection-end-column="34" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/deep_q_learning_tf.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="170">
+              <caret line="25" column="36" selection-start-line="25" selection-start-column="36" selection-end-line="25" selection-end-column="36" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -125,10 +118,43 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../gym/gym/envs/toy_text/discrete.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="665">
+              <caret line="60" selection-start-line="60" selection-end-line="60" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/q_learning.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="136">
+              <caret line="8" column="16" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/compare_optimal_policies.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="257">
+              <caret line="23" column="23" selection-start-line="23" selection-start-column="23" selection-end-line="23" selection-end-column="23" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="16" selection-start-line="16" selection-end-line="16" />
+            <state relative-caret-position="272">
+              <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -162,22 +188,23 @@
         <option value="$PROJECT_DIR$/PI_and_VI.py" />
         <option value="$PROJECT_DIR$/deep_q_learning_keras_RM.py" />
         <option value="$PROJECT_DIR$/value_iteration.py" />
-        <option value="$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py" />
-        <option value="$PROJECT_DIR$/dynamic_programming.py" />
-        <option value="$PROJECT_DIR$/visualization_and_metrics.py" />
-        <option value="$PROJECT_DIR$/q_learning.py" />
-        <option value="$PROJECT_DIR$/deep_q_learning_tf.py" />
-        <option value="$PROJECT_DIR$/deep_q_learning_tf_RM.py" />
-        <option value="$PROJECT_DIR$/draft.py" />
         <option value="$PROJECT_DIR$/deep_q_learning_keras.py" />
+        <option value="$PROJECT_DIR$/deep_q_learning_tf.py" />
+        <option value="$PROJECT_DIR$/visualization_and_metrics.py" />
+        <option value="$PROJECT_DIR$/dynamic_programming.py" />
+        <option value="$PROJECT_DIR$/q_learning.py" />
+        <option value="$PROJECT_DIR$/compare_optimal_policies.py" />
+        <option value="$PROJECT_DIR$/draft.py" />
+        <option value="$PROJECT_DIR$/deep_q_learning_tf_RM.py" />
+        <option value="$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="670" />
-    <option name="y" value="-25" />
-    <option name="width" value="1295" />
-    <option name="height" value="730" />
+    <option name="x" value="-5" />
+    <option name="y" value="-5" />
+    <option name="width" value="1289" />
+    <option name="height" value="729" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -201,7 +228,7 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/RM game - Convergence/DQL-tf-1D/Values/episodes = 5000.png" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/RM game - Convergence/DQL-tf-2D/Values" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -233,6 +260,28 @@
       <module name="" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/PI_and_VI.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="compare_optimal_policies" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="rl_for_rm_oksana" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/compare_optimal_policies.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -307,35 +356,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test_dql" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\oriou\AppData\Local\Programs\Python\Python36\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_dql.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.draft" />
+        <item itemvalue="Python.compare_optimal_policies" />
         <item itemvalue="Python.deep_q_learning_keras" />
         <item itemvalue="Python.dynamic_programming" />
         <item itemvalue="Python.PI_and_VI.py" />
-        <item itemvalue="Python.test_dql" />
       </list>
     </recent_temporary>
   </component>
@@ -363,12 +390,12 @@
       <workItem from="1558075504981" duration="26309000" />
       <workItem from="1558334195335" duration="46329000" />
       <workItem from="1558437456583" duration="4925000" />
-      <workItem from="1558442416604" duration="10382000" />
+      <workItem from="1558442416604" duration="37381000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="202888000" />
+    <option name="totallyTimeSpent" value="229887000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -382,12 +409,12 @@
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="2062" height="1126" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.48043185" visible="true" weight="0.13522954" />
-      <window_info id="Structure" order="1" sideWeight="0.51956815" side_tool="true" visible="true" weight="0.13522954" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4815951" visible="true" weight="0.13872255" />
+      <window_info id="Structure" order="1" sideWeight="0.5184049" side_tool="true" weight="0.13872255" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.25527638" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.18518518" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39899498" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -397,12 +424,12 @@
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Database Changes" order="10" />
       <window_info anchor="bottom" id="Jupyter" order="11" weight="0.33065328" />
-      <window_info anchor="bottom" id="Terminal" order="12" weight="0.32964823" />
+      <window_info anchor="bottom" id="Terminal" order="12" visible="true" weight="0.32921812" />
       <window_info anchor="bottom" id="Python Console" order="13" weight="0.32964823" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info active="true" anchor="right" id="SciView" order="3" visible="true" weight="0.248503" />
+      <window_info anchor="right" id="SciView" order="3" visible="true" weight="0.248503" />
       <window_info anchor="right" id="Database" order="4" />
     </layout>
   </component>
@@ -410,9 +437,10 @@
     <option name="version" value="1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/rl_for_rm_oksana$draft.coverage" NAME="draft Coverage Results" MODIFIED="1558452672928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/rl_for_rm_oksana$draft.coverage" NAME="draft Coverage Results" MODIFIED="1558533710416" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/rl_for_rm_oksana$test_dql.coverage" NAME="test_dql Coverage Results" MODIFIED="1558354160057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/rl_for_rm_oksana$deep_q_learning.coverage" NAME="deep_q_learning Coverage Results" MODIFIED="1557930095078" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/rl_for_rm_oksana$compare_optimal_policies.coverage" NAME="compare_optimal_policies Coverage Results" MODIFIED="1558532324419" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/rl_for_rm_oksana$dynamic_programming.coverage" NAME="dynamic_programming Coverage Results" MODIFIED="1558427005426" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/rl_for_rm_oksana$PI_and_VI.coverage" NAME="PI_and_VI.py Coverage Results" MODIFIED="1558355031690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/rl_for_rm_oksana$deep_q_learning_keras.coverage" NAME="deep_q_learning_keras Coverage Results" MODIFIED="1558451553008" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -531,52 +559,9 @@
     <entry file="file://$PROJECT_DIR$/Notebooks/RL_algos_benchmark.ipynb" />
     <entry file="file://$PROJECT_DIR$/Notebooks/RM game.ipynb" />
     <entry file="file://$PROJECT_DIR$/Notebooks/RL overview.ipynb" />
-    <entry file="file://$PROJECT_DIR$/../gym/gym/envs/toy_text/discrete.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="969">
-          <caret line="60" lean-forward="true" selection-start-line="60" selection-end-line="60" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/deep_q_learning_keras_RM.py" />
-    <entry file="file://$PROJECT_DIR$/Notebooks/RL_overview.ipynb">
-      <provider selected="true" editor-type-id="jupyter-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Notebooks/Revenue management.ipynb">
       <provider selected="true" editor-type-id="jupyter-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/q_learning.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="16" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dynamic_programming.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="24" column="34" selection-start-line="24" selection-start-column="34" selection-end-line="24" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Notebooks/RL_benchmark_frozen_lake.ipynb">
-      <provider selected="true" editor-type-id="jupyter-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/visualization_and_metrics.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="79" column="26" selection-start-line="79" selection-start-column="26" selection-end-line="79" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Benjamin/rl_simu/scripts/environment.py">
       <provider selected="true" editor-type-id="text-editor" />
@@ -584,13 +569,6 @@
     <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Benjamin/rl_simu/scripts/agent.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-293" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
-        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Oksana/Autoencodeur/models.py">
@@ -612,16 +590,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/deep_q_learning_tf_RM.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" selection-start-line="8" selection-end-line="13" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/value_iteration.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="51">
@@ -629,39 +597,103 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/deep_q_learning_tf.py">
+    <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Benjamin/rl_simu/scripts/main.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/deep_q_learning_keras.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="66" selection-start-line="15" selection-start-column="66" selection-end-line="15" selection-end-column="66" />
+        <state relative-caret-position="85">
+          <caret line="5" selection-start-line="5" selection-end-line="5" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Notebooks/RL_benchmark_frozen_lake.ipynb">
+      <provider selected="true" editor-type-id="jupyter-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Notebooks/RL_overview.ipynb">
+      <provider selected="true" editor-type-id="jupyter-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/compare_optimal_policies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="257">
+          <caret line="23" column="23" selection-start-line="23" selection-start-column="23" selection-end-line="23" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../gym/gym/envs/toy_text/discrete.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="665">
+          <caret line="60" selection-start-line="60" selection-end-line="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/q_learning.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="16" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Downloads/Code_PFE_GTL_Supelec_Kingfisher_2019/PFE/Benjamin/rl_simu/scripts/main.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Notebooks/RM_game.ipynb">
       <provider selected="true" editor-type-id="jupyter-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/deep_q_learning_keras.py">
+    <entry file="file://$PROJECT_DIR$/deep_q_learning_tf.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="68" column="18" selection-start-line="68" selection-start-column="18" selection-end-line="68" selection-end-column="18" />
+        <state relative-caret-position="170">
+          <caret line="25" column="36" selection-start-line="25" selection-start-column="36" selection-end-line="25" selection-end-column="36" />
           <folding>
-            <element signature="e#24#37#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gym-RM/gym_RM/envs/RM_env.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dynamic_programming.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="25" column="28" selection-start-line="25" selection-start-column="28" selection-end-line="25" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/draft.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="557">
-          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        <state relative-caret-position="238">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/visualization_and_metrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="18" selection-start-column="18" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/deep_q_learning_tf_RM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-629">
+          <caret line="2" column="34" selection-start-line="2" selection-start-column="34" selection-end-line="2" selection-end-column="34" />
         </state>
       </provider>
     </entry>

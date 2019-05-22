@@ -18,6 +18,8 @@ class RMEnv(discrete.DiscreteEnv):
         #Initial state distribution, used in the reset function
         isd = np.zeros(nS, float)
         isd[0] = 1.
+        # for k in range(len(isd)):
+        #     isd[k] = 1/len(isd)
 
         P = {s: {a: [] for a in range(nA)} for s in range(nS)} #Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
 

@@ -10,7 +10,7 @@ from visualization_and_metrics import *
 from value_iteration import *
 from policy_iteration import *
 from q_learning import *
-from deep_q_learning_tf import *
+from deep_q_learning_tf_RM import *
 from dynamic_programming import *
 
 
@@ -22,13 +22,13 @@ if __name__ == '__main__':
 
     gamma = 1
     alpha = 0.05
-    nb_episodes, nb_steps = 10000, 10000
-    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.9995
+    nb_episodes, nb_steps = 2000, 10000
+    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.999
     
     visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
-    q_table, rList = dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay)
+    q_table, rList = dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, T, C)
+    print(q_table)
     v = q_to_v(env, q_table)
-    print(v)
     visualisation_value_RM(v, T, C)
     policy = extract_policy_RM(env, v, gamma)
     visualize_policy_RM(policy, T, C)
@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
     """
     alpha, gamma = 0.07, 0.99
-    nb_episodes, nb_steps = 10000, 10000
-    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.9995
+    nb_episodes, nb_steps = 50000, 10000
+    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.99995
 
     visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
     q_table, rList = q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     visualisation_value_RM(v, T, C)
     policy = extract_policy_RM(env, v, gamma)
     visualize_policy_RM(policy, T, C)
-    #print("Average reward over 100 episodes : " + str(average_n_episodes(env, policy, 100)))
+    print("Average reward over 50000 episodes : " + str(average_n_episodes(env, policy, 50000)))
     """
     """
     max_iter = 100000
@@ -67,4 +67,5 @@ if __name__ == '__main__':
     visualize_policy_RM(P, T, C)
     P = P.reshape(1, T*C)
     P = P[0]
-    #print("Average reward over 1000 episodes : " + str(average_n_episodes(env, P, 1000)))
+    print("Average reward over 50000 episodes : " + str(average_n_episodes(env, P, 50000)))
+

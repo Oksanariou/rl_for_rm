@@ -22,7 +22,8 @@ def P(t, x, a, lamb, C, VM, A):
         r = 0
     for f in A:
         d_list.append(d(f, a, lamb, A)*(f+r)+(1-d(f, a, lamb, A))*VM[t+1, x])
-    return np.argmax(d_list)*20 + 50
+    #return np.argmax(d_list)*20 + 50
+    return np.argmax(d_list)
 
 def dynamic_programming(T, C, alpha, lamb, prices):
     VM = np.zeros((T, C), float)

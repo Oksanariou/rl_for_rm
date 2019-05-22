@@ -84,7 +84,7 @@ def extract_policy_RM(env, U, gamma):
                 for p, s_prime, r, _ in env.P[s][a]:
                     list_sum[a] += p*(r+gamma*U[s_prime])
             policy[s] = np.argmax(list_sum)
-            policy[s] = 50 + 20*policy[s]
+            #policy[s] = 50 + 20*policy[s]
     return policy
 
 def visualize_policy_RM(P, T, C):
