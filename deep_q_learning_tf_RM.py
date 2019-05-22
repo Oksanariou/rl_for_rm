@@ -48,6 +48,8 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, 
     # create lists to contain total rewards and steps per episode
     jList = []
     rList = []
+    
+
     with tf.Session() as sess:
         sess.run(init)
         for i in tqdm(range(nb_episodes)):
