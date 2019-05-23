@@ -1,43 +1,50 @@
 import numpy as np
 import random
 
+from visualization_and_metrics import visualisation_value_RM, extract_policy_RM, visualize_policy_RM, average_n_episodes
 
-def q_learning(env, alpha, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay):
+
+def q_learning(env, alpha, gamma, nb_episodes, epsilon, epsilon_min, epsilon_decay):
     # Initialize the Q-table with zeros
     Q = np.zeros([env.nS, env.action_space.n])
 
-    rList = []
-    for i in range(nb_episodes):
-        print(i)
-        rAll = 0
-        state = env.reset()  # Initial observation
+    for episode in range(nb_episodes):
+        state = env.set_random_state()
         state_idx = env.to_idx(*state)
 
-        for j in range(nb_steps):
+        done = False
+        while not done:
             # The action associated to s is the one that provides the best Q-value
             # with a proba 1-epsilon and is random with a proba epsilon
             if random.random() < 1 - epsilon:
-                action = np.argmax(Q[state_idx, :])
+                action = np.argmax(Q[state_idx])
             else:
                 action = np.random.randint(env.action_space.n)
 
             # We get our transition <s, a, r, s'>
-            s_prime, r, d, _ = env.step(action)
-            rAll += r
+            next_state, r, done, _ = env.step(action)
+            next_state_idx = env.to_idx(*next_state)
+
             # We update the Q-table with using new knowledge
-            Q[state_idx, action] = alpha * (r + gamma * np.max(Q[env.to_idx(*s_prime), :])) + (1 - alpha) * Q[
-                state_idx, action]
-            state = s_prime
+            old_value = Q[state_idx, action]
+            new_value = (r + gamma * np.max(Q[next_state_idx]))
+            Q[state_idx, action] = alpha * new_value + (1 - alpha) * old_value
 
-            if d == True:
-                break
+            state_idx = next_state_idx
 
-        if epsilon > epsilon_min:
-            epsilon *= epsilon_decay
+        if episode % int(nb_episodes / 10) == 0:
+            v = q_to_v(env, Q)
+            visualisation_value_RM(v, env.T, env.C)
+            policy = extract_policy_RM(env, v, gamma)
+            visualize_policy_RM(policy, env.T, env.C)
 
-        rList.append(rAll)
+            N = 1000
+            revenue = average_n_episodes(env, policy, N)
+            print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
 
-    return Q, rList
+        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+
+    return Q
 
 
 def q_to_v(env, Q_table):
