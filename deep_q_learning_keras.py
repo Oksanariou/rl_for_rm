@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense, Flatten
+from keras.layers import Dense
 from keras.optimizers import Adam
 from visualization_and_metrics import visualize_policy_RM
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         policy = q_to_policy(env, Q_table)
         visualize_policy_RM(policy, env.T, env.C)
 
-        state = env.reset()
+        state = env.set_random_state()
         state = np.reshape(state, [1, state_size])
 
         done = False

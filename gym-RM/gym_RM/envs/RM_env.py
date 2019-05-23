@@ -88,6 +88,11 @@ class RMEnv(gym.Env):
 
         return self.s
 
+    def set_random_state(self):
+        self.s = self.observation_space.sample()
+
+        return self.s
+
     def step(self, a):
         transitions = self.P[self.s][a]
         transition_idx = self.categorical_sample([t[0] for t in transitions])
