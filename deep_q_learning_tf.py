@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
+
 def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay):
     state_size = env.observation_space.n
     action_size = env.action_space.n
@@ -38,7 +39,7 @@ def dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay):
                 # Get new state and reward from environment
                 s1, r, d, _ = env.step(a[0])
 
-                #WITHOUT EXPERIENCE REPLAY
+                # WITHOUT EXPERIENCE REPLAY
 
                 # Obtain the Q' values by feeding the new state through our network
                 Q1 = sess.run(Qout, feed_dict={inputs1: np.identity(state_size)[s1:s1 + 1]})

@@ -19,6 +19,17 @@ def visualize_policy_FL(policy):
             visu += 'U'
     print(visu)
 
+def run_episode_FL(env, policy):
+    """ Runs an episode and returns the total reward """
+    state = env.reset()
+    total_reward = 0
+    while True:
+        action = policy[state]
+        state, reward, done, _ = env.step(action)
+        total_reward += reward
+        if done:
+            break
+    return total_reward
 
 def run_episode(env, policy):
     """ Runs an episode and returns the total reward """
@@ -36,7 +47,7 @@ def run_episode(env, policy):
 
 def average_n_episodes(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
-    scores = [run_episode(env, policy) for _ in range(n_eval)]
+    scores = [run_episode_FL(env, policy) for _ in range(n_eval)]
     return np.mean(scores)
 
 
@@ -83,20 +94,22 @@ def extract_policy_RM(env, U, gamma):
     policy = np.zeros(env.nS)
     for state_idx in range(env.nS):
         state = env.to_coordinate(state_idx)
-        if U[state_idx] == 0.00000000e+00:
-            policy[state_idx] == 0
-        else:
-            list_sum = np.zeros(env.nA)
-            for a in range(env.nA):
-                for p, s_prime, r, _ in env.P[state][a]:
-                    list_sum[a] += p * (r + gamma * U[env.to_idx(*s_prime)])
-            policy[state_idx] = np.argmax(list_sum)
-            # policy[s] = 50 + 20*policy[s]
+        # if U[state_idx] == 0.00000000e+00:
+        # policy[state_idx] == 0
+        # else:
+        list_sum = np.zeros(env.nA)
+        for idx_a in range(env.nA):
+            action = env.A[idx_a]
+            for p, s_prime, r, _ in env.P[state][action]:
+                list_sum[idx_a] += p * (r + gamma * U[env.to_idx(*s_prime)])
+        idx_best_a = np.argmax(list_sum)
+        policy[state_idx] = env.A[idx_best_a]
     return policy
 
 
 def visualize_policy_RM(P, T, C):
     P = np.reshape(P, (T, C))
+    P = P[:T - 1, :C - 1]
     plt.imshow(P, aspect='auto')
     plt.title("Prices coming from the optimal policy")
     plt.xlabel('Number of bookings')
@@ -119,3 +132,19 @@ def q_to_policy_RM(Q):
     # policy[s] = 50 + 20*policy[s]
 
     return np.array(policy)
+
+
+def difference_between_policies(p1, p2):
+    Error = 0
+    for k in range(len(p1)):
+        Error += abs(p1[k] - p2[k])
+    return Error
+
+
+def plot_evolution_difference_between_policies(X, P):
+    plt.plot(X, P)
+    plt.title("Evolution of the difference with the optimal policy")
+    plt.xlabel("Number of episodes")
+    plt.ylabel("Difference with the optimal policy")
+    plt.grid()
+    return plt.show()
