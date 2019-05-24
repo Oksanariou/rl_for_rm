@@ -44,10 +44,14 @@ def run_episode(env, policy):
             break
     return total_reward
 
+def average_n_episodes_FL(env, policy, n_eval):
+    """ Runs n episodes and returns the average of the n total rewards"""
+    scores = [run_episode_FL(env, policy) for _ in range(n_eval)]
+    return np.mean(scores)
 
 def average_n_episodes(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
-    scores = [run_episode_FL(env, policy) for _ in range(n_eval)]
+    scores = [run_episode(env, policy) for _ in range(n_eval)]
     return np.mean(scores)
 
 
