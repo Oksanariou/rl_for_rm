@@ -1,13 +1,27 @@
 import numpy as np
 import random
+from scipy.special import softmax
+import matplotlib.pyplot as plt
 
 from visualization_and_metrics import visualisation_value_RM, extract_policy_RM, visualize_policy_RM, \
     average_n_episodes, difference_between_policies
 
 
-def q_learning(env, alpha, gamma, nb_episodes, epsilon, epsilon_min, epsilon_decay, P_ref):
+def softmax_(env, Q, state, temp):
+    sum = 0
+    proba_actions = []
+    for k in range(env.action_space.n):
+        sum += np.exp(Q[state][k] / temp)
+    for k in range(env.action_space.n):
+        proba_actions.append(np.exp(Q[state][k] / temp) / sum)
+    return proba_actions
+
+
+def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, epsilon_min, epsilon_decay, P_ref, temp):
     # Initialize the Q-table with zeros
-    Q = np.zeros([env.nS, env.action_space.n])
+    Q = np.ones([env.nS, env.action_space.n])
+    M = np.ones([env.nS, env.action_space.n])
+    Q[:] = 0
     diff_with_policy_opt_list = []
     nb_episodes_list = []
 
@@ -15,15 +29,18 @@ def q_learning(env, alpha, gamma, nb_episodes, epsilon, epsilon_min, epsilon_dec
         state = env.set_random_state()
 
         state_idx = env.to_idx(*state)
-
         done = False
         while not done:
-            # The action associated to s is the one that provides the best Q-value
-            # with a proba 1-epsilon and is random with a proba epsilon
+            # action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
+
+            # Epsilon_greedy
             if random.random() < 1 - epsilon:
                 action_idx = np.argmax(Q[state_idx])
             else:
-                action_idx = np.random.randint(env.action_space.n)
+                proba_actions = softmax(np.array(Q[state_idx] / temp))
+                action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
+                # action_idx = np.random.randint(env.action_space.n)
+
             action = env.A[action_idx]
 
             # We get our transition <s, a, r, s'>
@@ -34,6 +51,8 @@ def q_learning(env, alpha, gamma, nb_episodes, epsilon, epsilon_min, epsilon_dec
             old_value = Q[state_idx, action_idx]
             new_value = (r + gamma * np.max(Q[next_state_idx]))
             Q[state_idx, action_idx] = alpha * new_value + (1 - alpha) * old_value
+
+            M[state_idx, action_idx] += 1
 
             state_idx = next_state_idx
 
@@ -52,9 +71,15 @@ def q_learning(env, alpha, gamma, nb_episodes, epsilon, epsilon_min, epsilon_dec
             diff_with_policy_opt_list.append(difference_with_optimal_policy)
             nb_episodes_list.append(episode)
 
-        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+            proba_1 = softmax(np.array(Q[50]/temp))
+            proba_2 = softmax(np.array(Q[450] / temp))
+            plt.plot(proba_1), plt.show()
+            plt.plot(proba_2), plt.show()
 
-    return Q, nb_episodes_list, diff_with_policy_opt_list
+        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+        alpha = max(alpha_min, alpha * alpha_decay)
+
+    return Q, nb_episodes_list, diff_with_policy_opt_list, M
 
 
 def q_to_v(env, Q_table):
