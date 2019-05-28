@@ -87,28 +87,29 @@ def to_onehot(size, value):
     return my_onehot
 
 
-def trainer(env, epochs=1000, batch_size=40, gamma=0.975, epsilon=1, epsilon_min=0.1, epsilon_decay=0.99, state_size=2):
+def trainer(env, Q_ref, epochs=1000, batch_size=40, gamma=0.975, epsilon=1, epsilon_min=0.1, epsilon_decay=0.99, state_size=2):
     critic = CriticNetwork(state_size)
     actor = ActorNetwork(state_size, env.nA)
 
     for i in tqdm(range(epochs)):
         state = env.set_random_state()
-        state = np.reshape(state, [1, state_size])
         done = False
 
         while (not done):
-            value_state = critic.model.predict(state)[0]
+            state_idx = env.to_idx(*state)
+            state_reshaped = np.reshape(state, [1, state_size])
+            value_state = critic.model.predict(state_reshaped)[0]
 
             if (random.random() < epsilon):
                 action_idx = np.random.randint(0, env.nA)
             else:
-                qval = actor.model.predict(state)[0]
+                qval = actor.model.predict(state_reshaped)[0]
                 action_idx = (np.argmax(qval))
             action = env.A[action_idx]
 
             next_state, r, done, info = env.step(action)
-            next_state = np.reshape(next_state, [1, state_size])
-            value_next_state = critic.model.predict(next_state)[0]
+            next_state_reshape = np.reshape(next_state, [1, state_size])
+            value_next_state = critic.model.predict(next_state_reshape)[0]
 
             if not done:  # Non-terminal state.
                 target = r + (gamma * value_next_state)
@@ -116,13 +117,14 @@ def trainer(env, epochs=1000, batch_size=40, gamma=0.975, epsilon=1, epsilon_min
                 target = r
             error = target - value_state
 
-            critic.remember(state, target)
+            critic.remember(state_reshaped, target)
 
-            old_qval = actor.model.predict(state)[0]
+            old_qval = actor.model.predict(state_reshaped)[0]
             y = np.zeros((1, env.nA))
             y[:] = old_qval[:]
-            y[0][action_idx] = error
-            actor.model.fit(state, y, epochs=1, verbose=0)
+            #y[0][action_idx] = error
+            y[0][action_idx] = Q_ref[state_idx][action_idx]
+            actor.model.fit(state_reshaped, y, epochs=1, verbose=0)
 
             if (len(critic.memory) >= batch_size):
                 critic.replay(batch_size)
@@ -131,13 +133,13 @@ def trainer(env, epochs=1000, batch_size=40, gamma=0.975, epsilon=1, epsilon_min
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
 
         if i % int(epochs / 10) == 0:
-            values, policy = extract_values_policy(env, actor.model)
+            values, policy = extract_values_policy(env, actor.model, state_size)
             visualisation_value_RM(values, env.T, env.C)
             visualize_policy_RM(policy, env.T, env.C)
     return actor.model
 
 
-def extract_values_policy(env, network):
+def extract_values_policy(env, network, state_size):
     policy, values = [], []
     for state_idx in range(env.nS):
         state = env.to_coordinate(state_idx)
@@ -172,7 +174,7 @@ if __name__ == '__main__':
 
     visualizing_epsilon_decay(epochs, epsilon, epsilon_min, epsilon_decay)
 
-    trained_actor_network = trainer(env, epochs, batch_size, gamma, epsilon, epsilon_min, epsilon_decay, state_size)
+    trained_actor_network = trainer(env, P_ref, epochs, batch_size, gamma, epsilon, epsilon_min, epsilon_decay, state_size)
     values, policy = extract_values_policy(env, trained_actor_network)
     visualisation_value_RM(values, env.T, env.C)
     visualize_policy_RM(policy, env.T, env.C)

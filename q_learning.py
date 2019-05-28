@@ -37,9 +37,9 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
             if random.random() < 1 - epsilon:
                 action_idx = np.argmax(Q[state_idx])
             else:
-                proba_actions = softmax(np.array(Q[state_idx] / temp))
-                action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
-                # action_idx = np.random.randint(env.action_space.n)
+                #proba_actions = softmax(np.array(Q[state_idx] / temp))
+                #action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
+                action_idx = np.random.randint(env.action_space.n)
 
             action = env.A[action_idx]
 
@@ -58,9 +58,9 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
 
         if episode % int(nb_episodes / 10) == 0:
             v = q_to_v(env, Q)
-            # visualisation_value_RM(v, env.T, env.C)
+            #visualisation_value_RM(v, env.T, env.C)
             policy = extract_policy_RM(env, v, gamma)
-            # visualize_policy_RM(policy, env.T, env.C)
+            #visualize_policy_RM(policy, env.T, env.C)
 
             N = 1000
             revenue = average_n_episodes(env, policy, N)
@@ -71,10 +71,10 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
             diff_with_policy_opt_list.append(difference_with_optimal_policy)
             nb_episodes_list.append(episode)
 
-            proba_1 = softmax(np.array(Q[50]/temp))
-            proba_2 = softmax(np.array(Q[450] / temp))
-            plt.plot(proba_1), plt.show()
-            plt.plot(proba_2), plt.show()
+            # proba_1 = softmax(np.array(Q[50]/temp))
+            # proba_2 = softmax(np.array(Q[450] / temp))
+            # plt.plot(proba_1), plt.show()
+            # plt.plot(proba_2), plt.show()
 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         alpha = max(alpha_min, alpha * alpha_decay)

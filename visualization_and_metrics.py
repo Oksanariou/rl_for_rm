@@ -152,3 +152,14 @@ def plot_evolution_difference_between_policies(X, P):
     plt.ylabel("Difference with the optimal policy")
     plt.grid()
     return plt.show()
+
+def v_to_q(env, V, gamma):
+    Q = np.zeros([env.nS, env.action_space.n])
+    for state_idx in range(env.nS):
+        for action_idx in range(env.nA):
+            state = env.to_coordinate(state_idx)
+            action = env.A[action_idx]
+            for p, s_, r, _ in env.P[state][action]:
+                next_state_idx = env.to_idx(*s_)
+                Q[state_idx][action_idx] += p*(r + gamma*V[next_state_idx])
+    return Q

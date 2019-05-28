@@ -1,6 +1,4 @@
 import numpy as np
-from visualization_and_metrics import *
-
 
 def d(f, a, lamb, A):
     return lamb * np.exp(-a * ((f / A[0]) - 1))

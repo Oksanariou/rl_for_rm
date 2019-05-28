@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def compute_value(env, t, x, V):
     d_list = []
     if x < env.C - 1:
@@ -8,8 +9,9 @@ def compute_value(env, t, x, V):
         r = 0
     for a in env.A:
         p, reward = env.proba_buy(a)
-        d_list.append(p * (r + a) + (1 - p)*V[t+1,x])
+        d_list.append(p * (r + a) + (1 - p) * V[t + 1, x])
     return np.max(d_list)
+
 
 def compute_policy(env, t, x, V):
     d_list = []
@@ -19,7 +21,7 @@ def compute_policy(env, t, x, V):
         r = 0
     for a in env.A:
         p, reward = env.proba_buy(a)
-        d_list.append(p * (r + a) + (1 - p)*V[t+1,x])
+        d_list.append(p * (r + a) + (1 - p) * V[t + 1, x])
     action_idx = np.argmax(d_list)
     return env.A[action_idx]
 
