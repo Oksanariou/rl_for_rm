@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def value_iteration(env, max_iter, epsilon):
     U = np.zeros(env.nS)
     for i in range(max_iter):
@@ -12,11 +11,11 @@ def value_iteration(env, max_iter, epsilon):
             U[state_idx] = max(q_sa)
 
         delta = np.sum(np.fabs(prev_U - U))
-        if delta > epsilon:
-            print("delta = {:.2}".format(delta))
-        else:
-            print("Converged at " + str(i))
-            break
+        # if delta > epsilon:
+        #     print("delta = {:.2}".format(delta))
+        # else:
+        #     print("Converged at " + str(i))
+        #     break
 
     return U
 
