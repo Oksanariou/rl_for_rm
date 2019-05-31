@@ -4,7 +4,7 @@ from scipy.special import softmax
 import matplotlib.pyplot as plt
 
 from visualization_and_metrics import visualisation_value_RM, extract_policy_RM, visualize_policy_RM, \
-    average_n_episodes, difference_between_policies
+    average_n_episodes, difference_between_policies, q_to_policy_RM
 
 
 def softmax_(env, Q, state, temp):
@@ -58,16 +58,15 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
 
         if episode % int(nb_episodes / 10) == 0:
             v = q_to_v(env, Q)
-            #visualisation_value_RM(v, env.T, env.C)
-            policy = extract_policy_RM(env, v, gamma)
-            #visualize_policy_RM(policy, env.T, env.C)
+            # visualisation_value_RM(v, env.T, env.C)
+            policy = q_to_policy_RM(env, Q)
+            # visualize_policy_RM(policy, env.T, env.C)
 
             N = 1000
             revenue = average_n_episodes(env, policy, N)
             print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
             difference_with_optimal_policy = difference_between_policies(policy, P_ref)
-            print("Difference with the optimal policy after {} episodes : {}".format(episode,
-                                                                                     difference_with_optimal_policy))
+            print("Difference with the optimal policy after {} episodes : {}".format(episode, difference_with_optimal_policy))
             diff_with_policy_opt_list.append(difference_with_optimal_policy)
             nb_episodes_list.append(episode)
 

@@ -4,7 +4,7 @@ from dynamic_programming import dynamic_programming
 from dynamic_programming_env import dynamic_programming_env
 from q_learning import q_learning, q_to_v
 from visualization_and_metrics import visualisation_value_RM, v_to_q, visualize_policy_RM, average_n_episodes, \
-    visualizing_epsilon_decay, extract_policy_RM, plot_evolution_difference_between_policies
+    visualizing_epsilon_decay, extract_policy_RM, plot_evolution_difference_between_policies, q_to_policy_RM
 import matplotlib.pyplot as plt
 #from actor_critic_keras import trainer, extract_values_policy
 from deep_q_learning_tf_RM import dql
@@ -13,15 +13,15 @@ from policy_iteration import policy_iteration
 from actor_critic_to_solve_RM_game import train_actor_critic
 
 if __name__ == '__main__':
-    micro_times = 50
+    data_collection_points = 50
+    micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 81, 10))
-    alpha = 0.7
-    lamb = 0.8
+    actions = tuple(k for k in range(50, 231, 20))
+    alpha = 0.8
+    lamb = 0.7
 
-    env = gym.make('gym_RMDCP:RMDCP-v0', micro_times=micro_times, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+    env = gym.make('gym_RM:RM-v0', micro_times = data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     print(env.P)
-
     # V, P_ref = dynamic_programming(env.T, env.C, env.alpha, env.lamb, env.A)
     # visualisation_value_RM(V, env.T, env.C)
     # visualize_policy_RM(P_ref, env.T, env.C)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # visualize_policy_RM(policy, T, C)
     # #print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
 
-    # alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 1
+    # alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
     # nb_episodes = 500000
     # epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.999995
     # temp = 100
@@ -65,6 +65,7 @@ if __name__ == '__main__':
     # q_table, nb_episodes_list, diff_with_policy_opt_list, M = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
     #                                                                      nb_episodes, epsilon,
     #                                                                      epsilon_min, epsilon_decay, P_ref, temp)
+    # #policy = q_to_policy_RM(env, q_table)
     # v = q_to_v(env, q_table)
     # visualisation_value_RM(v, env.T, env.C)
     # policy = extract_policy_RM(env, v, gamma)
@@ -77,15 +78,15 @@ if __name__ == '__main__':
     # plt.colorbar()
     # plt.show()
 
-    # max_iter = 100000
-    # epsilon = 1e-20
-    # gamma = 0.99
-    #
-    # v = value_iteration(env, max_iter, epsilon)
-    # visualisation_value_RM(v, env.T, env.C)
-    # policy = extract_policy_RM(env, v, gamma)
-    # visualize_policy_RM(policy, env.T, env.C)
-    # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
+    max_iter = 100000
+    epsilon = 1e-20
+    gamma = 0.99
+
+    v = value_iteration(env, max_iter, epsilon)
+    visualisation_value_RM(v, env.T, env.C)
+    policy = extract_policy_RM(env, v, gamma)
+    visualize_policy_RM(policy, env.T, env.C)
+    print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
     #
     # max_iter = 100000
     # epsilon = 1e-20

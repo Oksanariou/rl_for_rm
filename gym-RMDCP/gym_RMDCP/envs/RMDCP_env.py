@@ -1,26 +1,30 @@
 import gym
 import numpy as np
+import random
 from gym import spaces
 from gym.utils import seeding
 
-default_micro_times = 500
+default_data_collection_points = 500
 default_capacity = 50
 default_actions = tuple(k for k in range(50, 231, 20))
 default_alpha = 0.66
 default_lambda = 0.2
+default_micro_times = 20
 
 
 class RMDCPEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, micro_times=default_micro_times, capacity=default_capacity, actions=default_actions,
+    def __init__(self, data_collection_points=default_data_collection_points, capacity=default_capacity,
+                 micro_times=default_micro_times, actions=default_actions,
                  alpha=default_alpha, lamb=default_lambda):
 
-        super(RMEnv, self).__init__()
+        super(RMDCPEnv, self).__init__()
 
-        self.T = micro_times
+        self.T = data_collection_points
         self.C = capacity
-        self.nS = micro_times * capacity  # number of states
+        self.M = micro_times
+        self.nS = data_collection_points * capacity  # number of states
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
@@ -99,14 +103,24 @@ class RMDCPEnv(gym.Env):
     def step(self, a):
         r = 0
         state = self.s
+        done = False
         t, x = state[0], state[1]
-        p = self.proba_buy(a)
-        for m in self.micro_times:
-            if random.random() < p:
-                r += p
-                x += 1
-        new_state = (t, x)
-        return new_state, r,
+        if t == self.T - 1 or x >= self.C - 1:
+            new_state, r, done = state, 0, True
+        else:
+            for m in range(self.M):
+                p, _ = self.proba_buy(a)
+                transition_idx = self.categorical_sample([p, 1 - p])
+                if transition_idx == 0:
+                    r += a
+                    x += 1
+                    if x >= self.C - 1:
+                        break
+            new_state = (t + 1, x)
+            if t+1 == self.T - 2 or x >= self.C - 2:
+                done = True
+        self.s = new_state
+        return new_state, r, done, 0
 
     def inc_buy(self, t, x):
         """Returns the next state when the person buys the ticket"""

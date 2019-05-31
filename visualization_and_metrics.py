@@ -122,19 +122,11 @@ def visualize_policy_RM(P, T, C):
     return plt.show()
 
 
-def q_to_policy_RM(Q):
+def q_to_policy_RM(env, Q):
     policy = []
     for l in Q:
-        # if l[0] == l[1] == l[2] == l[3] == l[4] == l[5] == l[6] == l[7] == l[8] == l[9] == 0.0:
-        # policy.append(10)
-        # else:
-        for k in range(0, len(l)):
-            if l[k] == max(l):
-                policy.append(k)
-                break
-    # for s in range(len(policy)):
-    # policy[s] = 50 + 20*policy[s]
-
+        idx_action = np.argmax(l)
+        policy.append(env.A[idx_action])
     return np.array(policy)
 
 
