@@ -155,3 +155,18 @@ def v_to_q(env, V, gamma):
                 next_state_idx = env.to_idx(*s_)
                 Q[state_idx][action_idx] += p*(r + gamma*V[next_state_idx])
     return Q
+
+def reshape_matrix_of_visits(M, env):
+    X = []
+    Y = []
+    Z = []
+    values = []
+    for x in range(M.shape[0]):
+        for y in range(M.shape[1]):
+            for z in range(M.shape[2]):
+                if M[x][y][z] != 0:
+                    X.append(x)
+                    Y.append(y)
+                    Z.append(env.A[z])
+                    values.append(M[x][y][z])
+    return X, Y, Z, values

@@ -20,7 +20,8 @@ def softmax_(env, Q, state, temp):
 def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, epsilon_min, epsilon_decay, P_ref, temp):
     # Initialize the Q-table with zeros
     Q = np.ones([env.nS, env.action_space.n])
-    M = np.ones([env.nS, env.action_space.n])
+    M = np.zeros([env.T, env.C, env.action_space.n])
+    trajectories = np.zeros([env.T, env.C])
     Q[:] = 0
     diff_with_policy_opt_list = []
     nb_episodes_list = []
@@ -51,8 +52,9 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
             old_value = Q[state_idx, action_idx]
             new_value = (r + gamma * np.max(Q[next_state_idx]))
             Q[state_idx, action_idx] = alpha * new_value + (1 - alpha) * old_value
-
-            M[state_idx, action_idx] += 1
+            t, x = env.to_coordinate(state_idx)
+            M[t, x, action_idx] += 1
+            trajectories[t][x] += 1
 
             state_idx = next_state_idx
 
@@ -78,7 +80,7 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         alpha = max(alpha_min, alpha * alpha_decay)
 
-    return Q, nb_episodes_list, diff_with_policy_opt_list, M
+    return Q, nb_episodes_list, diff_with_policy_opt_list, M, trajectories
 
 
 def q_to_v(env, Q_table):

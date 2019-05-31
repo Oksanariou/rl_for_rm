@@ -47,33 +47,7 @@ class RMDCPEnv(gym.Env):
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
         P = {(t, x): {a: [] for a in A} for t in range(T) for x in range(C)}
 
-        # Filling the transitions dictionnary P
-        for t in range(T):
-            for x in range(C):
-                s = (t, x)
-                for a in A:
-                    li = P[s][a]
-                    if t == T - 1 or x == C - 1:  # Terminal states, the game ends
-                        li.append((1.0, s, 0, True))
-                    else:
-                        for b in range(
-                                2):  # If the agent is in a state s with the action a then there are two possible states where he might end in
-                            if b == 0:  # The person buys the ticket
-                                new_t, new_x = self.inc_buy(t, x)
-                                new_state = (new_t, new_x)
-                                p, r = self.proba_buy(a)
-                                done = False
-                                if t == T - 2 or x == C - 2:
-                                    done = True
-                                li.append((p, new_state, r, done))
-                            else:  # The person does not buy the ticket
-                                new_t, new_x = self.inc_not_buy(t, x)
-                                new_state = (new_t, new_x)
-                                p, r = self.proba_not_buy(a)
-                                done = False
-                                if t == T - 2:
-                                    done = True
-                                li.append((p, new_state, r, done))
+        # TODO: Filling the transitions dictionnary P
 
         return P
 
@@ -117,24 +91,10 @@ class RMDCPEnv(gym.Env):
                     if x >= self.C - 1:
                         break
             new_state = (t + 1, x)
-            if t+1 == self.T - 2 or x >= self.C - 2:
+            if t+1 == self.T - 1 or x >= self.C - 1:
                 done = True
         self.s = new_state
         return new_state, r, done, 0
-
-    def inc_buy(self, t, x):
-        """Returns the next state when the person buys the ticket"""
-        # t = min(t + 1, self.T - 1)
-        # x = min(x + 1, self.C - 1)
-        t = t + 1
-        x = x + 1
-        return t, x
-
-    def inc_not_buy(self, t, x):
-        """Returns the next state when the person does not buys the ticket"""
-        # t = min(t + 1, self.T - 1)
-        t = t + 1
-        return t, x
 
     def proba_buy(self, a):
         """Returns:
