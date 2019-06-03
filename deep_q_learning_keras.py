@@ -45,14 +45,14 @@ class DQNAgent:
     def set_target(self):
         self.target_model.set_weights(self.model.get_weights())
 
-    def get_target_q_value(self, next_state):
+    def get_discounted_max_q_value(self, next_state):
 
         next_q_values = self.model.predict(next_state)
-        action = np.argmax(next_q_values[0])
+        action_idx = np.argmax(next_q_values[0])
 
-        q_value = self.target_model.predict(next_state)[0][action]
+        max_target_value = self.target_model.predict(next_state)[0][action_idx]
 
-        return reward + self.gamma * q_value
+        return self.gamma * max_target_value
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -69,12 +69,11 @@ class DQNAgent:
 
         state_batch, q_values_batch = [], []
 
-        for state, action, reward, next_state, done in minibatch:
-
-            q_value = self.get_target_q_value(next_state)
+        for state, action_idx, reward, next_state, done in minibatch:
+            q_value = reward + self.get_discounted_max_q_value(next_state)
 
             q_values = self.model.predict(state)
-            q_values[0][action] = reward if done else q_value
+            q_values[0][action_idx] = reward if done else q_value
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
@@ -86,14 +85,15 @@ class DQNAgent:
 
         self.replay_count += 1
         if self.replay_count % self.target_model_update == 0:
+            print("Updating target with current model")
             self.set_target()
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def init(self, X, Y, epochs):
-        history = self.model.fit(X, Y, batch_size, epochs=epochs, verbose=0)
-        self.loss = history.history['loss'][0]
+        self.model.fit(X, Y, batch_size, epochs=epochs, verbose=0)
+        self.set_target()
 
 
 def compute_q_table(env, model):
@@ -106,11 +106,13 @@ def compute_q_table(env, model):
 
 
 def q_to_policy(env, Q):
-    return np.argmax(Q, axis=1)
+    return [env.A[action_idx] for action_idx in np.argmax(Q_table, axis=1)]
+    # return np.argmax(Q, axis=1)
 
 
 def visualize_V_RM(Q, T, C):
     P = np.reshape(np.max(Q, axis=1), (T, C))
+    plt.figure()
     plt.imshow(P, aspect='auto')
     plt.title("Expected reward")
     plt.xlabel('Number of bookings')
@@ -119,7 +121,7 @@ def visualize_V_RM(Q, T, C):
     return plt.show()
 
 
-def init_with_V(agent, env, gamma):
+def get_true_Q_table(env, gamma):
     shape = [space.n for space in env.observation_space]
     states = [(t, x) for t in range(shape[0]) for x in range(shape[1])]
 
@@ -135,10 +137,17 @@ def init_with_V(agent, env, gamma):
             q_values.append(expected_discounted_reward)
         true_Q_table.append(q_values)
 
-    true_Q_table = np.asarray(true_Q_table)
+    return np.asarray(true_Q_table), true_policy
+
+
+def init_with_V(agent, env, gamma):
+    shape = [space.n for space in env.observation_space]
+    states = [(t, x) for t in range(shape[0]) for x in range(shape[1])]
+
+    true_Q_table, true_policy = get_true_Q_table(env, gamma)
     visualize_V_RM(true_Q_table, env.T, env.C)
 
-    N = 1000
+    N = 10000
     revenue = average_n_episodes(env, true_policy.flatten(), N)
     print("Average reward over {} episodes  : {}".format(N, revenue))
 
@@ -160,6 +169,7 @@ def init_with_V(agent, env, gamma):
     Q_table = compute_q_table(env, agent.model)
     visualize_V_RM(Q_table, env.T, env.C)
 
+    plt.figure()
     plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
     plt.show()
 
@@ -188,19 +198,25 @@ if __name__ == "__main__":
 
     revenues = []
 
-    for episodes in range(nb_episodes):
+    for episode in range(nb_episodes):
 
-        Q_table = compute_q_table(env, agent.model)
-        visualize_V_RM(Q_table, env.T, env.C)
+        if episode % int(nb_episodes / 10) == 0:
+            Q_table = compute_q_table(env, agent.model)
+            visualize_V_RM(Q_table, env.T, env.C)
 
-        policy = q_to_policy(env, Q_table)
-        visualize_policy_RM(policy, env.T, env.C)
+            policy = q_to_policy(env, Q_table)
+            visualize_policy_RM(policy, env.T, env.C)
+
+            N = 1000
+            revenue = average_n_episodes(env, policy, N)
+            print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
+            revenues.append(revenue)
 
         state = env.set_random_state()
+        # state = env.reset()
         state = np.reshape(state, [1, state_size])
 
         done = False
-        revenue = 0
 
         while not done:
             action_idx = agent.act(state)
@@ -209,12 +225,8 @@ if __name__ == "__main__":
 
             agent.remember(state, action_idx, reward, next_state, done)
             state = next_state
-            revenue += reward
 
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size)
 
-        print("episode: {}/{}, revenue=: {}, loss: {:.2}, e: {:.2}".format(episodes, nb_episodes, revenue, agent.loss,
-                                                                           agent.epsilon))
-
-        revenues.append(revenue)
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon))
