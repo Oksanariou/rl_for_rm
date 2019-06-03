@@ -6,7 +6,6 @@ def value_iteration(env, max_iter, epsilon):
         prev_U = np.copy(U)
         for state_idx in range(env.nS):
             state = env.to_coordinate(state_idx)
-
             q_sa = [sum([p * (r + prev_U[env.to_idx(*s_)]) for p, s_, r, _ in env.P[state][a]]) for a in env.A]
             U[state_idx] = max(q_sa)
 

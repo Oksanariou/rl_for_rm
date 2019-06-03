@@ -3,6 +3,7 @@ import numpy as np
 import random
 from gym import spaces
 from gym.utils import seeding
+import scipy.special
 
 default_data_collection_points = 500
 default_capacity = 50
@@ -40,16 +41,47 @@ class RMDCPEnv(gym.Env):
 
         self.s = (0, 0)
 
-        self.P = self.init_transitions(self.T, self.C, self.A, self.nA, self.nS)
+        self.P = self.init_transitions(self.T, self.C, self.A)
 
-    def init_transitions(self, T, C, A, nA, nS):
+    def init_transitions(self, T, C, A):
 
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
         P = {(t, x): {a: [] for a in A} for t in range(T) for x in range(C)}
-
-        # TODO: Filling the transitions dictionnary P
-
+        for t in range(T):
+            for x in range(C):
+                s = (t, x)
+                for a in A:
+                    P[s][a] = self.transitions(s, a)
         return P
+
+    def transitions(self, state, action):
+        list_transitions = []
+        t, x = state[0], state[1]
+        done = False
+        if t == self.T - 1 or x == self.C - 1:
+            list_transitions.append((1, state, 0, True))
+        else:
+            for k in range(self.M):
+                proba_buy, _ = self.proba_buy(action)
+                proba_next_state = ((1 - proba_buy) ** (self.M - 1 - k)) * (proba_buy ** k) * scipy.special.binom(
+                    self.M - 1, k)
+                reward = k * action
+                new_t, new_x = t + 1, x + k
+                new_state = (new_t, new_x)
+                if new_t == self.T - 1 or new_x == self.C - 1:
+                    done = True
+
+                list_transitions.append((proba_next_state, new_state, reward, done))
+            if self.C - x < self.M:
+                sum_proba = 0
+                _, state_backup, reward_backup, done_backup = list_transitions[self.C - x - 1]
+                for k in range(self.M - (self.C - x)+1):
+                    sum_proba += list_transitions[self.C - x -1 + k][0]
+
+                list_transitions = list_transitions[:self.C - x -1]
+                list_transitions.append((sum_proba, state_backup, reward_backup, done_backup))
+
+        return list_transitions
 
     def to_coordinate(self, state_idx):
         t = int(int(state_idx) / self.C)
@@ -75,26 +107,32 @@ class RMDCPEnv(gym.Env):
         return self.s
 
     def step(self, a):
-        r = 0
-        state = self.s
-        done = False
-        t, x = state[0], state[1]
-        if t == self.T - 1 or x >= self.C - 1:
-            new_state, r, done = state, 0, True
-        else:
-            for m in range(self.M):
-                p, _ = self.proba_buy(a)
-                transition_idx = self.categorical_sample([p, 1 - p])
-                if transition_idx == 0:
-                    r += a
-                    x += 1
-                    if x >= self.C - 1:
-                        break
-            new_state = (t + 1, x)
-            if t+1 == self.T - 1 or x >= self.C - 1:
-                done = True
-        self.s = new_state
-        return new_state, r, done, 0
+        transitions = self.transitions(self.s, a)
+        transition_idx = self.categorical_sample([t[0] for t in transitions])
+        p, s, r, d = transitions[transition_idx]
+        self.s = s
+        return s, r, d, {"prob": p}
+
+        # r = 0
+        # state = self.s
+        # done = False
+        # t, x = state[0], state[1]
+        # if t == self.T - 1 or x >= self.C - 1:
+        #     new_state, r, done = state, 0, True
+        # else:
+        #     for m in range(self.M):
+        #         p, _ = self.proba_buy(a)
+        #         transition_idx = self.categorical_sample([p, 1 - p])
+        #         if transition_idx == 0:
+        #             r += a
+        #             x += 1
+        #             if x >= self.C - 1:
+        #                 break
+        #     new_state = (t + 1, x)
+        #     if t + 1 == self.T - 1 or x >= self.C - 1:
+        #         done = True
+        # self.s = new_state
+        # return new_state, r, done, 0
 
     def proba_buy(self, a):
         """Returns:

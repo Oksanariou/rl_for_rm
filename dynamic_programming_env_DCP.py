@@ -12,7 +12,7 @@ def compute_value(env, t, x, V):
                 r = V[t + 1, x + k]
             else:
                 r = 0
-            sum += ((1 - p) ** (env.M - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M, k)
+            sum += ((1 - p) ** (env.M-1 - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M-1, k)
         d_list.append(sum)
     return np.max(d_list)
 
@@ -27,7 +27,7 @@ def compute_policy(env, t, x, V):
                 r = V[t + 1, x + k]
             else:
                 r = 0
-            sum += ((1 - p) ** (env.M - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M, k)
+            sum += ((1 - p) ** (env.M-1 - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M-1, k)
         d_list.append(sum)
     action_idx = np.argmax(d_list)
     return env.A[action_idx]

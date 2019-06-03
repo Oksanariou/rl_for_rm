@@ -2,6 +2,7 @@ import gym
 import numpy as np
 from gym import spaces
 from gym.utils import seeding
+import scipy.special
 
 default_micro_times = 500
 default_capacity = 50
@@ -72,6 +73,27 @@ class RMEnv(gym.Env):
                                 li.append((p, new_state, r, done))
 
         return P
+
+    def transitions(self, state, action):
+        list_transitions = []
+        t, x = state[0], state[1]
+        done = False
+        if t == self.T - 1 or x == self.C - 1:
+            list_transitions.append((1, state, 0, True))
+        else:
+            for k in range(2):
+                proba_buy, _ = self.proba_buy(action)
+                proba_next_state = ((1 - proba_buy) ** (1 - k)) * (proba_buy ** k) * scipy.special.binom(1, k)
+                reward = k * action
+                new_t, new_x = t + 1, x + k
+                new_state = (new_t, new_x)
+                if new_t == self.T - 1 or new_x == self.C - 1:
+                    done = True
+                if new_x > self.C - 1:
+                    break
+                list_transitions.append((proba_next_state, new_state, reward, done))
+
+        return list_transitions
 
     def to_coordinate(self, state_idx):
         t = int(int(state_idx) / self.C)

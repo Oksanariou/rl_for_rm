@@ -16,9 +16,9 @@ from actor_critic_to_solve_RM_game import train_actor_critic
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 if __name__ == '__main__':
-    data_collection_points = 5
-    micro_times = 4
-    capacity = 5
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
     actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.4
     lamb = 0.2
@@ -26,19 +26,7 @@ if __name__ == '__main__':
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
     # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
-    print(env.s)
-    print(env.P[(3,3)][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
-
+    print(env.P)
     # V, P_ref = dynamic_programming(env.T, env.C, env.alpha, env.lamb, env.A)
     # visualisation_value_RM(V, env.T, env.C)
     # visualize_policy_RM(P_ref, env.T, env.C)
@@ -51,7 +39,6 @@ if __name__ == '__main__':
     visualize_policy_RM(P_ref, env.T, env.C)
     P_ref = P_ref.reshape(env.T * env.C)
     print("Average reward over 1000 episodes : " + str(average_n_episodes(env, P_ref, 1000)))
-
     # q_model = v_to_q(env, V, 1)
     # v = q_to_v(env, q_model)
     # p = extract_policy_RM(env, v, 1)
@@ -105,15 +92,15 @@ if __name__ == '__main__':
     # plt.colorbar()
     # plt.show()
 
-    max_iter = 100000
-    epsilon = 1e-20
-    gamma = 1
-
-    v = value_iteration(env, max_iter, epsilon)
-    visualisation_value_RM(v, env.T, env.C)
-    policy = extract_policy_RM(env, v, gamma)
-    visualize_policy_RM(policy, env.T, env.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
+    # max_iter = 100000
+    # epsilon = 1e-20
+    # gamma = 0.99
+    #
+    # v = value_iteration(env, max_iter, epsilon)
+    # visualisation_value_RM(v, env.T, env.C)
+    # policy = extract_policy_RM(env, v, gamma)
+    # visualize_policy_RM(policy, env.T, env.C)
+    # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
     #
     # max_iter = 100000
     # epsilon = 1e-20
