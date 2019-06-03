@@ -122,19 +122,11 @@ def visualize_policy_RM(P, T, C):
     return plt.show()
 
 
-def q_to_policy_RM(Q):
+def q_to_policy_RM(env, Q):
     policy = []
     for l in Q:
-        # if l[0] == l[1] == l[2] == l[3] == l[4] == l[5] == l[6] == l[7] == l[8] == l[9] == 0.0:
-        # policy.append(10)
-        # else:
-        for k in range(0, len(l)):
-            if l[k] == max(l):
-                policy.append(k)
-                break
-    # for s in range(len(policy)):
-    # policy[s] = 50 + 20*policy[s]
-
+        idx_action = np.argmax(l)
+        policy.append(env.A[idx_action])
     return np.array(policy)
 
 
@@ -152,3 +144,29 @@ def plot_evolution_difference_between_policies(X, P):
     plt.ylabel("Difference with the optimal policy")
     plt.grid()
     return plt.show()
+
+def v_to_q(env, V, gamma):
+    Q = np.zeros([env.nS, env.action_space.n])
+    for state_idx in range(env.nS):
+        for action_idx in range(env.nA):
+            state = env.to_coordinate(state_idx)
+            action = env.A[action_idx]
+            for p, s_, r, _ in env.P[state][action]:
+                next_state_idx = env.to_idx(*s_)
+                Q[state_idx][action_idx] += p*(r + gamma*V[next_state_idx])
+    return Q
+
+def reshape_matrix_of_visits(M, env):
+    X = []
+    Y = []
+    Z = []
+    values = []
+    for x in range(M.shape[0]):
+        for y in range(M.shape[1]):
+            for z in range(M.shape[2]):
+                if M[x][y][z] != 0:
+                    X.append(x)
+                    Y.append(y)
+                    Z.append(env.A[z])
+                    values.append(M[x][y][z])
+    return X, Y, Z, values
