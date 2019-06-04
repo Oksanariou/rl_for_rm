@@ -5,7 +5,7 @@ from dynamic_programming_env import dynamic_programming_env
 from q_learning import q_learning, q_to_v
 from visualization_and_metrics import visualisation_value_RM, v_to_q, visualize_policy_RM, average_n_episodes, \
     visualizing_epsilon_decay, extract_policy_RM, plot_evolution_difference_between_policies, q_to_policy_RM, \
-    reshape_matrix_of_visits
+    reshape_matrix_of_visits, from_microtimes_to_DCP
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # from actor_critic_keras import trainer, extract_values_policy
@@ -16,41 +16,34 @@ from actor_critic_to_solve_RM_game import train_actor_critic
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 if __name__ == '__main__':
-    data_collection_points = 5
-    micro_times = 4
-    capacity = 5
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
     actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.4
+    alpha = 0.66
     lamb = 0.2
 
-    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
+    env_DCP = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-    #env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
-    print(env.s)
-    print(env.P[(3,3)][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
-    print(env.s)
-    print(env.P[env.s][50])
-    env.step(50)
+    env_microtimes = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+    print(env_DCP.P)
+    env_DCP.visualize_proba_actions()
 
-    # V, P_ref = dynamic_programming(env.T, env.C, env.alpha, env.lamb, env.A)
-    # visualisation_value_RM(V, env.T, env.C)
-    # visualize_policy_RM(P_ref, env.T, env.C)
-    # P_ref = P_ref.reshape(env.T * env.C)
-    # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, P_ref, 1000)))
+    V, P_ref = dynamic_programming(env_microtimes.T, env_microtimes.C, env_microtimes.alpha, env_microtimes.lamb, env_microtimes.A)
+    visualisation_value_RM(V, env_microtimes.T, env_microtimes.C)
+    visualize_policy_RM(P_ref, env_microtimes.T, env_microtimes.C)
+    P_ref = P_ref.reshape(env_microtimes.T * env_microtimes.C)
+    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_microtimes, P_ref, 1000)))
 
-    V, P_ref = dynamic_programming_env_DCP(env)
-    V = V.reshape(env.T * env.C)
-    visualisation_value_RM(V, env.T, env.C)
-    visualize_policy_RM(P_ref, env.T, env.C)
-    P_ref = P_ref.reshape(env.T * env.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env, P_ref, 1000)))
+    # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
+    # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
+
+    V, P_ref = dynamic_programming_env_DCP(env_DCP)
+    V = V.reshape(env_DCP.T * env_DCP.C)
+    visualisation_value_RM(V, env_DCP.T, env_DCP.C)
+    visualize_policy_RM(P_ref, env_DCP.T, env_DCP.C)
+    P_ref = P_ref.reshape(env_DCP.T * env_DCP.C)
+    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_DCP, P_ref, 1000)))
 
     # q_model = v_to_q(env, V, 1)
     # v = q_to_v(env, q_model)
@@ -109,11 +102,11 @@ if __name__ == '__main__':
     epsilon = 1e-20
     gamma = 1
 
-    v = value_iteration(env, max_iter, epsilon)
-    visualisation_value_RM(v, env.T, env.C)
-    policy = extract_policy_RM(env, v, gamma)
-    visualize_policy_RM(policy, env.T, env.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
+    v = value_iteration(env_DCP, max_iter, epsilon)
+    visualisation_value_RM(v, env_DCP.T, env_DCP.C)
+    policy = extract_policy_RM(env_DCP, v, gamma)
+    visualize_policy_RM(policy, env_DCP.T, env_DCP.C)
+    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_DCP, policy, 1000)))
     #
     # max_iter = 100000
     # epsilon = 1e-20

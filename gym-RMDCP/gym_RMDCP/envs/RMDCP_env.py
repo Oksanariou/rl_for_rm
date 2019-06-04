@@ -4,6 +4,7 @@ import random
 from gym import spaces
 from gym.utils import seeding
 import scipy.special
+import matplotlib.pyplot as plt
 
 default_data_collection_points = 500
 default_capacity = 50

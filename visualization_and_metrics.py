@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy import stats
 
 def visualize_policy_FL(policy):
     visu = ''
@@ -19,6 +19,7 @@ def visualize_policy_FL(policy):
             visu += 'U'
     print(visu)
 
+
 def run_episode_FL(env, policy):
     """ Runs an episode and returns the total reward """
     state = env.reset()
@@ -30,6 +31,7 @@ def run_episode_FL(env, policy):
         if done:
             break
     return total_reward
+
 
 def run_episode(env, policy):
     """ Runs an episode and returns the total reward """
@@ -44,10 +46,12 @@ def run_episode(env, policy):
             break
     return total_reward
 
+
 def average_n_episodes_FL(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
     scores = [run_episode_FL(env, policy) for _ in range(n_eval)]
     return np.mean(scores)
+
 
 def average_n_episodes(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
@@ -145,6 +149,7 @@ def plot_evolution_difference_between_policies(X, P):
     plt.grid()
     return plt.show()
 
+
 def v_to_q(env, V, gamma):
     Q = np.zeros([env.nS, env.action_space.n])
     for state_idx in range(env.nS):
@@ -153,8 +158,9 @@ def v_to_q(env, V, gamma):
             action = env.A[action_idx]
             for p, s_, r, _ in env.P[state][action]:
                 next_state_idx = env.to_idx(*s_)
-                Q[state_idx][action_idx] += p*(r + gamma*V[next_state_idx])
+                Q[state_idx][action_idx] += p * (r + gamma * V[next_state_idx])
     return Q
+
 
 def reshape_matrix_of_visits(M, env):
     X = []
@@ -170,3 +176,18 @@ def reshape_matrix_of_visits(M, env):
                     Z.append(env.A[z])
                     values.append(M[x][y][z])
     return X, Y, Z, values
+
+
+def from_microtimes_to_DCP(policy_microtimes, env_microtimes, env_DCP, way):
+    policy_microtimes = policy_microtimes.reshape(env_microtimes.T, env_microtimes.C)
+    policy_DCP = np.zeros((env_DCP.T, env_DCP.C), int)
+    for t in range(env_DCP.T):
+        for x in range(env_DCP.C):
+            if way == "median":
+                policy_DCP[t, x] = np.median(policy_microtimes[t*env_DCP.M:t*env_DCP.M+env_DCP.M,x:x+1])
+            elif way == "mean":
+                policy_DCP[t, x] = np.mean(policy_microtimes[t * env_DCP.M:t * env_DCP.M + env_DCP.M, x:x + 1])
+            else:
+                print("Specify median or mean")
+    return policy_DCP
+

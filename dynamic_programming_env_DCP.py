@@ -7,9 +7,9 @@ def compute_d_list(env, t, x, V):
     for a in env.A:
         p, reward = env.proba_buy(a)
         sum = 0
-        for k in range(env.M):
+        for k in range(env.M+1):
             r = k * a + V[t + 1, x + k] if x + k <= env.C - 1 else V[t + 1, env.C - 1] + a * (env.C - 1 - x)
-            sum += ((1 - p) ** (env.M - 1 - k)) * (p ** k) * r * scipy.special.binom(env.M - 1, k)
+            sum += ((1 - p) ** (env.M - k)) * (p ** k) * r * scipy.special.binom(env.M, k)
         d_list.append(sum)
     return d_list
 
