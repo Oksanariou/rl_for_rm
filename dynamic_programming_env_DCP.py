@@ -2,33 +2,25 @@ import numpy as np
 import scipy.special
 
 
-def compute_value(env, t, x, V):
+def compute_d_list(env, t, x, V):
     d_list = []
     for a in env.A:
         p, reward = env.proba_buy(a)
         sum = 0
         for k in range(env.M):
-            if x + k < env.C - 1:
-                r = V[t + 1, x + k]
-            else:
-                r = 0
-            sum += ((1 - p) ** (env.M-1 - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M-1, k)
+            r = k * a + V[t + 1, x + k] if x + k <= env.C - 1 else V[t + 1, env.C - 1] + a * (env.C - 1 - x)
+            sum += ((1 - p) ** (env.M - 1 - k)) * (p ** k) * r * scipy.special.binom(env.M - 1, k)
         d_list.append(sum)
+    return d_list
+
+
+def compute_value(env, t, x, V):
+    d_list = compute_d_list(env, t, x, V)
     return np.max(d_list)
 
 
 def compute_policy(env, t, x, V):
-    d_list = []
-    for a in env.A:
-        p, reward = env.proba_buy(a)
-        sum = 0
-        for k in range(env.M):
-            if x + k < env.C - 1:
-                r = V[t + 1, x + k]
-            else:
-                r = 0
-            sum += ((1 - p) ** (env.M-1 - k)) * (p ** k) * (r + k * a) * scipy.special.binom(env.M-1, k)
-        d_list.append(sum)
+    d_list = compute_d_list(env, t, x, V)
     action_idx = np.argmax(d_list)
     return env.A[action_idx]
 

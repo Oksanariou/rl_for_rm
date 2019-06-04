@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-    # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+    #env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     print(env.s)
     print(env.P[(3,3)][50])
     env.step(50)
