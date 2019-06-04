@@ -80,10 +80,9 @@ class RMDCPEnv(gym.Env):
                         remaining_proba += ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
                             self.M, k)
 
-                    proba_next_state +=  remaining_proba
+                    proba_next_state += remaining_proba
 
                 list_transitions.append((proba_next_state, new_state, total_reward, done))
-
 
         return list_transitions
 
@@ -100,7 +99,6 @@ class RMDCPEnv(gym.Env):
         return [seed]
 
     def reset(self):
-        # self.s = self.observation_space.sample()
         self.s = (0, 0)
 
         return self.s
@@ -116,27 +114,6 @@ class RMDCPEnv(gym.Env):
         p, s, r, d = transitions[transition_idx]
         self.s = s
         return s, r, d, {"prob": p}
-
-        # r = 0
-        # state = self.s
-        # done = False
-        # t, x = state[0], state[1]
-        # if t == self.T - 1 or x >= self.C - 1:
-        #     new_state, r, done = state, 0, True
-        # else:
-        #     for m in range(self.M):
-        #         p, _ = self.proba_buy(a)
-        #         transition_idx = self.categorical_sample([p, 1 - p])
-        #         if transition_idx == 0:
-        #             r += a
-        #             x += 1
-        #             if x >= self.C - 1:
-        #                 break
-        #     new_state = (t + 1, x)
-        #     if t + 1 == self.T - 1 or x >= self.C - 1:
-        #         done = True
-        # self.s = new_state
-        # return new_state, r, done, 0
 
     def proba_buy(self, a):
         """Returns:
