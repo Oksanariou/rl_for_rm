@@ -62,7 +62,8 @@ class RMDCPEnv(gym.Env):
         if t == self.T - 1 or x == self.C - 1:
             list_transitions.append((1, state, 0, True))
         else:
-            for k in range(self.M + 1):
+            k=0
+            while k <= self.M:
                 proba_buy, reward = self.proba_buy(action)
                 proba_next_state = ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
                     self.M, k)
@@ -84,6 +85,7 @@ class RMDCPEnv(gym.Env):
                     proba_next_state += remaining_proba
 
                 list_transitions.append((proba_next_state, new_state, total_reward, done))
+                k = k + 1
 
         return list_transitions
 

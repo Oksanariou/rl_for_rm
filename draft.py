@@ -20,20 +20,20 @@ if __name__ == '__main__':
     micro_times = 5
     capacity = 10
     actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.66
+    alpha = 0.4
     lamb = 0.2
 
     env_DCP = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
     env_microtimes = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
-    print(env_DCP.P)
-    env_DCP.visualize_proba_actions()
-
-    V, P_ref = dynamic_programming(env_microtimes.T, env_microtimes.C, env_microtimes.alpha, env_microtimes.lamb, env_microtimes.A)
-    visualisation_value_RM(V, env_microtimes.T, env_microtimes.C)
-    visualize_policy_RM(P_ref, env_microtimes.T, env_microtimes.C)
-    P_ref = P_ref.reshape(env_microtimes.T * env_microtimes.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_microtimes, P_ref, 1000)))
+    # print(env_DCP.P)
+    # env_DCP.visualize_proba_actions()
+    #
+    # V, P_ref = dynamic_programming(env_microtimes.T, env_microtimes.C, env_microtimes.alpha, env_microtimes.lamb, env_microtimes.A)
+    # visualisation_value_RM(V, env_microtimes.T, env_microtimes.C)
+    # visualize_policy_RM(P_ref, env_microtimes.T, env_microtimes.C)
+    # P_ref = P_ref.reshape(env_microtimes.T * env_microtimes.C)
+    # print("Average reward over 1000 episodes : " + str(average_n_episodes(env_microtimes, P_ref, 1000)))
 
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
     # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
