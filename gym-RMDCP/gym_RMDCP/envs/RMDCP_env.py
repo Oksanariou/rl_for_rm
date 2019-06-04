@@ -61,25 +61,29 @@ class RMDCPEnv(gym.Env):
         if t == self.T - 1 or x == self.C - 1:
             list_transitions.append((1, state, 0, True))
         else:
-            for k in range(self.M):
-                proba_buy, _ = self.proba_buy(action)
-                proba_next_state = ((1 - proba_buy) ** (self.M - 1 - k)) * (proba_buy ** k) * scipy.special.binom(
-                    self.M - 1, k)
-                reward = k * action
+            for k in range(self.M + 1):
+                proba_buy, reward = self.proba_buy(action)
+                proba_next_state = ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
+                    self.M, k)
+                total_reward = k * reward
                 new_t, new_x = t + 1, x + k
                 new_state = (new_t, new_x)
                 if new_t == self.T - 1 or new_x == self.C - 1:
                     done = True
 
-                list_transitions.append((proba_next_state, new_state, reward, done))
-            if self.C - x < self.M:
-                sum_proba = 0
-                _, state_backup, reward_backup, done_backup = list_transitions[self.C - x - 1]
-                for k in range(self.M - (self.C - x)+1):
-                    sum_proba += list_transitions[self.C - x -1 + k][0]
+                # When we reach maximum capacity before the end of the DCP
+                # The remaining probabilities go to the last valid transition
+                if new_x == self.C - 1:
+                    remaining_proba = 0.
+                    while k + 1 <= self.M:
+                        k = k + 1
+                        remaining_proba += ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
+                            self.M, k)
 
-                list_transitions = list_transitions[:self.C - x -1]
-                list_transitions.append((sum_proba, state_backup, reward_backup, done_backup))
+                    proba_next_state +=  remaining_proba
+
+                list_transitions.append((proba_next_state, new_state, total_reward, done))
+
 
         return list_transitions
 
