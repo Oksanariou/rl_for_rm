@@ -22,7 +22,7 @@ class DQNAgent:
         self.gamma = 0.9  # discount rate
         self.epsilon = 1.0  # exploration rate
         self.epsilon_min = 0.05
-        self.epsilon_decay = 0.99
+        self.epsilon_decay = 0.999
 
         self.replay_count = 0
         self.target_model_update = target_model_update
@@ -72,6 +72,8 @@ class DQNAgent:
 
         for state, action_idx, reward, next_state, done in minibatch:
             q_value = reward + self.get_discounted_max_q_value(next_state)
+            # q_value = reward + self.gamma * np.max(self.target_model.predict(next_state))
+            # q_value = np.max(self.target_model.predict(state))
 
             q_values = self.model.predict(state)
             q_values[0][action_idx] = reward if done else q_value
@@ -141,11 +143,11 @@ def get_true_Q_table(env, gamma):
     return np.asarray(true_Q_table), true_policy
 
 
-def init_with_V(agent, env, gamma):
+def init_with_V(agent, env):
     shape = [space.n for space in env.observation_space]
     states = [(t, x) for t in range(shape[0]) for x in range(shape[1])]
 
-    true_Q_table, true_policy = get_true_Q_table(env, gamma)
+    true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     true_V = q_to_v(env, true_Q_table)
     visualisation_value_RM(true_V, env.T, env.C)
 
@@ -197,7 +199,7 @@ if __name__ == "__main__":
     action_size = env.action_space.n
 
     batch_size = 64
-    nb_episodes = 50
+    nb_episodes = 100
 
     agent = DQNAgent(state_size, action_size)
 
@@ -211,15 +213,15 @@ if __name__ == "__main__":
             visualisation_value_RM(V, env.T, env.C)
 
             policy = q_to_policy(env, Q_table)
-            visualize_policy_RM(policy, env.T, env.C)
+            # visualize_policy_RM(policy, env.T, env.C)
 
             N = 1000
             revenue = average_n_episodes(env, policy, N)
             print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
             revenues.append(revenue)
 
-        #state = env.set_random_state()
-        state = env.reset()
+        state = env.set_random_state()
+        # state = env.reset()
         state = np.reshape(state, [1, state_size])
 
         done = False
