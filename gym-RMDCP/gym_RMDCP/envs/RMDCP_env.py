@@ -62,7 +62,7 @@ class RMDCPEnv(gym.Env):
         if t == self.T - 1 or x == self.C - 1:
             list_transitions.append((1, state, 0, True))
         else:
-            k=0
+            k = 0
             while k <= self.M:
                 proba_buy, reward = self.proba_buy(action)
                 proba_next_state = ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
@@ -108,6 +108,8 @@ class RMDCPEnv(gym.Env):
 
     def set_random_state(self):
         self.s = self.observation_space.sample()
+        while self.s[0] == self.T - 1 or self.s[1] == self.C - 1:
+            self.s = self.observation_space.sample()
 
         return self.s
 
