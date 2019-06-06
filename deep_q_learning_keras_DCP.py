@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import random
+import sys
 from collections import deque
 
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.layers import Dense, BatchNormalization
-from keras.models import Sequential
+from keras import Input
+from keras.layers import Dense, BatchNormalization, Lambda, K
+from keras.models import Sequential, Model
 from keras.optimizers import Adam
 
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
@@ -15,23 +17,27 @@ from visualization_and_metrics import visualize_policy_RM, average_n_episodes, v
 
 
 class DQNAgent:
-    def __init__(self, input_size, action_size, target_model_update=10):
+    def __init__(self, input_size, action_size, gamma=0.9, epsilon=0.3, epsilon_min=0.01, target_model_update=10,
+                 dueling=True):
         self.input_size = input_size
         self.action_size = action_size
         self.memory = deque(maxlen=200)
-        self.gamma = 0.9  # discount rate
-        self.epsilon = 1.0  # exploration rate
-        self.epsilon_min = 0.05
+        self.gamma = gamma  # discount rate
+        self.epsilon = epsilon  # exploration rate
+        self.epsilon_min = epsilon_min
         self.epsilon_decay = 0.999
 
         self.replay_count = 0
         self.target_model_update = target_model_update
         self.loss = 0.
         self.learning_rate = 0.001
-        self.model = self._build_model()
-        self.target_model = self._build_model()
 
-    def _build_model(self):
+        self.model_builder = self._build_dueling_model if dueling else self._build_simple_model
+
+        self.model = self.model_builder()
+        self.target_model = self.model_builder()
+
+    def _build_simple_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(50, input_shape=(self.input_size,), activation='relu', name='state'))
@@ -42,6 +48,36 @@ class DQNAgent:
         # model.add(Dropout(rate=0.2))
         model.add(Dense(self.action_size, activation='relu', name='action'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+
+        return model
+
+    def _build_dueling_model(self):
+        # Neural Net for Dueling Deep-Q learning Model
+        # We need the Keras functional API here
+
+        state_layer = Input(shape=(self.input_size,))
+
+        action_value_layer = Dense(50, activation='relu')(state_layer)
+        action_value_layer = BatchNormalization()(action_value_layer)
+        action_value_layer = Dense(50, activation='relu')(action_value_layer)
+        action_value_layer = BatchNormalization()(action_value_layer)
+        action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
+
+        state_value_layer = Dense(50, activation='relu')(state_layer)
+        state_value_layer = BatchNormalization()(state_value_layer)
+        state_value_layer = Dense(50, activation='relu')(state_value_layer)
+        state_value_layer = BatchNormalization()(state_value_layer)
+        state_value_layer = Dense(1, activation='relu')(state_value_layer)
+
+        merge_layer = Lambda(lambda x: x[0] + K.mean(x[1], axis=1, keepdims=True) - x[1],
+                             output_shape=(self.action_size,))
+
+        q_value_layer = merge_layer([state_value_layer, action_value_layer])
+
+        model = Model(inputs=[state_layer], outputs=[q_value_layer])
+
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+
         return model
 
     def set_target(self):
@@ -201,7 +237,8 @@ if __name__ == "__main__":
     batch_size = 64
     nb_episodes = 100
 
-    agent = DQNAgent(state_size, action_size)
+    agent = DQNAgent(state_size, action_size, gamma=0.9, epsilon=0.0, epsilon_min=0., target_model_update=sys.maxsize)
+    init_with_V(agent, env)
 
     revenues = []
 
