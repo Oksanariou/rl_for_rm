@@ -301,7 +301,7 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size, method, episode)
 
-        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon))
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss_value, agent.epsilon))
     plt.figure()
     plt.plot(absc, errors_Q_table, '-o')
     plt.xlabel("Epochs")
