@@ -388,7 +388,7 @@ if __name__ == "__main__":
 
     agent = DQNAgent(state_size, action_size)
     init_target_network_with_true_Q_table(agent, env, batch_size)
-    method = 0
+    method = 1
 
     errors_Q_table = []
     errors_V_table = []
