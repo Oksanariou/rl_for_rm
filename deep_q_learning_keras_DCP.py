@@ -17,13 +17,15 @@ from q_learning import q_to_v
 from visualization_and_metrics import visualize_policy_RM, average_n_episodes, visualisation_value_RM, q_to_policy_RM, \
     reshape_matrix_of_visits
 from mpl_toolkits.mplot3d import Axes3D
+from SumTree import SumTree
 
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
                  epsilon=1., epsilon_min=0., epsilon_decay=0.999,
                  target_model_update=10,
-                 learning_rate=0.001, dueling=False, hidden_layer_size=50, loss=mean_squared_error):
+                 learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50, loss=mean_squared_error):
+
         self.input_size = input_size
         self.action_size = action_size
         self.memory = deque(maxlen=5000)
@@ -44,6 +46,14 @@ class DQNAgent:
         self.model = self._build_model()
         self.target_model = self._build_model()
         self.M = np.zeros([env.T, env.C, env.action_space.n])
+
+        self.prioritized_experience_replay = prioritized_experience_replay
+        self.priority_capacity = 5000
+        self.tree = SumTree(self.priority_capacity)
+        self.priority_e = 0.01
+        self.priority_a = 0.6
+        self.priority_b = 0.01
+        self.priority_b_decay = 0.999
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -114,10 +124,33 @@ class DQNAgent:
         # q_values = self.target_model.predict(state)
         return np.argmax(q_values[0])  # returns action
 
-    def replay(self, batch_size, method, episode):
-        minibatch = random.sample(self.memory, batch_size)
+    def prioritized_sample(self, batch_size):
+        minibatch = []
+        segment = (self.tree.total()) / batch_size
+        for i in range(0, batch_size):
+            a = segment * i + self.priority_e
+            b = segment * (i + 1)
+            s = random.uniform(a, b)
+            (idx, priority, data) = self.tree.get(s)
+            minibatch.append((idx, data))
+        return minibatch
+
+    def prioritized_update(self, idx, error):
+        priority = ((error + self.priority_e) ** self.priority_a) * (
+                    1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
+        self.tree.update(idx, priority)
+
+    def replay(self, batch_size, method):
+        minibatch = self.prioritized_sample(batch_size) if self.prioritized_experience_replay else random.sample(
+            self.memory, batch_size)
+
         state_batch, q_values_batch = [], []
-        for state, action_idx, reward, next_state, done in minibatch:
+        for i in range(len(minibatch)):
+            if self.prioritized_experience_replay:
+                idx, (state, action_idx, reward, next_state, done) = minibatch[i][0], minibatch[i][1]
+            else:
+                state, action_idx, reward, next_state, done = minibatch[i]
+
             t, x = state[0][0], state[0][1]
             self.M[t, x, action_idx] += 1
             if method == 0:
@@ -129,20 +162,28 @@ class DQNAgent:
 
             # q_values = self.target_model.predict(state)
             q_values = self.model.predict(state)
+            error = abs(q_values[0][action_idx] - q_value)
             q_values[0][action_idx] = reward if done else q_value
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
 
+            if self.prioritized_experience_replay:
+                self.prioritized_update(idx, error)
+
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), batch_size, epochs=1, verbose=0)
-        self.loss_value = history.history['loss'][0]
+        self.loss = history.history['loss'][0]
 
         self.update_epsilon()
+        self.update_priority_b()
 
         self.replay_count += 1
         if self.replay_count % self.target_model_update == 0:
             print("Updating target with current model")
             self.set_target()
+
+    def update_priority_b(self):
+        self.priority_b = min(1., self.priority_b / self.priority_b_decay)
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
@@ -296,12 +337,14 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
             next_state = np.reshape(next_state, [1, state_size])
 
             agent.remember(state, action_idx, reward, next_state, done)
+            if agent.prioritized_experience_replay:
+                agent.tree.add(reward + agent.priority_e, (state, action_idx, reward, next_state, done))
+
             state = next_state
-
             if len(agent.memory) > batch_size:
-                agent.replay(batch_size, method, episode)
+                agent.replay(batch_size, method)
 
-        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss_value, agent.epsilon))
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}, b: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon, agent.priority_b))
     plt.figure()
     plt.plot(absc, errors_Q_table, '-o')
     plt.xlabel("Epochs")
@@ -341,7 +384,7 @@ if __name__ == "__main__":
     action_size = env.action_space.n
 
     batch_size = 10
-    nb_episodes = 1000
+    nb_episodes = 5000
 
     agent = DQNAgent(state_size, action_size)
     # init_target_network_with_true_Q_table(agent, env, batch_size)
@@ -353,12 +396,12 @@ if __name__ == "__main__":
     absc = []
     a = 0
 
-    agent, a = train(agent, nb_episodes, batch_size, method, a, absc, errors_Q_table, errors_V_table, errors_policy)
-
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     true_V = q_to_v(env, true_Q_table)
     visualisation_value_RM(true_V, env.T, env.C)
     visualize_policy_RM(true_policy, env.T, env.C)
+
+    agent, a = train(agent, nb_episodes, batch_size, method, a, absc, errors_Q_table, errors_V_table, errors_policy)
 
     Q_table = compute_q_table(env, agent.target_model)
     V = q_to_v(env, Q_table)
