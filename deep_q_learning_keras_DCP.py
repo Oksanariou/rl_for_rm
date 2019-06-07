@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 import random
-import sys
 from collections import deque
 
 import gym
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from keras import Input
 from keras.layers import Dense, BatchNormalization, Lambda, K
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
+from keras.losses import mean_squared_error, logcosh
 
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from q_learning import q_to_v
-from visualization_and_metrics import visualize_policy_RM, average_n_episodes, visualisation_value_RM
+from visualization_and_metrics import visualize_policy_RM, average_n_episodes, visualisation_value_RM, q_to_policy_RM, \
+    reshape_matrix_of_visits
+from mpl_toolkits.mplot3d import Axes3D
 
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9, epsilon=0.3, epsilon_min=0.01, target_model_update=10,
-                 dueling=True):
+                 learning_rate=0.001, dueling=True, hidden_layer_size=50, loss=mean_squared_error):
         self.input_size = input_size
         self.action_size = action_size
         self.memory = deque(maxlen=200)
@@ -29,25 +32,34 @@ class DQNAgent:
 
         self.replay_count = 0
         self.target_model_update = target_model_update
-        self.loss = 0.
-        self.learning_rate = 0.001
+        self.loss_value = 0.
 
-        self.model_builder = self._build_dueling_model if dueling else self._build_simple_model
 
-        self.model = self.model_builder()
-        self.target_model = self.model_builder()
+        self.hidden_layer_size = hidden_layer_size
+        self.dueling = dueling
+        self.loss = loss
+        self.learning_rate = learning_rate
+
+        self.model = self._build_model()
+        self.target_model = self._build_model()
+
+        self.M = np.zeros([env.T, env.C, env.action_space.n])
+
+    def _build_model(self):
+        model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
+        return model_builder()
 
     def _build_simple_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(50, input_shape=(self.input_size,), activation='relu', name='state'))
+        model.add(Dense(self.hidden_layer_size, input_shape=(self.input_size,), activation='relu', name='state'))
         model.add(BatchNormalization())
         # model.add(Dropout(rate=0.2))
-        model.add(Dense(50, activation='relu'))
+        model.add(Dense(self.hidden_layer_size, activation='relu'))
         model.add(BatchNormalization())
         # model.add(Dropout(rate=0.2))
         model.add(Dense(self.action_size, activation='relu', name='action'))
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        model.compile(loss=self.loss, optimizer=Adam(lr=self.learning_rate))
 
         return model
 
@@ -57,15 +69,15 @@ class DQNAgent:
 
         state_layer = Input(shape=(self.input_size,))
 
-        action_value_layer = Dense(50, activation='relu')(state_layer)
+        action_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
-        action_value_layer = Dense(50, activation='relu')(action_value_layer)
+        action_value_layer = Dense(self.hidden_layer_size, activation='relu')(action_value_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
         action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
 
-        state_value_layer = Dense(50, activation='relu')(state_layer)
+        state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
-        state_value_layer = Dense(50, activation='relu')(state_value_layer)
+        state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_value_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
         state_value_layer = Dense(1, activation='relu')(state_value_layer)
 
@@ -76,7 +88,7 @@ class DQNAgent:
 
         model = Model(inputs=[state_layer], outputs=[q_value_layer])
 
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        model.compile(loss=self.loss, optimizer=Adam(lr=self.learning_rate))
 
         return model
 
@@ -101,15 +113,18 @@ class DQNAgent:
         q_values = self.model.predict(state)
         return np.argmax(q_values[0])  # returns action
 
-    def replay(self, batch_size):
+    def replay(self, batch_size, method):
         minibatch = random.sample(self.memory, batch_size)
-
         state_batch, q_values_batch = [], []
-
         for state, action_idx, reward, next_state, done in minibatch:
-            q_value = reward + self.get_discounted_max_q_value(next_state)
-            # q_value = reward + self.gamma * np.max(self.target_model.predict(next_state))
-            # q_value = np.max(self.target_model.predict(state))
+            t, x = state[0][0], state[0][1]
+            self.M[t, x, action_idx] += 1
+            if method == 0:
+                q_value = self.target_model.predict(state)[0][action_idx]
+            elif method == 1:
+                q_value = reward + self.gamma * np.max(self.model.predict(next_state))
+            elif method == 2:
+                q_value = reward + self.get_discounted_max_q_value(next_state)
 
             q_values = self.model.predict(state)
             q_values[0][action_idx] = reward if done else q_value
@@ -118,7 +133,7 @@ class DQNAgent:
             q_values_batch.append(q_values[0])
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), batch_size, epochs=1, verbose=0)
-        self.loss = history.history['loss'][0]
+        self.loss_value = history.history['loss'][0]
 
         self.update_epsilon()
 
@@ -130,7 +145,7 @@ class DQNAgent:
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-    def init(self, X, Y, epochs):
+    def init(self, X, Y, epochs, batch_size):
         self.model.fit(X, Y, batch_size, epochs=epochs, verbose=0)
         self.set_target()
 
@@ -179,7 +194,7 @@ def get_true_Q_table(env, gamma):
     return np.asarray(true_Q_table), true_policy
 
 
-def init_with_V(agent, env):
+def init_with_V(agent, env, batch_size):
     shape = [space.n for space in env.observation_space]
     states = [(t, x) for t in range(shape[0]) for x in range(shape[1])]
 
@@ -189,7 +204,7 @@ def init_with_V(agent, env):
 
     N = 10000
     revenue = average_n_episodes(env, true_policy.flatten(), N)
-    print("Average reward over {} episodes  : {}".format(N, revenue))
+    print("Average reward of the true policy over {} episodes  : {}".format(N, revenue))
 
     error = float("inf")
     training_errors = []
@@ -198,7 +213,7 @@ def init_with_V(agent, env):
     tol = 100
     epochs = 10
     while error > tol and total_epochs <= 2000:
-        agent.init(np.asarray(states), np.asarray(true_Q_table), epochs)
+        agent.init(np.asarray(states), np.asarray(true_Q_table), epochs, batch_size)
         Q_table = compute_q_table(env, agent.model)
         error = np.sqrt(np.square(true_Q_table - Q_table).sum())
 
@@ -212,45 +227,26 @@ def init_with_V(agent, env):
 
     plt.figure()
     plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Error between the true Q-table and the agent's Q-table")
     plt.show()
 
-    N = 1000
-    revenue = average_n_episodes(env, true_policy.flatten(), N)
-    print("Average reward over {} episodes  : {}".format(N, revenue))
 
-
-if __name__ == "__main__":
-
-    data_collection_points = 10
-    micro_times = 5
-    capacity = 10
-    actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.4
-    lamb = 0.2
-
-    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
-                   micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-
-    state_size = len(env.observation_space.spaces)
-    action_size = env.action_space.n
-
-    batch_size = 64
-    nb_episodes = 100
-
-    agent = DQNAgent(state_size, action_size, gamma=0.9, epsilon=0.0, epsilon_min=0., target_model_update=sys.maxsize)
-    init_with_V(agent, env)
-
+def train(agent, nb_episodes, batch_size, method):
+    true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     revenues = []
-
+    training_errors = []
     for episode in range(nb_episodes):
 
         if episode % int(nb_episodes / 10) == 0:
             Q_table = compute_q_table(env, agent.model)
             V = q_to_v(env, Q_table)
             visualisation_value_RM(V, env.T, env.C)
+            error = np.sqrt(np.square(true_Q_table - Q_table).sum())
+            training_errors.append(error)
 
-            policy = q_to_policy(env, Q_table)
-            # visualize_policy_RM(policy, env.T, env.C)
+            policy = q_to_policy_RM(env, Q_table)
+            #visualize_policy_RM(policy, env.T, env.C)
 
             N = 1000
             revenue = average_n_episodes(env, policy, N)
@@ -272,6 +268,61 @@ if __name__ == "__main__":
             state = next_state
 
             if len(agent.memory) > batch_size:
-                agent.replay(batch_size)
+                agent.replay(batch_size, method)
 
-        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon))
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss_value, agent.epsilon))
+
+    plt.figure()
+    plt.plot(training_errors, '-o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Difference with the true Q-table")
+    plt.show()
+
+    return agent
+
+
+def init_target_network_with_true_Q_table(agent, env, batch_size):
+    init_with_V(agent, env, batch_size)
+    agent.model = agent._build_model()
+    agent.target_model_update = sys.maxsize
+
+    return agent
+
+
+if __name__ == "__main__":
+    data_collection_points = 4
+    micro_times = 3
+    capacity = 4
+    actions = tuple(k for k in range(50, 231, 50))
+    alpha = 0.8
+    lamb = 0.7
+
+    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
+                   micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+
+    state_size = len(env.observation_space.spaces)
+    action_size = env.action_space.n
+
+    batch_size = 10
+    nb_episodes = 2000
+
+    agent = DQNAgent(state_size, action_size, epsilon=0.01, epsilon_min=0.01, hidden_layer_size=10, loss=logcosh)
+    init_target_network_with_true_Q_table(agent, env, batch_size)
+    method = 0
+
+    train(agent, nb_episodes, batch_size, method)
+
+    true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
+    true_V = q_to_v(env, true_Q_table)
+    visualisation_value_RM(true_V, env.T, env.C)
+
+    Q_table = compute_q_table(env, agent.model)
+    V = q_to_v(env, Q_table)
+    visualisation_value_RM(V, env.T, env.C)
+
+    X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
+    fig.colorbar(p, ax=ax)
+    plt.show()
