@@ -24,7 +24,8 @@ class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
                  epsilon=1., epsilon_min=0., epsilon_decay=0.999,
                  target_model_update=10,
-                 learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50, loss=mean_squared_error):
+                 learning_rate=0.001, dueling=False, prioritized_experience_replay=True, hidden_layer_size=50,
+                 loss=mean_squared_error):
 
         self.input_size = input_size
         self.action_size = action_size
@@ -53,7 +54,7 @@ class DQNAgent:
         self.priority_e = 0.01
         self.priority_a = 0.6
         self.priority_b = 0.01
-        self.priority_b_decay = 0.999
+        self.priority_b_decay = 0.99
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -137,7 +138,7 @@ class DQNAgent:
 
     def prioritized_update(self, idx, error):
         priority = ((error + self.priority_e) ** self.priority_a) * (
-                    1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
+                1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
         self.tree.update(idx, priority)
 
     def replay(self, batch_size, method):
@@ -343,8 +344,7 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
             state = next_state
             if len(agent.memory) > batch_size:
                 agent.replay(batch_size, method)
-
-        print("episode: {}/{}, loss: {:.2}, e: {:.2}, b: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon, agent.priority_b))
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}, b: {:.2}".format(episode, nb_episodes, agent.loss_value, agent.epsilon, agent.priority_b))
     plt.figure()
     plt.plot(absc, errors_Q_table, '-o')
     plt.xlabel("Epochs")
