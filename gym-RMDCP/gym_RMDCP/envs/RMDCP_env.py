@@ -108,6 +108,8 @@ class RMDCPEnv(gym.Env):
 
     def set_random_state(self):
         self.s = self.observation_space.sample()
+        while self.s[0] == self.T - 1 or self.s[1] == self.C - 1:
+            self.s = self.observation_space.sample()
 
         return self.s
 

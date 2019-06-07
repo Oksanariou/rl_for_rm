@@ -20,20 +20,21 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class DQNAgent:
-    def __init__(self, input_size, action_size, gamma=0.9, epsilon=0.3, epsilon_min=0.01, target_model_update=10,
-                 learning_rate=0.001, dueling=True, hidden_layer_size=50, loss=mean_squared_error):
+    def __init__(self, input_size, action_size, gamma=0.9,
+                 epsilon=1., epsilon_min=0., epsilon_decay=0.999,
+                 target_model_update=10,
+                 learning_rate=0.001, dueling=False, hidden_layer_size=50, loss=mean_squared_error):
         self.input_size = input_size
         self.action_size = action_size
-        self.memory = deque(maxlen=200)
+        self.memory = deque(maxlen=5000)
         self.gamma = gamma  # discount rate
         self.epsilon = epsilon  # exploration rate
         self.epsilon_min = epsilon_min
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = epsilon_decay
 
         self.replay_count = 0
         self.target_model_update = target_model_update
         self.loss_value = 0.
-
 
         self.hidden_layer_size = hidden_layer_size
         self.dueling = dueling
@@ -42,7 +43,6 @@ class DQNAgent:
 
         self.model = self._build_model()
         self.target_model = self._build_model()
-
         self.M = np.zeros([env.T, env.C, env.action_space.n])
 
     def _build_model(self):
@@ -111,9 +111,10 @@ class DQNAgent:
             return random.randrange(self.action_size)
 
         q_values = self.model.predict(state)
+        # q_values = self.target_model.predict(state)
         return np.argmax(q_values[0])  # returns action
 
-    def replay(self, batch_size, method):
+    def replay(self, batch_size, method, episode):
         minibatch = random.sample(self.memory, batch_size)
         state_batch, q_values_batch = [], []
         for state, action_idx, reward, next_state, done in minibatch:
@@ -126,6 +127,7 @@ class DQNAgent:
             elif method == 2:
                 q_value = reward + self.get_discounted_max_q_value(next_state)
 
+            # q_values = self.target_model.predict(state)
             q_values = self.model.predict(state)
             q_values[0][action_idx] = reward if done else q_value
 
@@ -200,7 +202,7 @@ def init_with_V(agent, env, batch_size):
 
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     true_V = q_to_v(env, true_Q_table)
-    visualisation_value_RM(true_V, env.T, env.C)
+    # visualisation_value_RM(true_V, env.T, env.C)
 
     N = 10000
     revenue = average_n_episodes(env, true_policy.flatten(), N)
@@ -219,11 +221,11 @@ def init_with_V(agent, env, batch_size):
 
         total_epochs += epochs
         training_errors.append(error)
-        print("After {} epochs , error:{:.2}".format(total_epochs, error))
+        # print("After {} epochs , error:{:.2}".format(total_epochs, error))
 
     Q_table = compute_q_table(env, agent.model)
     V = q_to_v(env, Q_table)
-    visualisation_value_RM(V, env.T, env.C)
+    # visualisation_value_RM(V, env.T, env.C)
 
     plt.figure()
     plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
@@ -232,26 +234,55 @@ def init_with_V(agent, env, batch_size):
     plt.show()
 
 
-def train(agent, nb_episodes, batch_size, method):
+def print_diff(env, agent):
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
+    true_V = q_to_v(env, true_Q_table)
+
+    Q_table = compute_q_table(env, agent.model)
+    V = q_to_v(env, Q_table)
+    policy = q_to_policy_RM(env, Q_table)
+
+    print("Visited states")
+    print(agent.M)
+    print("Difference with the true Q-table")
+    print(
+        abs(true_Q_table.reshape(env.T, env.C, env.action_space.n) - Q_table.reshape(env.T, env.C, env.action_space.n)))
+    print("Difference with the true V-table")
+    print(abs(true_V.reshape(env.T, env.C) - V.reshape(env.T, env.C)))
+    print("Difference with the true Policy")
+    print(abs(true_policy.reshape(env.T, env.C) - policy.reshape(env.T, env.C)))
+
+
+def train(agent, nb_episodes, batch_size, method, a, absc,
+          errors_Q_table, errors_V_table, errors_policy):
+    true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
+    true_V = q_to_v(env, true_Q_table)
     revenues = []
-    training_errors = []
     for episode in range(nb_episodes):
 
         if episode % int(nb_episodes / 10) == 0:
             Q_table = compute_q_table(env, agent.model)
+            policy = q_to_policy_RM(env, Q_table)
             V = q_to_v(env, Q_table)
             visualisation_value_RM(V, env.T, env.C)
-            error = np.sqrt(np.square(true_Q_table - Q_table).sum())
-            training_errors.append(error)
+            error_Q_table = np.sqrt(
+                np.square(true_Q_table.reshape(4, 4, 4)[:-1, :-1] - Q_table.reshape(4, 4, 4)[:-1, :-1]).sum())
+            errors_Q_table.append(error_Q_table)
+            error_V_table = np.sqrt(np.square(true_V - V).sum())
+            errors_V_table.append(error_V_table)
+            error_policy = np.sqrt(np.square(true_policy[:-1, :-1] - policy.reshape(4, 4)[:-1, :-1]).sum())
+            errors_policy.append(error_policy)
+            a += int(nb_episodes / 10)
+            absc.append(a)
 
             policy = q_to_policy_RM(env, Q_table)
-            #visualize_policy_RM(policy, env.T, env.C)
+            # visualize_policy_RM(policy, env.T, env.C)
 
             N = 1000
             revenue = average_n_episodes(env, policy, N)
             print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
             revenues.append(revenue)
+            print_diff(env, agent)
 
         state = env.set_random_state()
         # state = env.reset()
@@ -268,24 +299,30 @@ def train(agent, nb_episodes, batch_size, method):
             state = next_state
 
             if len(agent.memory) > batch_size:
-                agent.replay(batch_size, method)
+                agent.replay(batch_size, method, episode)
 
-        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss_value, agent.epsilon))
-
+        print("episode: {}/{}, loss: {:.2}, e: {:.2}".format(episode, nb_episodes, agent.loss, agent.epsilon))
     plt.figure()
-    plt.plot(training_errors, '-o')
+    plt.plot(absc, errors_Q_table, '-o')
     plt.xlabel("Epochs")
     plt.ylabel("Difference with the true Q-table")
     plt.show()
-
-    return agent
+    plt.figure()
+    plt.plot(absc, errors_V_table, '-o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Difference with the true V-table")
+    plt.show()
+    plt.plot(absc, errors_policy, '-o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Difference with the policy")
+    plt.show()
+    return agent, a
 
 
 def init_target_network_with_true_Q_table(agent, env, batch_size):
     init_with_V(agent, env, batch_size)
     agent.model = agent._build_model()
     agent.target_model_update = sys.maxsize
-
     return agent
 
 
@@ -304,19 +341,26 @@ if __name__ == "__main__":
     action_size = env.action_space.n
 
     batch_size = 10
-    nb_episodes = 2000
+    nb_episodes = 1000
 
-    agent = DQNAgent(state_size, action_size, epsilon=0.01, epsilon_min=0.01, hidden_layer_size=10, loss=logcosh)
-    init_target_network_with_true_Q_table(agent, env, batch_size)
-    method = 0
+    agent = DQNAgent(state_size, action_size)
+    # init_target_network_with_true_Q_table(agent, env, batch_size)
+    method = 2
 
-    train(agent, nb_episodes, batch_size, method)
+    errors_Q_table = []
+    errors_V_table = []
+    errors_policy = []
+    absc = []
+    a = 0
+
+    agent, a = train(agent, nb_episodes, batch_size, method, a, absc, errors_Q_table, errors_V_table, errors_policy)
 
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     true_V = q_to_v(env, true_Q_table)
     visualisation_value_RM(true_V, env.T, env.C)
+    visualize_policy_RM(true_policy, env.T, env.C)
 
-    Q_table = compute_q_table(env, agent.model)
+    Q_table = compute_q_table(env, agent.target_model)
     V = q_to_v(env, Q_table)
     visualisation_value_RM(V, env.T, env.C)
 
