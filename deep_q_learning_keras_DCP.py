@@ -22,9 +22,9 @@ from SumTree import SumTree
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
-                 epsilon=1., epsilon_min=0., epsilon_decay=0.999,
+                 epsilon=1., epsilon_min=1., epsilon_decay=0.9999,
                  target_model_update=10,
-                 learning_rate=0.001, dueling=False, prioritized_experience_replay=True, hidden_layer_size=50,
+                 learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50,
                  loss=mean_squared_error):
 
         self.input_size = input_size
@@ -54,7 +54,7 @@ class DQNAgent:
         self.priority_e = 0.01
         self.priority_a = 0.6
         self.priority_b = 0.01
-        self.priority_b_decay = 0.99
+        self.priority_b_increase = 0.999
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -121,8 +121,8 @@ class DQNAgent:
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
 
-        q_values = self.model.predict(state)
-        # q_values = self.target_model.predict(state)
+        #q_values = self.model.predict(state)
+        q_values = self.target_model.predict(state)
         return np.argmax(q_values[0])  # returns action
 
     def prioritized_sample(self, batch_size):
@@ -157,7 +157,7 @@ class DQNAgent:
             if method == 0:
                 q_value = self.target_model.predict(state)[0][action_idx]
             elif method == 1:
-                q_value = reward + self.gamma * np.max(self.model.predict(next_state))
+                q_value = reward + self.gamma * np.max(self.target_model.predict(next_state))
             elif method == 2:
                 q_value = reward + self.get_discounted_max_q_value(next_state)
 
@@ -173,7 +173,7 @@ class DQNAgent:
                 self.prioritized_update(idx, error)
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), batch_size, epochs=1, verbose=0)
-        self.loss = history.history['loss'][0]
+        self.loss_value = history.history['loss'][0]
 
         self.update_epsilon()
         self.update_priority_b()
@@ -184,7 +184,7 @@ class DQNAgent:
             self.set_target()
 
     def update_priority_b(self):
-        self.priority_b = min(1., self.priority_b / self.priority_b_decay)
+        self.priority_b = min(1., self.priority_b / self.priority_b_increase)
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
@@ -254,7 +254,7 @@ def init_with_V(agent, env, batch_size):
     training_errors = []
     total_epochs = 0
 
-    tol = 100
+    tol = 10
     epochs = 10
     while error > tol and total_epochs <= 2000:
         agent.init(np.asarray(states), np.asarray(true_Q_table), epochs, batch_size)
@@ -383,12 +383,12 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    batch_size = 10
+    batch_size = 30
     nb_episodes = 5000
 
     agent = DQNAgent(state_size, action_size)
-    # init_target_network_with_true_Q_table(agent, env, batch_size)
-    method = 2
+    init_target_network_with_true_Q_table(agent, env, batch_size)
+    method = 0
 
     errors_Q_table = []
     errors_V_table = []
