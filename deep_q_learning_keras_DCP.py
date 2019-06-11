@@ -22,9 +22,9 @@ from SumTree import SumTree
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
-                 epsilon=1., epsilon_min=1., epsilon_decay=0.9999,
+                 epsilon=1., epsilon_min=0., epsilon_decay=0.999,
                  target_model_update=10,
-                 learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50,
+                 learning_rate=0.001, dueling=False, prioritized_experience_replay=True, hidden_layer_size=50,
                  loss=mean_squared_error):
 
         self.input_size = input_size
@@ -52,9 +52,9 @@ class DQNAgent:
         self.priority_capacity = 5000
         self.tree = SumTree(self.priority_capacity)
         self.priority_e = 0.01
-        self.priority_a = 0.6
-        self.priority_b = 0.01
-        self.priority_b_increase = 0.999
+        self.priority_a = 0.7
+        self.priority_b = 0.5
+        self.priority_b_increase = 0.9999
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -121,8 +121,8 @@ class DQNAgent:
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
 
-        #q_values = self.model.predict(state)
-        q_values = self.target_model.predict(state)
+        q_values = self.model.predict(state)
+        # q_values = self.target_model.predict(state)
         return np.argmax(q_values[0])  # returns action
 
     def prioritized_sample(self, batch_size):
@@ -139,6 +139,7 @@ class DQNAgent:
     def prioritized_update(self, idx, error):
         priority = ((error + self.priority_e) ** self.priority_a) * (
                 1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
+        # priority = ((error + self.priority_e) ** self.priority_a)
         self.tree.update(idx, priority)
 
     def replay(self, batch_size, method):
@@ -193,6 +194,21 @@ class DQNAgent:
         self.model.fit(X, Y, batch_size, epochs=epochs, verbose=0)
         self.set_target()
 
+
+
+def plot_histogram_memory(env, agent):
+    states = []
+    actions = []
+    for k in range(len(agent.memory)):
+        states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
+        actions.append(agent.memory[k][1])
+    fig, ax = plt.subplots(tight_layout=True)
+    counts, xedges, yedges, im = ax.hist2d(states, actions)
+    plt.xlabel("State index")
+    plt.ylabel("Action index")
+    plt.title("Transitions present in the agent's memory")
+    plt.colorbar(im, ax=ax)
+    plt.show()
 
 def compute_q_table(env, model):
     state_size = len(env.observation_space)
@@ -299,27 +315,43 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
           errors_Q_table, errors_V_table, errors_policy):
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
     true_V = q_to_v(env, true_Q_table)
-    revenues = []
+
     for episode in range(nb_episodes):
 
         if episode % int(nb_episodes / 10) == 0:
             Q_table = compute_q_table(env, agent.model)
             policy = q_to_policy_RM(env, Q_table)
             V = q_to_v(env, Q_table)
+
             visualisation_value_RM(V, env.T, env.C)
+            policy = q_to_policy_RM(env, Q_table)
+            # visualize_policy_RM(policy, env.T, env.C)
+            error_borders = 0
+            error_not_borders = 0
+            for k in range(len(errors_Q_ind)):
+                if (k >= 12 and k <= 15) or (k >= 28 and k <= 31) or k >= 44:
+                    error_borders += np.sqrt(
+                    np.square(true_Q_table.reshape(16*4)[k] - Q_table.reshape(16*4)[k]).sum())
+                else:
+                    error_not_borders += np.sqrt(
+                    np.square(true_Q_table.reshape(16*4)[k] - Q_table.reshape(16*4)[k]).sum())
+                    # errors_Q_ind[k].append(np.sqrt(
+                    # np.square(true_Q_table.reshape(16*4)[k] - Q_table.reshape(16*4)[k]).sum()))
+            errors_borders.append(error_borders)
+            errors_not_borders.append(error_not_borders)
+
             error_Q_table = np.sqrt(
                 np.square(true_Q_table.reshape(4, 4, 4)[:-1, :-1] - Q_table.reshape(4, 4, 4)[:-1, :-1]).sum())
             errors_Q_table.append(error_Q_table)
+
             error_V_table = np.sqrt(np.square(true_V - V).sum())
             errors_V_table.append(error_V_table)
+
             error_policy = np.sqrt(np.square(true_policy[:-1, :-1] - policy.reshape(4, 4)[:-1, :-1]).sum())
             errors_policy.append(error_policy)
+
             a += int(nb_episodes / 10)
             absc.append(a)
-
-            policy = q_to_policy_RM(env, Q_table)
-            # visualize_policy_RM(policy, env.T, env.C)
-
             N = 1000
             revenue = average_n_episodes(env, policy, N)
             print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
@@ -359,6 +391,25 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
     plt.xlabel("Epochs")
     plt.ylabel("Difference with the policy")
     plt.show()
+    plt.figure()
+    plt.plot(absc, revenues, '-o')
+    plt.xlabel("Epochs")
+    plt.ylabel("Revenues")
+    plt.show()
+
+    # plt.figure()
+    # for k in range(len(errors_Q_ind)):
+    #     plt.plot(absc, errors_Q_ind[k], '-o')
+    # plt.xlabel("Epochs")
+    # plt.ylabel("Difference of each coefficient of the Q-table with the true Q-table")
+    # plt.show()
+
+    plt.figure()
+    plt.plot(absc, errors_borders, absc, errors_not_borders)
+    plt.legend(["Error at the borders", "Error not at the borders"])
+    plt.xlabel("Epochs")
+    plt.ylabel("Difference of each coefficient of the Q-table with the true Q-table")
+    plt.show()
     return agent, a
 
 
@@ -367,6 +418,7 @@ def init_target_network_with_true_Q_table(agent, env, batch_size):
     agent.model = agent._build_model()
     agent.target_model_update = sys.maxsize
     return agent
+
 
 
 if __name__ == "__main__":
@@ -384,16 +436,21 @@ if __name__ == "__main__":
     action_size = env.action_space.n
 
     batch_size = 30
-    nb_episodes = 5000
+    nb_episodes = 2000
 
     agent = DQNAgent(state_size, action_size)
-    init_target_network_with_true_Q_table(agent, env, batch_size)
-    method = 1
+    # init_target_network_with_true_Q_table(agent, env, batch_size)
+    method = 2
 
     errors_Q_table = []
     errors_V_table = []
     errors_policy = []
     absc = []
+    revenues = []
+    errors_Q_ind = [[] for i in range(16 * 4)]
+    errors_borders = []
+    errors_not_borders = []
+
     a = 0
 
     true_Q_table, true_policy = get_true_Q_table(env, agent.gamma)
