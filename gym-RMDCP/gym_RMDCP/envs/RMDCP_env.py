@@ -144,3 +144,40 @@ class RMDCPEnv(gym.Env):
         prob_n = np.asarray(prob_n)
         csprob_n = np.cumsum(prob_n)
         return (csprob_n > self.np_random.rand()).argmax()
+
+    def get_state_scaler(self):
+
+        return StateScaler(self.T, self.C)
+
+    def get_value_scaler(self):
+
+        return ValueScaler(self.A, self.C)
+
+
+class StateScaler(object):
+    def __init__(self, T, C):
+        super(StateScaler, self).__init__()
+        self.scale_time = 2. / (T - 1)
+        self.scale_capacity = 2. / (C - 1)
+
+    def scale(self, state):
+        dcp, capacity = state
+
+        return self.scale_time * dcp - 1, self.scale_capacity * capacity - 1
+
+    def unscale(self, state):
+        dcp, capacity = state
+
+        return int((dcp + 1) / self.scale_time), int((capacity + 1) / self.scale_capacity)
+
+
+class ValueScaler(object):
+    def __init__(self, A, C):
+        super(ValueScaler, self).__init__()
+        self.scale_value = 2. / C * max(A)
+
+    def scale(self, value):
+        return self.scale_value * value - 1
+
+    def unscale(self, value):
+        return (value + 1) / self.scale_value
