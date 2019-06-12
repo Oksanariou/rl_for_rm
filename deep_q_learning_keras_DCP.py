@@ -43,6 +43,7 @@ class DQNAgent:
         self.episode = 0
         self.replay_count = 0
         self.loss_value = 0.
+        self.last_visited = []
 
         self.hidden_layer_size = hidden_layer_size
         self.dueling = dueling
@@ -51,8 +52,6 @@ class DQNAgent:
 
         self.model = self._build_model()
         self.target_model = self._build_model()
-
-        self.M = np.zeros([env.T, env.C, env.action_space.n])
 
         self.prioritized_experience_replay = prioritized_experience_replay
         self.priority_capacity = 5000
@@ -166,7 +165,7 @@ class DQNAgent:
         minibatch = self.prioritized_sample(self.batch_size) if self.prioritized_experience_replay else random.sample(
             self.memory, self.batch_size)
 
-        state_batch, q_values_batch, sample_weight = [], [], []
+        state_batch, q_values_batch, sample_weight, action_batch = [], [], [], []
         for i in range(len(minibatch)):
             if self.prioritized_experience_replay:
                 idx, (state, action_idx, reward, next_state, done) = minibatch[i][0], minibatch[i][1]
@@ -174,7 +173,6 @@ class DQNAgent:
                 state, action_idx, reward, next_state, done = minibatch[i]
 
             t, x = state[0][0], state[0][1]
-            self.M[t, x, action_idx] += 1
 
             sample_weight.append(max((t, x)))
 
@@ -193,16 +191,19 @@ class DQNAgent:
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
+            action_batch.append(action_idx)
 
             if self.prioritized_experience_replay:
                 error = abs(q_values[0][action_idx] - q_value)
                 self.prioritized_update(idx, error)
 
-        history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0)
-        self.loss = history.history['loss'][0]
+        history = self.model.fit(np.array(state_batch), np.array(q_values_batch), 30, epochs=1, verbose=0)
+        self.loss_value = history.history['loss'][0]
 
         self.update_epsilon()
         self.update_priority_b()
+
+        self.last_visited = zip(state_batch, action_batch)
 
         self.replay_count += 1
         if self.replay_count % self.target_model_update == 0:
@@ -498,6 +499,40 @@ class PolicyDisplay(Callback):
             visualize_policy_RM(policy, self.env.T, self.env.C)
 
 
+class MemoryMonitor(Callback):
+
+    def __init__(self, condition, agent, env):
+        super().__init__(condition, agent, env)
+        self.replays = []
+        self.hist2d = []
+
+    def _run(self):
+        self.replays.append(self.agent.replay_count)
+        states = []
+        actions = []
+        for k in range(len(agent.memory)):
+            states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
+            actions.append(agent.memory[k][1])
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
+        self.hist2d.append((h, xedges, yedges))
+
+
+class MemoryDisplay(Callback):
+
+    def __init__(self, condition, agent, env, memory_monitor):
+        super().__init__(condition, agent, env)
+        self.memory_monitor = memory_monitor
+
+    def _run(self):
+        fig, ax = plt.subplots(tight_layout=True)
+        h, xedges, yedges = self.memory_monitor.hist2d[-1]
+        im = plt.pcolormesh(xedges, yedges, h.T)
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+        plt.colorbar(im, ax=ax)
+        plt.show()
+
+
 def train(agent, nb_episodes, callbacks):
     for episode in range(nb_episodes):
 
@@ -573,11 +608,15 @@ if __name__ == "__main__":
     revenue_compute = RevenueMonitor(while_training, agent, env, q_compute, 10_000)
     revenue_display = RevenueDisplay(after_train, agent, env, revenue_compute, true_revenue)
 
+    memory_monitor = MemoryMonitor(while_training, agent, env)
+    memory_display = MemoryDisplay(after_train, agent, env, memory_monitor)
+
     callbacks = [true_compute, true_v_display, true_revenue,
                  agent_monitor,
                  q_compute, v_display, policy_display,
                  q_error, q_error_display,
-                 revenue_compute, revenue_display]
+                 revenue_compute, revenue_display,
+                 memory_monitor, memory_display]
 
     train(agent, nb_episodes, callbacks)
 
