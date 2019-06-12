@@ -22,14 +22,14 @@ from SumTree import SumTree
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
-                 epsilon=1., epsilon_min=1., epsilon_decay=0.999,
+                 epsilon=1., epsilon_min=0.2, epsilon_decay=0.9999,
                  target_model_update=10,
                  learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50,
                  loss=mean_squared_error):
 
         self.input_size = input_size
         self.action_size = action_size
-        self.memory = deque(maxlen=5000)
+        self.memory = deque(maxlen=50000)
         self.gamma = gamma  # discount rate
         self.epsilon = epsilon  # exploration rate
         self.epsilon_min = epsilon_min
@@ -137,9 +137,9 @@ class DQNAgent:
         return minibatch
 
     def prioritized_update(self, idx, error):
-        priority = ((error + self.priority_e) ** self.priority_a) * (
-                1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
-        # priority = ((error + self.priority_e) ** self.priority_a)
+        # priority = ((error + self.priority_e) ** self.priority_a) * (
+        #         1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
+        priority = ((error + self.priority_e) ** self.priority_a)
         self.tree.update(idx, priority)
 
     def replay(self, batch_size, method):
@@ -164,13 +164,13 @@ class DQNAgent:
 
             # q_values = self.target_model.predict(state)
             q_values = self.model.predict(state)
-            error = abs(q_values[0][action_idx] - q_value)
             q_values[0][action_idx] = reward if done else q_value
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
 
             if self.prioritized_experience_replay:
+                error = abs(q_values[0][action_idx] - q_value)
                 self.prioritized_update(idx, error)
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), batch_size, epochs=1, verbose=0)
@@ -372,6 +372,7 @@ def train(agent, nb_episodes, batch_size, method, a, absc,
             agent.remember(state, action_idx, reward, next_state, done)
             if agent.prioritized_experience_replay:
                 agent.tree.add(reward + agent.priority_e, (state, action_idx, reward, next_state, done))
+                # agent.tree.add(max(state[0][0], state[0][1]) + agent.priority_e, (state, action_idx, reward, next_state, done))
 
             state = next_state
             if len(agent.memory) > batch_size:
@@ -436,7 +437,7 @@ if __name__ == "__main__":
     action_size = env.action_space.n
 
     batch_size = 30
-    nb_episodes = 2000
+    nb_episodes = 4000
 
     agent = DQNAgent(state_size, action_size)
     # init_target_network_with_true_Q_table(agent, env, batch_size)
