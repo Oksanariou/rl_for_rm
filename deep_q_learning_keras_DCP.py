@@ -541,13 +541,13 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 500
+    nb_episodes = 3000
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
                      prioritized_experience_replay=False,
-                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.01,
+                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
                      epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999)
     # init_target_network_with_true_Q_table(agent, env)
     # init_memory_with_true_Q_table(agent, env, 10)
