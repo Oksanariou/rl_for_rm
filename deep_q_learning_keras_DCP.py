@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
 from collections import deque
-from collections.abc import Iterable
 
 import gym
 import sys
@@ -137,7 +136,6 @@ class DQNAgent:
             return random.randrange(self.action_size)
 
         state = np.reshape(state, [1, self.input_size])
-
         q_values = self.model.predict(state)
 
         return np.argmax(q_values[0])  # returns action
@@ -175,7 +173,7 @@ class DQNAgent:
             else:
                 state, action_idx, reward, next_state, done = minibatch[i]
 
-            t, x = state[0]
+            t, x = state[0][0], state[0][1]
             self.M[t, x, action_idx] += 1
 
             sample_weight.append(max((t, x)))
@@ -191,18 +189,17 @@ class DQNAgent:
                 q_value = reward + self.get_discounted_max_q_value(next_state)
 
             q_values = self.model.predict(state)
-            error = abs(q_values[0][action_idx] - q_value)
             q_values[0][action_idx] = reward if done else q_value
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
 
             if self.prioritized_experience_replay:
+                error = abs(q_values[0][action_idx] - q_value)
                 self.prioritized_update(idx, error)
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0)
-        # sample_weight=np.array(sample_weight))
-        self.loss_value = history.history['loss'][0]
+        self.loss = history.history['loss'][0]
 
         self.update_epsilon()
         self.update_priority_b()
@@ -232,7 +229,6 @@ def compute_q_table(env, agent, target=False):
     model = agent.target_model if target else agent.model
 
     return model.predict(np.array(states))
-
 
 
 def get_true_Q_table(env, gamma):
@@ -266,7 +262,7 @@ def init_with_V(agent, env):
     training_errors = []
     total_epochs = 0
 
-    tol = 100
+    tol = 10
     epochs = 10
     while error > tol and total_epochs <= 2000:
         agent.init(states, true_Q_table, epochs)
@@ -355,8 +351,17 @@ class QErrorMonitor(Callback):
         self.errors_Q_table = []
         self.errors_V_table = []
         self.errors_policy = []
+
         self.true = true_compute
         self.q = q_compute
+
+        borders = np.reshape(np.arange(env.T * env.C * env.nA), (env.T, env.C, env.nA))
+        borders = ((borders // env.nA + 1) % 4 == 0) | (borders >= (env.T - 1) * env.C * env.nA)
+        self.mask_borders = borders.reshape((env.T * env.C, env.nA))
+        self.mask_not_borders = np.logical_not(self.mask_borders)
+
+        self.errors_borders = []
+        self.errors_not_borders = []
 
     def _run(self):
 
@@ -376,6 +381,9 @@ class QErrorMonitor(Callback):
         self.errors_Q_table.append(self._mse(true_Q_table, Q_table))
         self.errors_V_table.append(self._mse(true_V_table, V_table))
         self.errors_policy.append(self._mse(true_policy, policy))
+
+        self.errors_borders.append(self._mse(true_Q_table[self.mask_borders], Q_table[self.mask_borders]))
+        self.errors_not_borders.append(self._mse(true_Q_table[self.mask_not_borders], Q_table[self.mask_not_borders]))
 
         T, C, nA = self.env.T, self.env.C, self.env.action_space.n
 
@@ -414,6 +422,14 @@ class QErrorDisplay(Callback):
         plt.plot(self.q_error.replays, self.q_error.errors_policy, '-o')
         plt.xlabel("Epochs")
         plt.ylabel("Difference with the policy")
+        plt.show()
+
+        plt.figure()
+        plt.plot(self.q_error.replays, self.q_error.errors_borders, self.q_error.replays,
+                 self.q_error.errors_not_borders)
+        plt.legend(["Error at the borders", "Error not at the borders"])
+        plt.xlabel("Epochs")
+        plt.ylabel("Difference of each coefficient of the Q-table with the true Q-table")
         plt.show()
 
 
@@ -525,13 +541,13 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 2000
+    nb_episodes = 500
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
                      prioritized_experience_replay=False,
-                     hidden_layer_size=50, dueling=True, loss=mean_squared_error, learning_rate=0.01,
+                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.01,
                      epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999)
     # init_target_network_with_true_Q_table(agent, env)
     # init_memory_with_true_Q_table(agent, env, 10)
