@@ -22,9 +22,9 @@ from SumTree import SumTree
 
 class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
-                 epsilon=1., epsilon_min=0., epsilon_decay=0.999,
+                 epsilon=1., epsilon_min=1., epsilon_decay=0.999,
                  target_model_update=10,
-                 learning_rate=0.001, dueling=False, prioritized_experience_replay=True, hidden_layer_size=50,
+                 learning_rate=0.001, dueling=False, prioritized_experience_replay=False, hidden_layer_size=50,
                  loss=mean_squared_error):
 
         self.input_size = input_size
@@ -203,7 +203,7 @@ def plot_histogram_memory(env, agent):
         states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
         actions.append(agent.memory[k][1])
     fig, ax = plt.subplots(tight_layout=True)
-    counts, xedges, yedges, im = ax.hist2d(states, actions)
+    counts, xedges, yedges, im = ax.hist2d(states, actions, bins = max(states)+1)
     plt.xlabel("State index")
     plt.ylabel("Action index")
     plt.title("Transitions present in the agent's memory")
