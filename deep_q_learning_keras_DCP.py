@@ -24,9 +24,11 @@ class DQNAgent:
     def __init__(self, input_size, action_size, gamma=0.9,
                  epsilon=1., epsilon_min=0.2, epsilon_decay=0.9999,
                  replay_method="DDQL", target_model_update=10, batch_size=32,
+                 state_scaler=None, value_scaler=None,
                  learning_rate=0.001, dueling=False, hidden_layer_size=50,
                  prioritized_experience_replay=False, memory_size=500,
-                 loss=mean_squared_error):
+                 loss=mean_squared_error,
+                 state_weights=None):
 
         self.input_size = input_size
         self.action_size = action_size
@@ -44,10 +46,14 @@ class DQNAgent:
         self.replay_count = 0
         self.loss_value = 0.
 
+        self.state_scaler = state_scaler
+        self.value_scaler = value_scaler
+
         self.hidden_layer_size = hidden_layer_size
         self.dueling = dueling
         self.loss = loss
         self.learning_rate = learning_rate
+        self.state_weights = state_weights
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -121,20 +127,66 @@ class DQNAgent:
         return self.gamma * max_target_value
 
     def remember(self, state, action_idx, reward, next_state, done):
+        sample_weight = self.state_weights[state] if self.state_weights is not None else 1.
 
+        state = self.normalize_state(state)
         state = np.reshape(state, [1, self.input_size])
 
+        next_state = self.normalize_state(next_state)
         next_state = np.reshape(next_state, [1, self.input_size])
 
+        reward = self.normalize_value(reward)
+
         if self.prioritized_experience_replay:
-            self.tree.add(reward + agent.priority_e, (state, action_idx, reward, next_state, done))
+            self.tree.add(reward + agent.priority_e, (state, action_idx, reward, next_state, done, sample_weight))
         else:
-            self.memory.append((state, action_idx, reward, next_state, done))
+            self.memory.append((state, action_idx, reward, next_state, done, sample_weight))
+
+    def normalize_states(self, states):
+        if self.state_scaler is None:
+            return np.asarray(states)
+        return np.asarray([self.normalize_state(state) for state in states])
+
+    def normalize_state(self, state):
+        if self.state_scaler is None:
+            return state
+        return self.state_scaler.scale(state)
+
+    def denormalize_states(self, states):
+        if self.state_scaler is None:
+            return np.asarray(states)
+        return np.asarray([self.denormalize_state(state) for state in states])
+
+    def denormalize_state(self, state):
+        if self.state_scaler is None:
+            return state
+        return self.state_scaler.unscale(state)
+
+    def normalize_values(self, values):
+        if self.value_scaler is None:
+            return np.asarray(values)
+        return np.asarray([self.normalize_value(value) for value in values])
+
+    def normalize_value(self, value):
+        if self.value_scaler is None:
+            return value
+        return self.value_scaler.scale(value)
+
+    def denormalize_values(self, values):
+        if self.value_scaler is None:
+            return np.asarray(values)
+        return np.asarray([self.denormalize_value(value) for value in values])
+
+    def denormalize_value(self, value):
+        if self.value_scaler is None:
+            return values
+        return self.value_scaler.unscale(value)
 
     def act(self, state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
 
+        state = self.normalize_state(state)
         state = np.reshape(state, [1, self.input_size])
         q_values = self.model.predict(state)
 
@@ -166,17 +218,12 @@ class DQNAgent:
         minibatch = self.prioritized_sample(self.batch_size) if self.prioritized_experience_replay else random.sample(
             self.memory, self.batch_size)
 
-        state_batch, q_values_batch, sample_weight = [], [], []
+        state_batch, q_values_batch, sample_weights = [], [], []
         for i in range(len(minibatch)):
             if self.prioritized_experience_replay:
-                idx, (state, action_idx, reward, next_state, done) = minibatch[i][0], minibatch[i][1]
+                idx, (state, action_idx, reward, next_state, done, sample_weight) = minibatch[i][0], minibatch[i][1]
             else:
-                state, action_idx, reward, next_state, done = minibatch[i]
-
-            t, x = state[0][0], state[0][1]
-            self.M[t, x, action_idx] += 1
-
-            sample_weight.append(max((t, x)))
+                state, action_idx, reward, next_state, done, sample_weight = minibatch[i]
 
             if self.replay_method == "TARGET_ONLY":
                 # To learn the target model Q values directly without accounting for an instant reward
@@ -198,8 +245,11 @@ class DQNAgent:
                 error = abs(q_values[0][action_idx] - q_value)
                 self.prioritized_update(idx, error)
 
-        history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0)
-        self.loss = history.history['loss'][0]
+            sample_weights.append(sample_weight)
+
+        history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0,
+                                 sample_weight=np.array(sample_weights))
+        self.loss_value = history.history['loss'][0]
 
         self.update_epsilon()
         self.update_priority_b()
@@ -216,8 +266,17 @@ class DQNAgent:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def init(self, X, Y, epochs):
+        X = self.normalize_states(X)
+        Y = self.normalize_values(Y)
+
         self.model.fit(X, Y, epochs=epochs, verbose=0)
         self.set_target()
+
+    def compute_sample_weight(self, states):
+        if self.state_weights is not None:
+            return np.asarray([self.state_weights[(t, x)] for t, x in states])
+        else:
+            return None
 
 
 def compute_q_table(env, agent, target=False):
@@ -228,7 +287,8 @@ def compute_q_table(env, agent, target=False):
 
     model = agent.target_model if target else agent.model
 
-    return model.predict(np.array(states))
+    q_table = model.predict(agent.normalize_states(states))
+    return agent.denormalize_values(q_table.flatten()).reshape((len(states), -1))
 
 
 def get_true_Q_table(env, gamma):
@@ -521,10 +581,23 @@ def train(agent, nb_episodes, callbacks):
 
 
 def init_target_network_with_true_Q_table(agent, env):
-    init_with_V(agent, env)
+    init_network_with_true_Q_table(agent, env)
+    # Reset main model
     agent.model = agent._build_model()
+    # And make sure the target model is never updated
     agent.target_model_update = sys.maxsize
-    return agent
+
+
+def init_network_with_true_Q_table(agent, env):
+    init_with_V(agent, env)
+
+
+def compute_state_weights(env):
+    shape = [space.n for space in env.observation_space]
+    compute_weight = lambda x: 1 + max(1. * x[0] / env.T, 1. * x[1] / env.C)
+    state_weights = [((t, x), compute_weight((t, x))) for t in range(shape[0]) for x in range(shape[1])]
+
+    return dict(state_weights)
 
 
 if __name__ == "__main__":
@@ -541,16 +614,17 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 3000
+    nb_episodes = 2000
 
     agent = DQNAgent(state_size, action_size,
-                     # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                     replay_method="DDQL", batch_size=30, memory_size=5000,
+                     state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
+                     replay_method="DDQL", batch_size=32, memory_size=5000,
                      prioritized_experience_replay=False,
                      hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999)
-    # init_target_network_with_true_Q_table(agent, env)
-    # init_memory_with_true_Q_table(agent, env, 10)
+                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999,
+                     state_weights=compute_state_weights(env))
+    #init_target_network_with_true_Q_table(agent, env)
+    #init_network_with_true_Q_table(agent, env)
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
