@@ -131,7 +131,10 @@ def q_to_policy_RM(env, Q):
     for l in Q:
         idx_action = np.argmax(l)
         policy.append(env.A[idx_action])
-    return np.array(policy)
+    policy = np.array(policy).reshape(env.T, env.C)
+    policy[:,-1] = 0.
+    policy[-1] = 0.
+    return np.array(policy.reshape(env.T*env.C))
 
 
 def difference_between_policies(p1, p2):

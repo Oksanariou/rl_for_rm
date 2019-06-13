@@ -45,6 +45,7 @@ class DQNAgent:
         self.episode = 0
         self.replay_count = 0
         self.loss_value = 0.
+        self.last_visited = []
 
         self.state_scaler = state_scaler
         self.value_scaler = value_scaler
@@ -57,8 +58,6 @@ class DQNAgent:
 
         self.model = self._build_model()
         self.target_model = self._build_model()
-
-        self.M = np.zeros([env.T, env.C, env.action_space.n])
 
         self.prioritized_experience_replay = prioritized_experience_replay
         self.priority_capacity = 5000
@@ -218,7 +217,7 @@ class DQNAgent:
         minibatch = self.prioritized_sample(self.batch_size) if self.prioritized_experience_replay else random.sample(
             self.memory, self.batch_size)
 
-        state_batch, q_values_batch, sample_weights = [], [], []
+        state_batch, q_values_batch, action_batch, sample_weights = [], [], [], []
         for i in range(len(minibatch)):
             if self.prioritized_experience_replay:
                 idx, (state, action_idx, reward, next_state, done, sample_weight) = minibatch[i][0], minibatch[i][1]
@@ -240,6 +239,7 @@ class DQNAgent:
 
             state_batch.append(state[0])
             q_values_batch.append(q_values[0])
+            action_batch.append(action_idx)
 
             if self.prioritized_experience_replay:
                 error = abs(q_values[0][action_idx] - q_value)
@@ -253,6 +253,8 @@ class DQNAgent:
 
         self.update_epsilon()
         self.update_priority_b()
+
+        self.last_visited = zip(state_batch, action_batch)
 
         self.replay_count += 1
         if self.replay_count % self.target_model_update == 0:
@@ -287,8 +289,14 @@ def compute_q_table(env, agent, target=False):
 
     model = agent.target_model if target else agent.model
 
-    q_table = model.predict(agent.normalize_states(states))
-    return agent.denormalize_values(q_table.flatten()).reshape((len(states), -1))
+    Q_table = model.predict(agent.normalize_states(states))
+
+    Q_table = agent.denormalize_values(Q_table.flatten()).reshape(env.T, env.C, env.action_space.n)
+
+    Q_table[:, -1] = 0.  # Setting the Q values of the states (x,t) such that x = C to zero
+    Q_table[-1] = 0.  # Setting the Q values of the states (x,t) such that t = T to zero
+
+    return Q_table.reshape(env.T * env.C, env.action_space.n)
 
 
 def get_true_Q_table(env, gamma):
@@ -437,15 +445,15 @@ class QErrorMonitor(Callback):
         if Q_table is None:
             return
 
+        T, C, nA = self.env.T, self.env.C, self.env.action_space.n
+
         self.replays.append(self.agent.replay_count)
         self.errors_Q_table.append(self._mse(true_Q_table, Q_table))
         self.errors_V_table.append(self._mse(true_V_table, V_table))
-        self.errors_policy.append(self._mse(true_policy, policy))
+        self.errors_policy.append(self._mse(true_policy.reshape(T, C), policy.reshape(T, C)))
 
         self.errors_borders.append(self._mse(true_Q_table[self.mask_borders], Q_table[self.mask_borders]))
         self.errors_not_borders.append(self._mse(true_Q_table[self.mask_not_borders], Q_table[self.mask_not_borders]))
-
-        T, C, nA = self.env.T, self.env.C, self.env.action_space.n
 
         print("Difference with the true Q-table")
         print(abs(true_Q_table.reshape(T, C, nA) - Q_table.reshape(T, C, nA)))
@@ -558,6 +566,40 @@ class PolicyDisplay(Callback):
             visualize_policy_RM(policy, self.env.T, self.env.C)
 
 
+class MemoryMonitor(Callback):
+
+    def __init__(self, condition, agent, env):
+        super().__init__(condition, agent, env)
+        self.replays = []
+        self.hist2d = []
+
+    def _run(self):
+        self.replays.append(self.agent.replay_count)
+        states = []
+        actions = []
+        for k in range(len(agent.memory)):
+            states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
+            actions.append(agent.memory[k][1])
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
+        self.hist2d.append((h, xedges, yedges))
+
+
+class MemoryDisplay(Callback):
+
+    def __init__(self, condition, agent, env, memory_monitor):
+        super().__init__(condition, agent, env)
+        self.memory_monitor = memory_monitor
+
+    def _run(self):
+        fig, ax = plt.subplots(tight_layout=True)
+        h, xedges, yedges = self.memory_monitor.hist2d[-1]
+        im = plt.pcolormesh(xedges, yedges, h.T)
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+        plt.colorbar(im, ax=ax)
+        plt.show()
+
+
 def train(agent, nb_episodes, callbacks):
     for episode in range(nb_episodes):
 
@@ -617,14 +659,14 @@ if __name__ == "__main__":
     nb_episodes = 2000
 
     agent = DQNAgent(state_size, action_size,
-                     state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                     replay_method="DDQL", batch_size=32, memory_size=5000,
+                     # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
+                     replay_method="DDQL", batch_size=30, memory_size=5000,
                      prioritized_experience_replay=False,
                      hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999,
+                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.9995,
                      state_weights=compute_state_weights(env))
-    #init_target_network_with_true_Q_table(agent, env)
-    #init_network_with_true_Q_table(agent, env)
+    # init_target_network_with_true_Q_table(agent, env)
+    # init_network_with_true_Q_table(agent, env)
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
@@ -647,17 +689,21 @@ if __name__ == "__main__":
     revenue_compute = RevenueMonitor(while_training, agent, env, q_compute, 10_000)
     revenue_display = RevenueDisplay(after_train, agent, env, revenue_compute, true_revenue)
 
+    memory_monitor = MemoryMonitor(while_training, agent, env)
+    memory_display = MemoryDisplay(after_train, agent, env, memory_monitor)
+
     callbacks = [true_compute, true_v_display, true_revenue,
                  agent_monitor,
                  q_compute, v_display, policy_display,
                  q_error, q_error_display,
-                 revenue_compute, revenue_display]
+                 revenue_compute, revenue_display,
+                 memory_monitor, memory_display]
 
     train(agent, nb_episodes, callbacks)
 
-    X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
-    fig.colorbar(p, ax=ax)
-    plt.show()
+    # X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
+    # fig.colorbar(p, ax=ax)
+    # plt.show()
