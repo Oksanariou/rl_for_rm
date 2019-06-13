@@ -178,7 +178,7 @@ class DQNAgent:
 
     def denormalize_value(self, value):
         if self.value_scaler is None:
-            return values
+            return value
         return self.value_scaler.unscale(value)
 
     def act(self, state):
@@ -251,7 +251,6 @@ class DQNAgent:
                                  sample_weight=np.array(sample_weights))
         self.loss_value = history.history['loss'][0]
 
-        self.update_epsilon()
         self.update_priority_b()
 
         self.last_visited = zip(state_batch, action_batch)
@@ -596,6 +595,45 @@ class MemoryDisplay(Callback):
         im = plt.pcolormesh(xedges, yedges, h.T)
         ax.set_xlim(xedges[0], xedges[-1])
         ax.set_ylim(yedges[0], yedges[-1])
+        plt.xlabel("State index")
+        plt.ylabel("Action index")
+        plt.title("Transitions present in the agent's memory")
+        plt.colorbar(im, ax=ax)
+        plt.show()
+
+class BatchMonitor(Callback):
+
+    def __init__(self, condition, agent, env):
+        super().__init__(condition, agent, env)
+        self.replays = []
+        self.hist2d = []
+
+    def _run(self):
+        self.replays.append(self.agent.replay_count)
+        states = []
+        actions = []
+        for k in range(len(list(agent.last_visited))):
+            states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
+            actions.append(agent.memory[k][1])
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
+        self.hist2d.append((h, xedges, yedges))
+
+
+class BatchDisplay(Callback):
+
+    def __init__(self, condition, agent, env, batch_monitor):
+        super().__init__(condition, agent, env)
+        self.batch_monitor = batch_monitor
+
+    def _run(self):
+        fig, ax = plt.subplots(tight_layout=True)
+        h, xedges, yedges = self.batch_monitor.hist2d[-1]
+        im = plt.pcolormesh(xedges, yedges, h.T)
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+        plt.xlabel("State index")
+        plt.ylabel("Action index")
+        plt.title("Transitions present in the agent's minibatch")
         plt.colorbar(im, ax=ax)
         plt.show()
 
@@ -617,6 +655,8 @@ def train(agent, nb_episodes, callbacks):
             state = next_state
 
             agent.replay(episode)
+
+        agent.update_epsilon()
 
         for callback in callbacks:
             callback.run(episode)
@@ -656,7 +696,7 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 2000
+    nb_episodes = 5000
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
@@ -672,6 +712,7 @@ if __name__ == "__main__":
     every_episode = lambda episode: True
     while_training = lambda episode: episode % (nb_episodes / 20) == 0
     after_train = lambda episode: episode == nb_episodes - 1
+    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (nb_episodes / 10) == 0
 
     true_compute = TrueCompute(before_train, agent, env)
     true_v_display = VDisplay(before_train, agent, env, true_compute)
@@ -680,7 +721,7 @@ if __name__ == "__main__":
     agent_monitor = AgentMonitor(every_episode, agent, env)
 
     q_compute = QCompute(while_training, agent, env)
-    v_display = VDisplay(while_training, agent, env, q_compute)
+    v_display = VDisplay(after_train, agent, env, q_compute)
     policy_display = PolicyDisplay(after_train, agent, env, q_compute)
 
     q_error = QErrorMonitor(while_training, agent, env, true_compute, q_compute)
@@ -692,12 +733,16 @@ if __name__ == "__main__":
     memory_monitor = MemoryMonitor(while_training, agent, env)
     memory_display = MemoryDisplay(after_train, agent, env, memory_monitor)
 
+    batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent, env)
+    batch_display = BatchDisplay(after_train, agent, env, batch_monitor)
+
     callbacks = [true_compute, true_v_display, true_revenue,
                  agent_monitor,
                  q_compute, v_display, policy_display,
                  q_error, q_error_display,
                  revenue_compute, revenue_display,
-                 memory_monitor, memory_display]
+                 memory_monitor, memory_display,
+                 batch_monitor, batch_display]
 
     train(agent, nb_episodes, callbacks)
 
