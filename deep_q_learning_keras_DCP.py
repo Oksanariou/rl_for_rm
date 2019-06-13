@@ -229,7 +229,11 @@ def compute_q_table(env, agent, target=False):
 
     model = agent.target_model if target else agent.model
 
-    return model.predict(np.array(states))
+    Q_table = model.predict(np.array(states)).reshape(env.T, env.C, env.action_space.n)
+    Q_table[:,-1] = 0. # Setting the Q values of the states (x,t) such that x = C to zero
+    Q_table[-1] = 0. # Setting the Q values of the states (x,t) such that t = T to zero
+
+    return Q_table.reshape(env.T*env.C, env.action_space.n)
 
 
 def get_true_Q_table(env, gamma):
@@ -378,15 +382,15 @@ class QErrorMonitor(Callback):
         if Q_table is None:
             return
 
+        T, C, nA = self.env.T, self.env.C, self.env.action_space.n
+
         self.replays.append(self.agent.replay_count)
         self.errors_Q_table.append(self._mse(true_Q_table, Q_table))
         self.errors_V_table.append(self._mse(true_V_table, V_table))
-        self.errors_policy.append(self._mse(true_policy, policy))
+        self.errors_policy.append(self._mse(true_policy.reshape(T, C), policy.reshape(T, C)))
 
         self.errors_borders.append(self._mse(true_Q_table[self.mask_borders], Q_table[self.mask_borders]))
         self.errors_not_borders.append(self._mse(true_Q_table[self.mask_not_borders], Q_table[self.mask_not_borders]))
-
-        T, C, nA = self.env.T, self.env.C, self.env.action_space.n
 
         print("Difference with the true Q-table")
         print(abs(true_Q_table.reshape(T, C, nA) - Q_table.reshape(T, C, nA)))
@@ -576,14 +580,14 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 3000
+    nb_episodes = 2000
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
                      prioritized_experience_replay=False,
                      hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.999)
+                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.9995)
     # init_target_network_with_true_Q_table(agent, env)
     # init_memory_with_true_Q_table(agent, env, 10)
 
@@ -620,9 +624,9 @@ if __name__ == "__main__":
 
     train(agent, nb_episodes, callbacks)
 
-    X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
-    fig.colorbar(p, ax=ax)
-    plt.show()
+    # X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
+    # fig.colorbar(p, ax=ax)
+    # plt.show()
