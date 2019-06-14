@@ -612,9 +612,10 @@ class BatchMonitor(Callback):
         self.replays.append(self.agent.replay_count)
         states = []
         actions = []
-        for k in range(len(list(agent.last_visited))):
-            states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
-            actions.append(agent.memory[k][1])
+        L = list(agent.last_visited)
+        for k in range(len(L)):
+            states.append(env.to_idx(L[k][0][0], L[k][0][1]))
+            actions.append(L[k][1])
         h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
         self.hist2d.append((h, xedges, yedges))
 
@@ -634,6 +635,27 @@ class BatchDisplay(Callback):
         plt.xlabel("State index")
         plt.ylabel("Action index")
         plt.title("Transitions present in the agent's minibatch")
+        plt.colorbar(im, ax=ax)
+        plt.show()
+
+class TotalBatchDisplay(Callback):
+
+    def __init__(self, condition, agent, env, batch_monitor):
+        super().__init__(condition, agent, env)
+        self.batch_monitor = batch_monitor
+
+    def _run(self):
+        fig, ax = plt.subplots(tight_layout=True)
+        H = np.zeros((self.batch_monitor.hist2d[0][0].shape[0], self.batch_monitor.hist2d[0][0].shape[1]), float)
+        h, xedges, yedges = self.batch_monitor.hist2d[-1]
+        for k in range(len(self.batch_monitor.hist2d)):
+            H += self.batch_monitor.hist2d[k][0]
+        im = plt.pcolormesh(xedges, yedges, H.T)
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+        plt.xlabel("State index")
+        plt.ylabel("Action index")
+        plt.title("Transitions picked up by the agent during experience replay")
         plt.colorbar(im, ax=ax)
         plt.show()
 
@@ -696,7 +718,7 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 5000
+    nb_episodes = 2000
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
@@ -734,7 +756,8 @@ if __name__ == "__main__":
     memory_display = MemoryDisplay(after_train, agent, env, memory_monitor)
 
     batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent, env)
-    batch_display = BatchDisplay(after_train, agent, env, batch_monitor)
+    batch_display = BatchDisplay(while_training_after_replay_has_started, agent, env, batch_monitor)
+    total_batch_display = TotalBatchDisplay(after_train, agent, env, batch_monitor)
 
     callbacks = [true_compute, true_v_display, true_revenue,
                  agent_monitor,
