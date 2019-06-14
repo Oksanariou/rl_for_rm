@@ -774,7 +774,7 @@ if __name__ == "__main__":
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
-                     prioritized_experience_replay=False,
+                     prioritized_experience_replay=True,
                      hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
                      epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.9995,
                      state_weights=compute_state_weights(env))
