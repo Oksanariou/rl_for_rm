@@ -60,7 +60,7 @@ class DQNAgent:
         self.target_model = self._build_model()
 
         self.prioritized_experience_replay = prioritized_experience_replay
-        self.priority_capacity = 5000
+        self.priority_capacity = 2000
         self.tree = SumTree(self.priority_capacity)
         self.priority_e = 0.01
         self.priority_a = 0.7
@@ -137,6 +137,7 @@ class DQNAgent:
         reward = self.normalize_value(reward)
 
         if self.prioritized_experience_replay:
+            self.memory.append((state, action_idx, reward, next_state, done, sample_weight))
             self.tree.add(reward + agent.priority_e, (state, action_idx, reward, next_state, done, sample_weight))
         else:
             self.memory.append((state, action_idx, reward, next_state, done, sample_weight))
@@ -202,10 +203,11 @@ class DQNAgent:
             minibatch.append((idx, data))
         return minibatch
 
+    def compute_priority(self, error):
+        return (error + self.priority_e) ** self.priority_a
+
     def prioritized_update(self, idx, error):
-        # priority = ((error + self.priority_e) ** self.priority_a) * (
-        #         1 / ((error + self.priority_e) ** self.priority_a)) ** self.priority_b
-        priority = ((error + self.priority_e) ** self.priority_a)
+        priority = self.compute_priority(error)
         self.tree.update(idx, priority)
 
     def replay(self, episode):
@@ -574,12 +576,14 @@ class MemoryMonitor(Callback):
 
     def _run(self):
         self.replays.append(self.agent.replay_count)
-        states = []
-        actions = []
+        states = [env.nS - 1]
+        actions = [0]
+        weights = [0]
         for k in range(len(agent.memory)):
             states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
             actions.append(agent.memory[k][1])
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
+            weights.append(1)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -601,6 +605,7 @@ class MemoryDisplay(Callback):
         plt.colorbar(im, ax=ax)
         plt.show()
 
+
 class BatchMonitor(Callback):
 
     def __init__(self, condition, agent, env):
@@ -610,13 +615,15 @@ class BatchMonitor(Callback):
 
     def _run(self):
         self.replays.append(self.agent.replay_count)
-        states = []
-        actions = []
+        states = [env.nS - 1]
+        actions = [0]
+        weights = [0]
         L = list(agent.last_visited)
         for k in range(len(L)):
             states.append(env.to_idx(L[k][0][0], L[k][0][1]))
             actions.append(L[k][1])
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n])
+            weights.append(1)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -638,6 +645,7 @@ class BatchDisplay(Callback):
         plt.colorbar(im, ax=ax)
         plt.show()
 
+
 class TotalBatchDisplay(Callback):
 
     def __init__(self, condition, agent, env, batch_monitor):
@@ -656,6 +664,49 @@ class TotalBatchDisplay(Callback):
         plt.xlabel("State index")
         plt.ylabel("Action index")
         plt.title("Transitions picked up by the agent during experience replay")
+        plt.colorbar(im, ax=ax)
+        plt.show()
+
+
+class SumtreeMonitor(Callback):
+
+    def __init__(self, condition, agent, env):
+        super().__init__(condition, agent, env)
+        self.replays = []
+        self.hist2d = []
+
+    def _run(self):
+        self.replays.append(self.agent.replay_count)
+        states = [env.nS - 1]
+        actions = [0]
+        weights = [0]
+        L = agent.tree.data
+        for k in range(len(L)):
+            if L[k] == 0:
+                break
+            states.append(env.to_idx(L[k][0][0][0], L[k][0][0][1]))
+            actions.append(L[k][1])
+            weights.append(agent.tree.tree[k + agent.tree.capacity - 1])
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n],
+                                           weights=weights)
+        self.hist2d.append((h, xedges, yedges))
+
+
+class SumtreeDisplay(Callback):
+
+    def __init__(self, condition, agent, env, sumtree_monitor):
+        super().__init__(condition, agent, env)
+        self.sumtree_monitor = sumtree_monitor
+
+    def _run(self):
+        fig, ax = plt.subplots(tight_layout=True)
+        h, xedges, yedges = self.sumtree_monitor.hist2d[-1]
+        im = plt.pcolormesh(xedges, yedges, h.T)
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+        plt.xlabel("State index")
+        plt.ylabel("Action index")
+        plt.title("Priorities of the transitions stored in the agent's sumtree")
         plt.colorbar(im, ax=ax)
         plt.show()
 
@@ -734,7 +785,8 @@ if __name__ == "__main__":
     every_episode = lambda episode: True
     while_training = lambda episode: episode % (nb_episodes / 20) == 0
     after_train = lambda episode: episode == nb_episodes - 1
-    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (nb_episodes / 10) == 0
+    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
+            nb_episodes / 10) == 0
 
     true_compute = TrueCompute(before_train, agent, env)
     true_v_display = VDisplay(before_train, agent, env, true_compute)
@@ -756,8 +808,11 @@ if __name__ == "__main__":
     memory_display = MemoryDisplay(after_train, agent, env, memory_monitor)
 
     batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent, env)
-    batch_display = BatchDisplay(while_training_after_replay_has_started, agent, env, batch_monitor)
+    batch_display = BatchDisplay(after_train, agent, env, batch_monitor)
     total_batch_display = TotalBatchDisplay(after_train, agent, env, batch_monitor)
+
+    sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent, env)
+    sumtree_display = SumtreeDisplay(after_train, agent, env, sumtree_monitor)
 
     callbacks = [true_compute, true_v_display, true_revenue,
                  agent_monitor,
@@ -765,7 +820,8 @@ if __name__ == "__main__":
                  q_error, q_error_display,
                  revenue_compute, revenue_display,
                  memory_monitor, memory_display,
-                 batch_monitor, batch_display]
+                 batch_monitor, batch_display, total_batch_display,
+                 sumtree_monitor, sumtree_display]
 
     train(agent, nb_episodes, callbacks)
 
