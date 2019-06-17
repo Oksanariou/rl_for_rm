@@ -6,6 +6,8 @@ import gym
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import dill as pickle
 from keras import Input
 from keras.layers import Dense, BatchNormalization, Lambda, K
 from keras.models import Sequential, Model
@@ -66,6 +68,8 @@ class DQNAgent:
         self.priority_a = 0.7
         self.priority_b = 0.5
         self.priority_b_increase = 0.9999
+
+        self.name = "agent"
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -385,6 +389,8 @@ class TrueCompute(Callback):
         self.policy = None
         self.V_table = None
 
+        self.name = "true_compute"
+
     def _run(self):
         true_Q_table, true_policy = get_true_Q_table(self.env, self.agent.gamma)
         true_V = q_to_v(self.env, true_Q_table)
@@ -402,6 +408,12 @@ class QCompute(Callback):
         self.policy = None
         self.V_table = None
 
+        self.Q_tables = []
+        self.policies = []
+        self.V_tables = []
+
+        self.name = "q_compute"
+
     def _run(self):
         Q_table = compute_q_table(self.env, self.agent)
         policy = q_to_policy_RM(self.env, Q_table)
@@ -410,6 +422,10 @@ class QCompute(Callback):
         self.Q_table = Q_table
         self.policy = policy
         self.V_table = V
+
+        self.Q_tables.append(Q_table)
+        self.policies.append(policy)
+        self.V_tables.append(V)
 
 
 class QErrorMonitor(Callback):
@@ -423,6 +439,8 @@ class QErrorMonitor(Callback):
 
         self.true = true_compute
         self.q = q_compute
+
+        self.name = "q_error"
 
         borders = np.reshape(np.arange(env.T * env.C * env.nA), (env.T, env.C, env.nA))
         borders = ((borders // env.nA + 1) % 4 == 0) | (borders >= (env.T - 1) * env.C * env.nA)
@@ -511,6 +529,8 @@ class RevenueMonitor(Callback):
         self.q = q_compute
         self.N = N
 
+        self.name = "revenue_compute"
+
     def _run(self):
         policy = self.q.policy
         if policy is None:
@@ -574,16 +594,18 @@ class MemoryMonitor(Callback):
         self.replays = []
         self.hist2d = []
 
+        self.name = "memory_monitor"
+
     def _run(self):
         self.replays.append(self.agent.replay_count)
         states = [env.nS - 1]
         actions = [0]
         weights = [0]
-        for k in range(len(agent.memory)):
-            states.append(env.to_idx(agent.memory[k][0][0][0], agent.memory[k][0][0][1]))
-            actions.append(agent.memory[k][1])
+        for k in range(len(self.agent.memory)):
+            states.append(env.to_idx(self.agent.memory[k][0][0][0], self.agent.memory[k][0][0][1]))
+            actions.append(self.agent.memory[k][1])
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n], weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -613,17 +635,19 @@ class BatchMonitor(Callback):
         self.replays = []
         self.hist2d = []
 
+        self.name = "batch_monitor"
+
     def _run(self):
         self.replays.append(self.agent.replay_count)
         states = [env.nS - 1]
         actions = [0]
         weights = [0]
-        L = list(agent.last_visited)
+        L = list(self.agent.last_visited)
         for k in range(len(L)):
-            states.append(env.to_idx(L[k][0][0], L[k][0][1]))
+            states.append(self.env.to_idx(L[k][0][0], L[k][0][1]))
             actions.append(L[k][1])
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n], weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -675,19 +699,21 @@ class SumtreeMonitor(Callback):
         self.replays = []
         self.hist2d = []
 
+        self.name = "sumtree_monitor"
+
     def _run(self):
         self.replays.append(self.agent.replay_count)
-        states = [env.nS - 1]
+        states = [self.env.nS - 1]
         actions = [0]
         weights = [0]
-        L = agent.tree.data
+        L = self.agent.tree.data
         for k in range(len(L)):
             if L[k] == 0:
                 break
             states.append(env.to_idx(L[k][0][0][0], L[k][0][0][1]))
             actions.append(L[k][1])
-            weights.append(agent.tree.tree[k + agent.tree.capacity - 1])
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, env.action_space.n],
+            weights.append(self.agent.tree.tree[k + self.agent.tree.capacity - 1])
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
                                            weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
@@ -719,15 +745,24 @@ def train(agent, nb_episodes, callbacks):
 
         done = False
 
-        while not done:
-            action_idx = agent.act(state)
-            next_state, reward, done, _ = env.step(env.A[action_idx])
+        # while not done:
+        #     action_idx = agent.act(state)
+        #     next_state, reward, done, _ = env.step(env.A[action_idx])
+        #
+        #     agent.remember(state, action_idx, reward, next_state, done)
+        #
+        #     state = next_state
+        #
+        #     agent.replay(episode)
 
-            agent.remember(state, action_idx, reward, next_state, done)
+        action_idx = agent.act(state)
+        next_state, reward, done, _ = env.step(env.A[action_idx])
 
-            state = next_state
+        agent.remember(state, action_idx, reward, next_state, done)
 
-            agent.replay(episode)
+        state = next_state
+
+        agent.replay(episode)
 
         agent.update_epsilon()
 
@@ -754,6 +789,49 @@ def compute_state_weights(env):
 
     return dict(state_weights)
 
+def run_n_times_and_save(experience_file_name, number_of_runs, nb_episodes, env):
+
+    os.mkdir('DQL-Results/'+experience_file_name)
+
+    before_train = lambda episode: episode == 0
+    while_training = lambda episode: episode % (nb_episodes / 20) == 0
+
+    pickle_out = open('DQL-Results/'+experience_file_name + "/Environment", "wb")
+    pickle.dump(env, pickle_out)
+    pickle_out.close()
+
+    for k in range(number_of_runs):
+        agent = DQNAgent(state_size, action_size,
+                         # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
+                         replay_method="DDQL", batch_size=30, memory_size=5000,
+                         prioritized_experience_replay=False, target_model_update=100,
+                         hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
+                         epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.9995,
+                         state_weights=compute_state_weights(env))
+
+        run_file_name = 'DQL-Results/'+experience_file_name+'/Run_' + str(k)
+        os.mkdir(run_file_name)
+
+        pickle_out = open(run_file_name + "/" + agent.name, "wb")
+        pickle.dump(agent, pickle_out)
+        pickle_out.close()
+
+        true_compute = TrueCompute(before_train, agent, env)
+        true_revenue = RevenueMonitor(before_train, agent, env, true_compute, 10_000)
+        q_compute = QCompute(while_training, agent, env)
+        q_error = QErrorMonitor(while_training, agent, env, true_compute, q_compute)
+        revenue_compute = RevenueMonitor(while_training, agent, env, q_compute, 10_000)
+        memory_monitor = MemoryMonitor(while_training, agent, env)
+
+        callbacks = [true_compute, true_revenue, q_compute, q_error, revenue_compute, memory_monitor]
+
+        train(agent, nb_episodes, callbacks)
+
+        for data in callbacks:
+            pickle_out = open(run_file_name + "/" + data.name, "wb")
+            pickle.dump(data, pickle_out)
+            pickle_out.close()
+
 
 if __name__ == "__main__":
     data_collection_points = 4
@@ -769,14 +847,14 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 2000
+    nb_episodes = 10000
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
-                     prioritized_experience_replay=True,
+                     prioritized_experience_replay=False, target_model_update=100,
                      hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                     epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.9995,
+                     epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.9999,
                      state_weights=compute_state_weights(env))
     # init_target_network_with_true_Q_table(agent, env)
     # init_network_with_true_Q_table(agent, env)
@@ -823,11 +901,15 @@ if __name__ == "__main__":
                  batch_monitor, batch_display, total_batch_display,
                  sumtree_monitor, sumtree_display]
 
-    train(agent, nb_episodes, callbacks)
+    # train(agent, nb_episodes, callbacks)
 
-    # X, Y, Z, values = reshape_matrix_of_visits(agent.M, env)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # p = ax.scatter3D(X, Y, Z, c=values, cmap='hot')
-    # fig.colorbar(p, ax=ax)
-    # plt.show()
+    experience_file_name = "Test"
+    run_n_times_and_save(experience_file_name, 30, 10000, env)
+
+    # pickle_in = open("DQL-Results/"+experience_file_name+"/Run_0/q_compute", "rb")
+    # q_compute = pickle.load(pickle_in)
+
+
+
+
+
