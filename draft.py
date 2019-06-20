@@ -19,11 +19,11 @@ if __name__ == '__main__':
     data_collection_points = 10
     micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.4
-    lamb = 0.2
+    actions = tuple(k for k in range(50, 231, 50))
+    alpha = 0.8
+    lamb = 0.7
 
-    env_DCP = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
+    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
     env_microtimes = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)
@@ -38,12 +38,12 @@ if __name__ == '__main__':
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
     # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
 
-    V, P_ref = dynamic_programming_env_DCP(env_DCP)
-    V = V.reshape(env_DCP.T * env_DCP.C)
-    visualisation_value_RM(V, env_DCP.T, env_DCP.C)
-    visualize_policy_RM(P_ref, env_DCP.T, env_DCP.C)
-    P_ref = P_ref.reshape(env_DCP.T * env_DCP.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_DCP, P_ref, 1000)))
+    V, P_ref = dynamic_programming_env_DCP(env)
+    V = V.reshape(env.T * env.C)
+    visualisation_value_RM(V, env.T, env.C)
+    visualize_policy_RM(P_ref, env.T, env.C)
+    P_DP = P_ref.reshape(env.T * env.C)
+    print("Average reward over 10000 episodes : " + str(average_n_episodes(env, P_DP, 10000, 0.01)))
 
     # q_model = v_to_q(env, V, 1)
     # v = q_to_v(env, q_model)
@@ -55,34 +55,34 @@ if __name__ == '__main__':
     # alpha = 0.05
     #
     # nb_episodes, nb_steps = 2000, 10000
-    # epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.999
+    # epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.995
     #
     # visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
-    # q_table, rList = dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, T, C)
+    # q_table, rList = dql(env, gamma, nb_episodes, nb_steps, epsilon, epsilon_min, epsilon_decay, env.T, env.C)
     # print(q_table)
     # v = q_to_v(env, q_table)
-    # visualisation_value_RM(v, T, C)
-    # policy = extract_policy_RM(env, v, gamma)
-    # visualize_policy_RM(policy, T, C)
-    # #print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
-
-    # alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
-    # nb_episodes = 500000
-    # epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.999995
-    # temp = 100
-    #
-    # visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
-    # visualizing_epsilon_decay(nb_episodes, alpha, alpha_min, alpha_decay)
-    # q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
-    #                                                                      nb_episodes, epsilon,
-    #                                                                      epsilon_min, epsilon_decay, P_ref, temp)
-    #
-    # v = q_to_v(env, q_table)
     # visualisation_value_RM(v, env.T, env.C)
-    # policy = q_to_policy_RM(env, q_table)
+    # policy = extract_policy_RM(env, v, gamma)
     # visualize_policy_RM(policy, env.T, env.C)
     # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
-    # plot_evolution_difference_between_policies(nb_episodes_list, diff_with_policy_opt_list)
+
+    alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
+    nb_episodes = 600000
+    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.99999
+    temp = 100
+
+    visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
+    # visualizing_epsilon_decay(nb_episodes, alpha, alpha_min, alpha_decay)
+    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
+                                                                         nb_episodes, epsilon,
+                                                                         epsilon_min, epsilon_decay, P_ref, temp)
+
+    v = q_to_v(env, q_table)
+    visualisation_value_RM(v, env.T, env.C)
+    policy = q_to_policy_RM(env, q_table)
+    visualize_policy_RM(policy, env.T, env.C)
+    print("Average reward over 10000 episodes : " + str(average_n_episodes(env, policy, 10000)))
+    plot_evolution_difference_between_policies(nb_episodes_list, diff_with_policy_opt_list)
     #
     # #M = M.reshape(env.nS, env.action_space.n)
     # X, Y, Z, values = reshape_matrix_of_visits(M, env)
@@ -100,13 +100,13 @@ if __name__ == '__main__':
 
     max_iter = 100000
     epsilon = 1e-20
-    gamma = 1
+    gamma = 0.99
 
-    v = value_iteration(env_DCP, max_iter, epsilon)
-    visualisation_value_RM(v, env_DCP.T, env_DCP.C)
-    policy = extract_policy_RM(env_DCP, v, gamma)
-    visualize_policy_RM(policy, env_DCP.T, env_DCP.C)
-    print("Average reward over 1000 episodes : " + str(average_n_episodes(env_DCP, policy, 1000)))
+    v = value_iteration(env, max_iter, epsilon)
+    visualisation_value_RM(v, env.T, env.C)
+    P_VI = extract_policy_RM(env, v, gamma)
+    visualize_policy_RM(P_VI, env.T, env.C)
+    print("Average reward over 10000 episodes : " + str(average_n_episodes(env, P_VI, 10000)))
     #
     # max_iter = 100000
     # epsilon = 1e-20
@@ -141,3 +141,14 @@ if __name__ == '__main__':
     # visualizing_epsilon_decay(nb_episodes, epsilon, 0, epsilon_decay)
     # policy = train_actor_critic(env, nb_episodes, epsilon, epsilon_decay, gamma, tau, lr)
     # visualize_policy_RM(policy, env.T, env.C)
+
+    plt.plot([nb_episodes_list[0], nb_episodes_list[-1]], [average_n_episodes(env, P_DP, 10000, 0.01)] * 2,
+             label="DP revenue", c='red', lw=2)
+    plt.plot([nb_episodes_list[0], nb_episodes_list[-1]], [average_n_episodes(env, P_VI, 10000, 0.01)] * 2,
+             label="VI revenue", c='orange', lw=2)
+    plt.plot(nb_episodes_list, revenues, label="Q-Learning revenue", c='blue', lw=2)
+    plt.legend()
+    plt.ylabel("Revenue")
+    plt.xlabel("Number of episodes")
+    plt.title("Average revenue")
+    plt.show()

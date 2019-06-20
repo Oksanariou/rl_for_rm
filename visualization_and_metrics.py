@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from scipy import stats
 
 def visualize_policy_FL(policy):
@@ -33,13 +34,16 @@ def run_episode_FL(env, policy):
     return total_reward
 
 
-def run_episode(env, policy):
+def run_episode(env, policy, epsilon=0.0):
     """ Runs an episode and returns the total reward """
     state = env.reset()
     total_reward = 0
     while True:
         state_idx = env.to_idx(*state)
-        action = policy[state_idx]
+        if np.random.rand() <= epsilon:
+            action = env.A[random.randrange(env.action_space.n)]
+        else:
+            action = policy[state_idx]
         state, reward, done, _ = env.step(action)
         total_reward += reward
         if done:
@@ -53,9 +57,9 @@ def average_n_episodes_FL(env, policy, n_eval):
     return np.mean(scores)
 
 
-def average_n_episodes(env, policy, n_eval):
+def average_n_episodes(env, policy, n_eval, epsilon=0.0):
     """ Runs n episodes and returns the average of the n total rewards"""
-    scores = [run_episode(env, policy) for _ in range(n_eval)]
+    scores = [run_episode(env, policy, epsilon) for _ in range(n_eval)]
     return np.mean(scores)
 
 

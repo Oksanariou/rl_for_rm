@@ -23,7 +23,7 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
     M = np.zeros([env.T, env.C, env.action_space.n])
     trajectories = np.zeros([env.T, env.C])
     Q[:] = 0
-    diff_with_policy_opt_list = []
+    diff_with_policy_opt_list, revenues = [], []
     nb_episodes_list = []
 
     for episode in range(nb_episodes):
@@ -64,8 +64,9 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
             policy = q_to_policy_RM(env, Q)
             # visualize_policy_RM(policy, env.T, env.C)
 
-            N = 1000
+            N = 10000
             revenue = average_n_episodes(env, policy, N)
+            revenues.append(revenue)
             print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
             difference_with_optimal_policy = difference_between_policies(policy, P_ref)
             print("Difference with the optimal policy after {} episodes : {}".format(episode, difference_with_optimal_policy))
@@ -80,7 +81,7 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
         epsilon = max(epsilon_min, epsilon * epsilon_decay)
         alpha = max(alpha_min, alpha * alpha_decay)
 
-    return Q, nb_episodes_list, diff_with_policy_opt_list, M, trajectories
+    return Q, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues
 
 
 def q_to_v(env, Q_table):

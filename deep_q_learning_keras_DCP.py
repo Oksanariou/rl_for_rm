@@ -20,6 +20,7 @@ from visualization_and_metrics import visualize_policy_RM, average_n_episodes, v
     reshape_matrix_of_visits
 from mpl_toolkits.mplot3d import Axes3D
 from SumTree import SumTree
+from scipy.stats import sem, t
 
 
 class DQNAgent:
@@ -522,21 +523,24 @@ class QErrorDisplay(Callback):
 
 class RevenueMonitor(Callback):
 
-    def __init__(self, condition, agent, env, q_compute, N):
+    def __init__(self, condition, agent, env, q_compute, N, name="revenue_compute"):
         super().__init__(condition, agent, env)
         self.replays = []
         self.revenues = []
         self.q = q_compute
         self.N = N
 
-        self.name = "revenue_compute"
+        self.name = name
 
     def _run(self):
         policy = self.q.policy
         if policy is None:
             return
 
-        revenue = average_n_episodes(self.env, policy.flatten(), self.N)
+        if self.name == "true_revenue":
+            revenue = average_n_episodes(self.env, policy.flatten(), self.N, agent.epsilon_min)
+        else:
+            revenue = average_n_episodes(self.env, policy.flatten(), self.N)
         self.replays.append(self.agent.replay_count)
         self.revenues.append(revenue)
 
@@ -605,7 +609,8 @@ class MemoryMonitor(Callback):
             states.append(env.to_idx(self.agent.memory[k][0][0][0], self.agent.memory[k][0][0][1]))
             actions.append(self.agent.memory[k][1])
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n], weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
+                                           weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -647,7 +652,8 @@ class BatchMonitor(Callback):
             states.append(self.env.to_idx(L[k][0][0], L[k][0][1]))
             actions.append(L[k][1])
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n], weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
+                                           weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 
@@ -745,22 +751,20 @@ def train(agent, nb_episodes, callbacks):
 
         done = False
 
-        # while not done:
-        #     action_idx = agent.act(state)
-        #     next_state, reward, done, _ = env.step(env.A[action_idx])
-        #
-        #     agent.remember(state, action_idx, reward, next_state, done)
-        #
-        #     state = next_state
-        #
-        #     agent.replay(episode)
+        while not done:
+            action_idx = agent.act(state)
+            next_state, reward, done, _ = env.step(env.A[action_idx])
 
-        action_idx = agent.act(state)
-        next_state, reward, done, _ = env.step(env.A[action_idx])
+            agent.remember(state, action_idx, reward, next_state, done)
 
-        agent.remember(state, action_idx, reward, next_state, done)
+            state = next_state
 
-        state = next_state
+        # action_idx = agent.act(state)
+        # next_state, reward, done, _ = env.step(env.A[action_idx])
+        #
+        # agent.remember(state, action_idx, reward, next_state, done)
+        #
+        # state = next_state
 
         agent.replay(episode)
 
@@ -789,14 +793,14 @@ def compute_state_weights(env):
 
     return dict(state_weights)
 
-def run_n_times_and_save(experience_file_name, number_of_runs, nb_episodes, env):
 
-    os.mkdir('DQL-Results/'+experience_file_name)
+def run_n_times_and_save(experience_dir_name, number_of_runs, nb_episodes, env):
+    os.mkdir('DQL-Results/' + experience_dir_name)
 
     before_train = lambda episode: episode == 0
     while_training = lambda episode: episode % (nb_episodes / 20) == 0
 
-    pickle_out = open('DQL-Results/'+experience_file_name + "/Environment", "wb")
+    pickle_out = open('DQL-Results/' + experience_dir_name + "/Environment", "wb")
     pickle.dump(env, pickle_out)
     pickle_out.close()
 
@@ -806,18 +810,14 @@ def run_n_times_and_save(experience_file_name, number_of_runs, nb_episodes, env)
                          replay_method="DDQL", batch_size=30, memory_size=5000,
                          prioritized_experience_replay=False, target_model_update=100,
                          hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                         epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.9995,
-                         state_weights=compute_state_weights(env))
+                         epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.99995,
+                         state_weights=None)
 
-        run_file_name = 'DQL-Results/'+experience_file_name+'/Run_' + str(k)
-        os.mkdir(run_file_name)
-
-        pickle_out = open(run_file_name + "/" + agent.name, "wb")
-        pickle.dump(agent, pickle_out)
-        pickle_out.close()
+        run_dir_name = 'DQL-Results/' + experience_dir_name + '/Run_' + str(k)
+        os.mkdir(run_dir_name)
 
         true_compute = TrueCompute(before_train, agent, env)
-        true_revenue = RevenueMonitor(before_train, agent, env, true_compute, 10_000)
+        true_revenue = RevenueMonitor(before_train, agent, env, true_compute, 10_000, "true_revenue")
         q_compute = QCompute(while_training, agent, env)
         q_error = QErrorMonitor(while_training, agent, env, true_compute, q_compute)
         revenue_compute = RevenueMonitor(while_training, agent, env, q_compute, 10_000)
@@ -827,17 +827,115 @@ def run_n_times_and_save(experience_file_name, number_of_runs, nb_episodes, env)
 
         train(agent, nb_episodes, callbacks)
 
+        pickle_out = open(run_dir_name + "/" + agent.name, "wb")
+        pickle.dump(agent, pickle_out)
+        pickle_out.close()
+
         for data in callbacks:
-            pickle_out = open(run_file_name + "/" + data.name, "wb")
+            print(data.name)
+            pickle_out = open(run_dir_name + "/" + data.name, "wb")
             pickle.dump(data, pickle_out)
             pickle_out.close()
 
 
+def extract_files_from_a_run(experience_dir_name, run_number, list_of_file_names):
+    """
+        Input: Name of the experience, number of the run from which we want to extract the files, list of the names of the files that we want to extract
+        Output: Dictionary containing the files of one run which names correspond to the names in callback_name
+    """
+    dict_of_files = {}
+    for dir_name in sorted(os.listdir("DQL-Results/" + experience_dir_name)):
+        if dir_name == "Run_" + str(run_number):
+            for file_name in os.listdir("DQL-Results/" + experience_dir_name + "/Run_" + str(run_number)):
+                if file_name in list_of_file_names:
+                    print("Collecting " + file_name + "...")
+                    pickle_in = open("DQL-Results/" + experience_dir_name + "/Run_" + str(run_number) + "/" + file_name,
+                                     "rb")
+                    dict_of_files[file_name] = pickle.load(pickle_in)
+                    pickle_in.close()
+    return (dict_of_files)
+
+def extract_files_from_experience_dir(experience_dir_name, list_of_file_names):
+    dict_of_files = {}
+    for file_name in os.listdir("DQL-Results/" + experience_dir_name):
+        if file_name in list_of_file_names:
+            print("Collecting " + file_name + "...")
+            pickle_in = open("DQL-Results/" + experience_dir_name + "/" + file_name,
+                                     "rb")
+            dict_of_files[file_name] = pickle.load(pickle_in)
+            pickle_in.close()
+    return (dict_of_files)
+
+
+def extract_same_files_from_several_runs(nb_first_run, nb_last_run, experience_dir_name, file_name="revenue_compute"):
+    """
+        Input: Number of the first run from which we want to get the file, number of the last run from which we want to get the file, name of the experience, name of the file that we want to extract
+        Output: List containing as many dictionaries as the number of runs from which we want to extract the file, with each dictionary containing the file that we want to extract
+    """
+    list_of_files = []
+    for k in range(nb_first_run, nb_last_run):
+        list_of_files.append(extract_files_from_a_run(experience_dir_name, k, [file_name]))
+    return list_of_files
+
+
+def compute_statistical_results_about_list_of_revenues(list_of_revenues, file_name="revenue_compute", confidence=0.95):
+    nb_collection_points = len(list_of_revenues[0][file_name].revenues)
+    nb_episodes = (list_of_revenues[0][file_name].replays[-1] - list_of_revenues[0][file_name].replays[
+        -2]) * nb_collection_points
+
+    x_axis = [k for k in range(0, nb_episodes, nb_episodes // nb_collection_points)]
+
+    all_revenues_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+    for k in range(len(list_of_revenues)):
+        revenues = list_of_revenues[k][file_name].revenues
+        for i in range(nb_collection_points):
+            all_revenues_combined_at_each_collection_point[i].append(revenues[i])
+
+    mean_revenues = [np.mean(list) for list in all_revenues_combined_at_each_collection_point]
+    std_revenues = [sem(list) for list in all_revenues_combined_at_each_collection_point]
+    confidence_revenues = [std_revenues[k] * t.ppf((1 + confidence) / 2, nb_collection_points - 1) for k in
+                           range(nb_collection_points)]
+    min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+    max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
+    return x_axis, mean_revenues, min_revenues, max_revenues
+
+
+def get_DP_revenue(experience_dir_name, run_number=0, file_name="true_revenue"):
+    true_revenue = extract_files_from_a_run(experience_dir_name, run_number, [file_name])[file_name]
+    DP_revenue = true_revenue.revenues[0]
+
+    return DP_revenue
+
+def get_DQL_with_true_Q_table_revenue(experience_dir_name, run_number=0, agent_name="agent", env_name = "Environment"):
+    agent = extract_files_from_a_run(experience_dir_name, run_number, [agent_name])[agent_name]
+    env = extract_files_from_experience_dir(experience_dir_name, [env_name])[env_name]
+    init_network_with_true_Q_table(agent, env)
+    Q_table_init = compute_q_table(env, agent)
+    policy_init = q_to_policy_RM(env, Q_table_init)
+    revenue = average_n_episodes(env, policy_init.flatten(), 10000, agent.epsilon_min)
+
+    return revenue
+
+
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict):
+    plt.plot(x_axis, mean_revenues, color="gray", label='DQL mean revenue')
+    plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+
+    for y_name in references_dict:
+        plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)
+
+    plt.legend()
+    plt.ylabel("Revenues")
+    plt.xlabel("Number of episodes")
+    plt.show()
+
+
 if __name__ == "__main__":
-    data_collection_points = 4
-    micro_times = 3
-    capacity = 4
-    actions = tuple(k for k in range(50, 231, 50))
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
 
@@ -847,17 +945,17 @@ if __name__ == "__main__":
     state_size = len(env.observation_space.spaces)
     action_size = env.action_space.n
 
-    nb_episodes = 10000
+    nb_episodes = 200
 
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method="DDQL", batch_size=30, memory_size=5000,
                      prioritized_experience_replay=False, target_model_update=100,
-                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                     epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.9999,
-                     state_weights=compute_state_weights(env))
-    # init_target_network_with_true_Q_table(agent, env)
-    # init_network_with_true_Q_table(agent, env)
+                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.01,
+                     epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.99995,
+                     state_weights=None)
+    init_target_network_with_true_Q_table(agent, env)
+    init_network_with_true_Q_table(agent, env)
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
@@ -868,7 +966,7 @@ if __name__ == "__main__":
 
     true_compute = TrueCompute(before_train, agent, env)
     true_v_display = VDisplay(before_train, agent, env, true_compute)
-    true_revenue = RevenueMonitor(before_train, agent, env, true_compute, 10_000)
+    true_revenue = RevenueMonitor(before_train, agent, env, true_compute, 10_000, name="true_revenue")
 
     agent_monitor = AgentMonitor(every_episode, agent, env)
 
@@ -903,13 +1001,20 @@ if __name__ == "__main__":
 
     # train(agent, nb_episodes, callbacks)
 
-    experience_file_name = "Test"
-    run_n_times_and_save(experience_file_name, 30, 10000, env)
+    experience_dir_name = "Flight_experience_replay"
+
+    # run_n_times_and_save(experience_file_name, 20, 100_000, env)
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=2, experience_dir_name = experience_dir_name)
+    x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(list_of_revenues)
+
+    mean_revenue_DP = get_DP_revenue(experience_dir_name)
+    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(experience_dir_name)
+
+    references_dict = {}
+    references_dict["DP revenue"] = mean_revenue_DP
+    references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
+
+    plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
     # pickle_in = open("DQL-Results/"+experience_file_name+"/Run_0/q_compute", "rb")
     # q_compute = pickle.load(pickle_in)
-
-
-
-
-
