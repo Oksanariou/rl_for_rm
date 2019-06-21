@@ -41,16 +41,17 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
         if init_with_true_Q_table:
             agent.init_network_with_true_Q_table()
 
+        for callback in callbacks_after_train:
+            callback.reset(agent)
+
         run_dir_name = results_dir_name + '/' + experience_dir_name + '/Run_' + str(k)
         os.mkdir(run_dir_name)
-        pickle_out = open(run_dir_name + "/" + "agent", "wb")
-        pickle.dump(agent, pickle_out)
-        pickle_out.close()
 
         agent.train(nb_episodes, callbacks_before_train + callbacks_after_train)
 
-        for callback in callbacks_after_train:
-            callback.reset(agent)
+        pickle_out = open(run_dir_name + "/" + "agent", "wb")
+        pickle.dump(agent, pickle_out)
+        pickle_out.close()
 
         for callback in callbacks_after_train:
             pickle_out = open(run_dir_name + "/" + callback.name, "wb")
