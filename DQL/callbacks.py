@@ -75,6 +75,18 @@ class QCompute(Callback):
         self.policies.append(policy)
         self.V_tables.append(V)
 
+    def reset(self, agent):
+        self.agent = agent
+
+        self.Q_table = None
+        self.policy = None
+        self.V_table = None
+
+        self.Q_tables = []
+        self.policies = []
+        self.V_tables = []
+
+
 
 class QErrorMonitor(Callback):
 
@@ -130,6 +142,14 @@ class QErrorMonitor(Callback):
 
         print("Difference with the true Policy")
         print(abs(true_policy.reshape(T, C) - policy.reshape(T, C)))
+
+    def reset(self, agent):
+        self.agent = agent
+
+        self.replays = []
+        self.errors_Q_table = []
+        self.errors_V_table = []
+        self.errors_policy = []
 
     def _mse(self, A, B):
         return np.sqrt(np.square(A.flatten() - B.flatten()).sum())
@@ -192,6 +212,12 @@ class RevenueMonitor(Callback):
         self.revenues.append(revenue)
 
         print("Average reward over {} episodes after {} replay : {}".format(self.N, self.agent.replay_count, revenue))
+
+    def reset(self, agent):
+        self.agent = agent
+
+        self.replays = []
+        self.revenues = []
 
 
 class RevenueDisplay(Callback):
@@ -259,6 +285,12 @@ class MemoryMonitor(Callback):
         h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
                                            weights=weights)
         self.hist2d.append((h, xedges, yedges))
+
+    def reset(self, agent):
+        self.agent = agent
+
+        self.replays = []
+        self.hist2d=[]
 
 
 class MemoryDisplay(Callback):

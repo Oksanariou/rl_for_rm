@@ -12,7 +12,6 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     compute_statistical_results_about_list_of_revenues, get_DP_revenue, get_DQL_with_true_Q_table_revenue, \
     extract_same_files_from_several_runs, plot_revenues
 
-
 if __name__ == "__main__":
     data_collection_points = 4
     micro_times = 3
@@ -53,10 +52,10 @@ if __name__ == "__main__":
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
 
-    nb_episodes = 2000
+    nb_episodes = 10_000
 
-    agent.init_target_network_with_true_Q_table()
-    agent.init_network_with_true_Q_table()
+    # agent.init_target_network_with_true_Q_table()
+    # agent.init_network_with_true_Q_table()
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
@@ -103,12 +102,16 @@ if __name__ == "__main__":
     agent.train(nb_episodes, callbacks)
 
     results_dir_name = "../DQL-Results"
-    experience_dir_name = "Test"
+    experience_dir_name = "Initialize_networks_with_true_Q_table"
+
+    callbacks_before_train = [true_compute, true_revenue]
+    callbacks_after_train = [q_compute, q_error, revenue_compute]
 
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
-                         number_of_runs=1, nb_episodes=1000)
+                         number_of_runs=2, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
+                         callbacks_after_train=callbacks_after_train, init_with_true_Q_table=True)
 
-    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=1,
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=2,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
 
