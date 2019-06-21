@@ -794,26 +794,24 @@ def compute_state_weights(env):
     return dict(state_weights)
 
 
-def run_n_times_and_save(experience_dir_name, number_of_runs, nb_episodes, env):
-    os.mkdir('DQL-Results/' + experience_dir_name)
+def run_n_times_and_save(results_dir_name, experience_dir_name, env, parameters_dict, before_train, while_training, number_of_runs, nb_episodes):
+    os.mkdir(results_dir_name+'/' + experience_dir_name)
 
-    before_train = lambda episode: episode == 0
-    while_training = lambda episode: episode % (nb_episodes / 20) == 0
-
-    pickle_out = open('DQL-Results/' + experience_dir_name + "/Environment", "wb")
+    pickle_out = open(results_dir_name+'/' + experience_dir_name + "/Environment", "wb")
     pickle.dump(env, pickle_out)
     pickle_out.close()
 
     for k in range(number_of_runs):
         agent = DQNAgent(state_size, action_size,
                          # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                         replay_method="DDQL", batch_size=30, memory_size=5000,
-                         prioritized_experience_replay=False, target_model_update=100,
-                         hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.001,
-                         epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.99995,
-                         state_weights=None)
+                         replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"], memory_size=parameters_dict["memory_size"],
+                         prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
+                         target_model_update=parameters_dict["target_model_update"],
+                         hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"], loss=parameters_dict["loss"], learning_rate=parameters_dict["learning_rate"],
+                         epsilon=parameters_dict["epsilon"], epsilon_min=parameters_dict["epsilon_min"], epsilon_decay=parameters_dict["epsilon_decay"],
+                         state_weights=parameters_dict["state_weights"])
 
-        run_dir_name = 'DQL-Results/' + experience_dir_name + '/Run_' + str(k)
+        run_dir_name = results_dir_name+'/' + experience_dir_name + '/Run_' + str(k)
         os.mkdir(run_dir_name)
 
         true_compute = TrueCompute(before_train, agent, env)
@@ -838,43 +836,43 @@ def run_n_times_and_save(experience_dir_name, number_of_runs, nb_episodes, env):
             pickle_out.close()
 
 
-def extract_files_from_a_run(experience_dir_name, run_number, list_of_file_names):
+def extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, list_of_file_names):
     """
         Input: Name of the experience, number of the run from which we want to extract the files, list of the names of the files that we want to extract
         Output: Dictionary containing the files of one run which names correspond to the names in callback_name
     """
     dict_of_files = {}
-    for dir_name in sorted(os.listdir("DQL-Results/" + experience_dir_name)):
+    for dir_name in sorted(os.listdir(results_dir_name+'/' + experience_dir_name)):
         if dir_name == "Run_" + str(run_number):
-            for file_name in os.listdir("DQL-Results/" + experience_dir_name + "/Run_" + str(run_number)):
+            for file_name in os.listdir(results_dir_name+'/' + experience_dir_name + "/Run_" + str(run_number)):
                 if file_name in list_of_file_names:
                     print("Collecting " + file_name + "...")
-                    pickle_in = open("DQL-Results/" + experience_dir_name + "/Run_" + str(run_number) + "/" + file_name,
+                    pickle_in = open(results_dir_name+'/' + experience_dir_name + "/Run_" + str(run_number) + "/" + file_name,
                                      "rb")
                     dict_of_files[file_name] = pickle.load(pickle_in)
                     pickle_in.close()
     return (dict_of_files)
 
-def extract_files_from_experience_dir(experience_dir_name, list_of_file_names):
+def extract_files_from_experience_dir(results_dir_name, experience_dir_name, list_of_file_names):
     dict_of_files = {}
-    for file_name in os.listdir("DQL-Results/" + experience_dir_name):
+    for file_name in os.listdir(results_dir_name+'/'  + experience_dir_name):
         if file_name in list_of_file_names:
             print("Collecting " + file_name + "...")
-            pickle_in = open("DQL-Results/" + experience_dir_name + "/" + file_name,
+            pickle_in = open(results_dir_name+'/'  + experience_dir_name + "/" + file_name,
                                      "rb")
             dict_of_files[file_name] = pickle.load(pickle_in)
             pickle_in.close()
     return (dict_of_files)
 
 
-def extract_same_files_from_several_runs(nb_first_run, nb_last_run, experience_dir_name, file_name="revenue_compute"):
+def extract_same_files_from_several_runs(nb_first_run, nb_last_run, results_dir_name, experience_dir_name, file_name="revenue_compute"):
     """
         Input: Number of the first run from which we want to get the file, number of the last run from which we want to get the file, name of the experience, name of the file that we want to extract
         Output: List containing as many dictionaries as the number of runs from which we want to extract the file, with each dictionary containing the file that we want to extract
     """
     list_of_files = []
     for k in range(nb_first_run, nb_last_run):
-        list_of_files.append(extract_files_from_a_run(experience_dir_name, k, [file_name]))
+        list_of_files.append(extract_files_from_a_run(results_dir_name, experience_dir_name, k, [file_name]))
     return list_of_files
 
 
@@ -901,15 +899,15 @@ def compute_statistical_results_about_list_of_revenues(list_of_revenues, file_na
     return x_axis, mean_revenues, min_revenues, max_revenues
 
 
-def get_DP_revenue(experience_dir_name, run_number=0, file_name="true_revenue"):
-    true_revenue = extract_files_from_a_run(experience_dir_name, run_number, [file_name])[file_name]
+def get_DP_revenue(results_dir_name, experience_dir_name, run_number=0, file_name="true_revenue"):
+    true_revenue = extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, [file_name])[file_name]
     DP_revenue = true_revenue.revenues[0]
 
     return DP_revenue
 
-def get_DQL_with_true_Q_table_revenue(experience_dir_name, run_number=0, agent_name="agent", env_name = "Environment"):
-    agent = extract_files_from_a_run(experience_dir_name, run_number, [agent_name])[agent_name]
-    env = extract_files_from_experience_dir(experience_dir_name, [env_name])[env_name]
+def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, run_number=0, agent_name="agent", env_name = "Environment"):
+    agent = extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, [agent_name])[agent_name]
+    env = extract_files_from_experience_dir(results_dir_name, experience_dir_name, [env_name])[env_name]
     init_network_with_true_Q_table(agent, env)
     Q_table_init = compute_q_table(env, agent)
     policy_init = q_to_policy_RM(env, Q_table_init)
@@ -947,13 +945,44 @@ if __name__ == "__main__":
 
     nb_episodes = 200
 
+    # Parameters:
+    replay_method = "DDQL"
+    batch_size = 30
+    memory_size = 5000
+    prioritized_experience_replay = False
+    target_model_update = 100
+    hidden_layer_size = 50
+    dueling = False
+    loss = mean_squared_error
+    learning_rate=0.01
+    epsilon = 1.0
+    epsilon_min = 0.02
+    epsilon_decay = 0.99995
+    state_weights = None
+
+    parameters_dict={}
+    parameters_dict["replay_method"] = replay_method
+    parameters_dict["batch_size"] = batch_size
+    parameters_dict["memory_size"] = memory_size
+    parameters_dict["prioritized_experience_replay"] = prioritized_experience_replay
+    parameters_dict["target_model_update"] = target_model_update
+    parameters_dict["hidden_layer_size"] = hidden_layer_size
+    parameters_dict["dueling"] = dueling
+    parameters_dict["loss"] = loss
+    parameters_dict["learning_rate"] = learning_rate
+    parameters_dict["epsilon"] = epsilon
+    parameters_dict["epsilon_min"] = epsilon_min
+    parameters_dict["epsilon_decay"] = epsilon_decay
+    parameters_dict["state_weights"] = state_weights
+
     agent = DQNAgent(state_size, action_size,
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                     replay_method="DDQL", batch_size=30, memory_size=5000,
-                     prioritized_experience_replay=False, target_model_update=100,
-                     hidden_layer_size=50, dueling=False, loss=mean_squared_error, learning_rate=0.01,
-                     epsilon=1.0, epsilon_min=0.02, epsilon_decay=0.99995,
-                     state_weights=None)
+                     replay_method=replay_method, batch_size=batch_size, memory_size=memory_size,
+                     prioritized_experience_replay=prioritized_experience_replay, target_model_update=target_model_update,
+                     hidden_layer_size=hidden_layer_size, dueling=dueling, loss=loss, learning_rate=learning_rate,
+                     epsilon=epsilon, epsilon_min=epsilon_min, epsilon_decay=epsilon_decay,
+                     state_weights=state_weights)
+
     init_target_network_with_true_Q_table(agent, env)
     init_network_with_true_Q_table(agent, env)
 
@@ -1001,15 +1030,17 @@ if __name__ == "__main__":
 
     # train(agent, nb_episodes, callbacks)
 
-    experience_dir_name = "Flight_experience_replay"
+    results_dir_name = "../DQL-Results"
+    experience_dir_name = "Test"
 
-    # run_n_times_and_save(experience_file_name, 20, 100_000, env)
-    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=2, experience_dir_name = experience_dir_name)
+    run_n_times_and_save(results_dir_name, experience_dir_name, env, parameters_dict, before_train, while_training, number_of_runs=2, nb_episodes=100)
+
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=2, results_dir_name= results_dir_name, experience_dir_name = experience_dir_name)
+
     x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(list_of_revenues)
 
-    mean_revenue_DP = get_DP_revenue(experience_dir_name)
-    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(experience_dir_name)
-
+    mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
+    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
     references_dict = {}
     references_dict["DP revenue"] = mean_revenue_DP
     references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
