@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import gym
 from scipy import stats
 
 def visualize_policy_FL(policy):
@@ -39,11 +40,12 @@ def run_episode(env, policy, epsilon=0.0):
     state = env.reset()
     total_reward = 0
     while True:
-        state_idx = env.to_idx(*state)
+        state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state
         if np.random.rand() <= epsilon:
-            action = env.A[random.randrange(env.action_space.n)]
+            action_idx = random.randrange(env.action_space.n)
+            action = env.A[action_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
         else:
-            action = policy[state_idx]
+            action = policy[state_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else env.A.index(policy[state_idx])
         state, reward, done, _ = env.step(action)
         total_reward += reward
         if done:

@@ -71,11 +71,11 @@ if __name__ == "__main__":
     agent_monitor = AgentMonitor(every_episode, agent)
 
     q_compute = QCompute(while_training, agent)
-    v_display = VDisplay(while_training, agent, q_compute)
-    policy_display = PolicyDisplay(while_training, agent, q_compute)
+    v_display = VDisplay(after_train, agent, q_compute)
+    policy_display = PolicyDisplay(after_train, agent, q_compute)
 
-    q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
-    q_error_display = QErrorDisplay(after_train, agent, q_error)
+    q_error = QErrorMonitor(after_train, agent, true_compute, q_compute)
+    q_error_display = QErrorDisplay(while_training, agent, q_error)
 
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
     revenue_display = RevenueDisplay(while_training, agent, revenue_compute, true_revenue)
