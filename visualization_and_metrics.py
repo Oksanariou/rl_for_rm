@@ -120,6 +120,19 @@ def extract_policy_RM(env, U, gamma):
         policy[state_idx] = env.A[idx_best_a]
     return policy
 
+def extract_policy_RM_discrete(env, U, gamma, P={}):
+    if P=={}:
+        P=env.P
+    policy = np.zeros(env.nS)
+    for state_idx in range(env.nS):
+        list_sum = np.zeros(env.nA)
+        for idx_a in range(env.nA):
+            for p, s_prime, r, _ in env.P[state_idx][idx_a]:
+                list_sum[idx_a] += p * (r + gamma * U[s_prime])
+        idx_best_a = np.argmax(list_sum)
+        policy[state_idx] = env.A[idx_best_a]
+    return policy
+
 
 def visualize_policy_RM(P, T, C):
     P = np.reshape(P, (T, C))
