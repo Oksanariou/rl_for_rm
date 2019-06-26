@@ -9,9 +9,9 @@ from value_iteration import value_iteration, value_iteration_discrete
 from visualization_and_metrics import visualize_policy_RM, visualisation_value_RM, extract_policy_RM_discrete, average_n_episodes
 
 
-def collect_transitions(env, size_of_experience):
+def collect_transitions(env, nb_transitions):
     input, output = [], []
-    for k in range(size_of_experience):
+    for k in range(nb_transitions):
         state_idx = env.set_random_state()
         action_idx = random.randrange(env.action_space.n)
         next_state_idx, reward, done, _ = env.step(action_idx)
@@ -22,6 +22,18 @@ def collect_transitions(env, size_of_experience):
 
         input.append([state_idx, action_idx])
         output.append(next_state_idx)
+    return input, output
+
+def collect_transitions_flights(env, nb_flights):
+    input, output = [], []
+    for k in range(nb_flights):
+        state_idx = env.reset()
+        done = False
+        while not done:
+            action_idx = random.randrange(env.action_space.n)
+            next_state_idx, reward, done, _ = env.step(action_idx)
+            input.append([state_idx, action_idx])
+            output.append(next_state_idx)
     return input, output
 
 def init_transitions(env, model):
@@ -74,7 +86,7 @@ if __name__ == '__main__':
     visualize_policy_RM(policy_DP, env.T, env.C)
     print("Average reward over 10000 episodes : " + str(average_n_episodes(env, policy_DP, 10000)))
 
-    X_train, y_train = collect_transitions(env, 100_000)
+    X_train, y_train = collect_transitions(env, 10_000)
     X_test, y_test = collect_transitions(env, 100)
 
     clf = MLPClassifier(hidden_layer_sizes=(50,50,))
