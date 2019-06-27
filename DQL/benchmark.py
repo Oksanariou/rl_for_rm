@@ -26,13 +26,14 @@ B = np.random.rand(5000, 6000)
     # net_cpu = K.conv2d(random_image_cpu, 32, 7)
     # net_cpu = K.sum(net_cpu)
 def multi():
-    x = K.variable(value=A)
-    y = K.variable(value=B)
+    with K.tf.device('/gpu:0'):
+        x = K.variable(value=A)
+        y = K.variable(value=B)
 
-    z = K.dot(x, y)
+        z = K.dot(x, y)
 
-        # Here you need to use K.eval() instead of z.eval() because this uses the backend session
-    return K.eval(z)
+            # Here you need to use K.eval() instead of z.eval() because this uses the backend session
+        return K.eval(z)
 
 
 sess = tf.Session(config=config)
