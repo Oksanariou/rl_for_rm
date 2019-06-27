@@ -71,7 +71,7 @@ class DQNAgent:
         return model_builder()
 
     def _build_simple_model(self):
-        with K.tf.device('/cpu:0'):
+        with K.tf.device('/gpu:0'):
         # Neural Net for Deep-Q learning Model
             model = Sequential()
             model.add(Dense(self.hidden_layer_size, input_shape=(self.input_size,), activation='relu', name='state'))
@@ -257,7 +257,7 @@ class DQNAgent:
         X = self.normalize_states(X)
         Y = self.normalize_values(Y)
 
-        self.model.fit(X, Y, epochs=epochs, verbose=1, batch_size=self.batch_size)
+        self.model.fit(X, Y, epochs=epochs, verbose=0, batch_size=self.batch_size)
         self.set_target()
 
     def init_with_V(self):
