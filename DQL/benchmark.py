@@ -35,8 +35,9 @@ def multi():
     return K.eval(z)
 
 
-# sess = tf.Session(config=config)
-# sess.run(tf.global_variables_initializer())
+sess = tf.Session(config=config)
+sess.run(tf.global_variables_initializer())
+K.set_session(sess)
 #
 # def gpu():
 #     sess.run(net_gpu)
