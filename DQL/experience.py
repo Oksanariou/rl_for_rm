@@ -57,7 +57,7 @@ def main():
     nb_episodes = 10_000
 
     # agent.init_target_network_with_true_Q_table()
-    # agent.init_network_with_true_Q_table()
+    agent.init_network_with_true_Q_table()
 
     # before_train = lambda episode: episode == 0
     # every_episode = lambda episode: True
@@ -128,13 +128,3 @@ def main():
     #
     # plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
-    config = K.tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-
-    with K.tf.device('/gpu:0'):
-        random_image_gpu = K.tf.random_normal((100, 100, 100, 3))
-        net_gpu = K.tf.layers.conv2d(random_image_gpu, 32, 7)
-        net_gpu = K.tf.reduce_sum(net_gpu)
-
-    sess = K.tf.Session(config=config)
-    sess.run(net_gpu)
