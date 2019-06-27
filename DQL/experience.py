@@ -75,10 +75,10 @@ def main():
     policy_display = PolicyDisplay(after_train, agent, q_compute)
 
     q_error = QErrorMonitor(after_train, agent, true_compute, q_compute)
-    q_error_display = QErrorDisplay(while_training, agent, q_error)
+    q_error_display = QErrorDisplay(after_train, agent, q_error)
 
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
-    revenue_display = RevenueDisplay(while_training, agent, revenue_compute, true_revenue)
+    revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
 
     memory_monitor = MemoryMonitor(while_training, agent)
     memory_display = MemoryDisplay(after_train, agent, memory_monitor)
@@ -101,7 +101,7 @@ def main():
 
     agent.train(nb_episodes, callbacks)
 
-    results_dir_name = "../DQL-Results"
+    results_dir_name = "DQL-Results"
     experience_dir_name = "Initialize_networks_with_true_Q_table"
 
     callbacks_before_train = [true_compute, true_revenue]
