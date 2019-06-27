@@ -12,6 +12,8 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     compute_statistical_results_about_list_of_revenues, get_DP_revenue, get_DQL_with_true_Q_table_revenue, \
     extract_same_files_from_several_runs, plot_revenues
 
+from keras.layers import K
+
 def main():
     data_collection_points = 20
     micro_times = 5
@@ -55,7 +57,7 @@ def main():
     nb_episodes = 10_000
 
     # agent.init_target_network_with_true_Q_table()
-    agent.init_network_with_true_Q_table()
+    # agent.init_network_with_true_Q_table()
 
     # before_train = lambda episode: episode == 0
     # every_episode = lambda episode: True
@@ -125,3 +127,14 @@ def main():
     # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
     #
     # plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+
+    config = K.tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+
+    with K.tf.device('/gpu:0'):
+        random_image_gpu = K.tf.random_normal((100, 100, 100, 3))
+        net_gpu = K.tf.layers.conv2d(random_image_gpu, 32, 7)
+        net_gpu = K.tf.reduce_sum(net_gpu)
+
+    sess = K.tf.Session(config=config)
+    sess.run(net_gpu)
