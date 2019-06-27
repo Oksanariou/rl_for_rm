@@ -15,9 +15,9 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
 from keras.layers import K
 
 def main():
-    data_collection_points = 200
-    micro_times = 50
-    capacity = 200
+    data_collection_points = 20
+    micro_times = 5
+    capacity = 20
     actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
@@ -33,7 +33,7 @@ def main():
     parameters_dict["memory_size"] = 5000
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 100
-    parameters_dict["hidden_layer_size"] = 100
+    parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 0.001
