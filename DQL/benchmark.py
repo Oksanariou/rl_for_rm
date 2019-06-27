@@ -6,8 +6,8 @@ import numpy as np
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 
-A = np.random.rand(100, 50000)
-B = np.random.rand(50000, 60000)
+A = np.random.rand(100, 5000)
+B = np.random.rand(5000, 6000)
 
 # with K.tf.device('/gpu:0'):
 #     # random_image_gpu = K.random_normal((100, 100, 100, 3))
