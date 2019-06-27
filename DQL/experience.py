@@ -68,7 +68,7 @@ def main():
     true_v_display = VDisplay(before_train, agent, true_compute)
     true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
 
-    agent_monitor = AgentMonitor(every_episode, agent)
+    agent_monitor = AgentMonitor(while_training, agent)
 
     q_compute = QCompute(while_training, agent)
     v_display = VDisplay(after_train, agent, q_compute)
