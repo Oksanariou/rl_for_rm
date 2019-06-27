@@ -14,7 +14,12 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
 
 from keras.layers import K
 
+import os
+
+
 def main():
+    print(os.getpid())
+
     data_collection_points = 20
     micro_times = 5
     capacity = 20
