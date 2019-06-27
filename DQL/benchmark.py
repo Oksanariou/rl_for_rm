@@ -5,15 +5,15 @@ import timeit
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 
-with tf.device('/gpu:0'):
-    random_image_gpu = tf.random_normal((100, 100, 100, 3))
-    net_gpu = tf.layers.conv2d(random_image_gpu, 32, 7)
-    net_gpu = tf.reduce_sum(net_gpu)
+with K.tf.device('/gpu:0'):
+    random_image_gpu = K.random_normal((100, 100, 100, 3))
+    net_gpu = K.conv2d(random_image_gpu, 32, 7)
+    net_gpu = K.sum(net_gpu)
 
-with tf.device('/cpu:0'):
-    random_image_cpu = tf.random_normal((100, 100, 100, 3))
-    net_cpu = tf.layers.conv2d(random_image_cpu, 32, 7)
-    net_cpu = tf.reduce_sum(net_cpu)
+with K.tf.device('/cpu:0'):
+    random_image_cpu = K.random_normal((100, 100, 100, 3))
+    net_cpu = K.conv2d(random_image_cpu, 32, 7)
+    net_cpu = K.sum(net_cpu)
 
 
 sess = tf.Session(config=config)
