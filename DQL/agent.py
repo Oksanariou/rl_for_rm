@@ -256,7 +256,7 @@ class DQNAgent:
         X = self.normalize_states(X)
         Y = self.normalize_values(Y)
 
-        self.model.fit(X, Y, epochs=epochs, verbose=0)
+        self.model.fit(X, Y, epochs=epochs, verbose=0, batch_size=self.batch_size)
         self.set_target()
 
     def init_with_V(self):
