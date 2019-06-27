@@ -12,7 +12,7 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     compute_statistical_results_about_list_of_revenues, get_DP_revenue, get_DQL_with_true_Q_table_revenue, \
     extract_same_files_from_several_runs, plot_revenues
 
-if __name__ == "__main__":
+def main():
     data_collection_points = 4
     micro_times = 3
     capacity = 4
