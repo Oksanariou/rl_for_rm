@@ -17,6 +17,7 @@ with tf.device('/cpu:0'):
 
 
 sess = tf.Session(config=config)
+sess.run(tf.global_variables_initializer())
 
 def gpu():
     sess.run(net_gpu)
