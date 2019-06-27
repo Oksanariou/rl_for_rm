@@ -15,6 +15,7 @@ from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from SumTree import SumTree
 
+import tensorflow as tf
 
 class DQNAgent:
     def __init__(self, env, gamma=0.9,
@@ -71,7 +72,7 @@ class DQNAgent:
         return model_builder()
 
     def _build_simple_model(self):
-        with K.tf.device('/cpu:0'):
+        with tf.device('/gpu:0'):
         # Neural Net for Deep-Q learning Model
             model = Sequential()
             model.add(Dense(self.hidden_layer_size, input_shape=(self.input_size,), activation='relu', name='state'))
