@@ -27,7 +27,7 @@ def main():
     parameters_dict = {}
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 30
+    parameters_dict["batch_size"] = 512
     parameters_dict["memory_size"] = 5000
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 100

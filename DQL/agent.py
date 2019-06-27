@@ -350,7 +350,7 @@ class DQNAgent:
             sample_weights.append(sample_weight)
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0,
-                                 sample_weight=np.array(sample_weights))
+                                 sample_weight=np.array(sample_weights), batch_size=self.batch_size)
         self.loss_value = history.history['loss'][0]
 
         self.update_priority_b()
