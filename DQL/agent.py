@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from keras import Input
-from keras.layers import Dense, BatchNormalization, Lambda, K
+from keras.layers import Dense, BatchNormalization, Lambda
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, logcosh
@@ -16,6 +16,7 @@ from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from SumTree import SumTree
 
 import tensorflow as tf
+from keras import backend as K
 
 class DQNAgent:
     def __init__(self, env, gamma=0.9,
@@ -72,7 +73,10 @@ class DQNAgent:
         return model_builder()
 
     def _build_simple_model(self):
-        with tf.device('/gpu:0'):
+        with K.tf.device('/gpu:0'):
+            config = tf.ConfigProto(device_count={'CPU': 1, 'GPU': 1})
+            session = tf.Session(config=config)
+            K.set_session(session)
         # Neural Net for Deep-Q learning Model
             model = Sequential()
             model.add(Dense(self.hidden_layer_size, input_shape=(self.input_size,), activation='relu', name='state'))
