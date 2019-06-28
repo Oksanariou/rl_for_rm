@@ -77,7 +77,7 @@ if __name__ == '__main__':
     parameters_dict = {}
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 1024
+    parameters_dict["batch_size"] = 64
     parameters_dict["memory_size"] = 5000
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 100
@@ -104,8 +104,8 @@ if __name__ == '__main__':
 
     nb_episodes = 10_000
 
-    agent.init_target_network_with_true_Q_table()
-    print(timeit.timeit('exp.test_time()', number=10, setup="import DQL.experience as exp"))
+    # agent.init_target_network_with_true_Q_table()
+    # print(timeit.timeit('exp.test_time()', number=10, setup="import DQL.experience as exp"))
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
