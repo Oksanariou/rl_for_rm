@@ -18,51 +18,8 @@ import os
 
 import timeit
 
-def test_time():
-    data_collection_points = 20
-    micro_times = 5
-    capacity = 20
-    actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.8
-    lamb = 0.7
-
-    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
-                   micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-
-    # Parameters:
-    parameters_dict = {}
-    parameters_dict["env"] = env
-    parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 1024
-    parameters_dict["memory_size"] = 5000
-    parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 100
-    parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = False
-    parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 0.001
-    parameters_dict["epsilon"] = 1.0
-    parameters_dict["epsilon_min"] = 0.02
-    parameters_dict["epsilon_decay"] = 0.9995
-    parameters_dict["state_weights"] = None
-
-    agent = DQNAgent(env=parameters_dict["env"],
-                     # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                     replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
-                     memory_size=parameters_dict["memory_size"],
-                     prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
-                     target_model_update=parameters_dict["target_model_update"],
-                     hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"],
-                     loss=parameters_dict["loss"], learning_rate=parameters_dict["learning_rate"],
-                     epsilon=parameters_dict["epsilon"], epsilon_min=parameters_dict["epsilon_min"],
-                     epsilon_decay=parameters_dict["epsilon_decay"],
-                     state_weights=parameters_dict["state_weights"])
-    agent.init_network_with_true_Q_table()
-
 
 if __name__ == '__main__':
-    print(os.getpid())
-
     data_collection_points = 20
     micro_times = 5
     capacity = 20
@@ -76,11 +33,11 @@ if __name__ == '__main__':
     # Parameters:
     parameters_dict = {}
     parameters_dict["env"] = env
-    parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 64
-    parameters_dict["memory_size"] = 5000
+    parameters_dict["replay_method"] = "DQL"
+    parameters_dict["batch_size"] = 128
+    parameters_dict["memory_size"] = 50000
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 100
+    parameters_dict["target_model_update"] = 500
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
@@ -140,39 +97,55 @@ if __name__ == '__main__':
     sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
     sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
 
-    callbacks = [true_compute, true_v_display, true_revenue,
-                 agent_monitor,
-                 q_compute, v_display, policy_display,
-                 q_error, q_error_display,
-                 revenue_compute, revenue_display,
-                 memory_monitor, memory_display,
-                 batch_monitor, batch_display, total_batch_display,
-                 sumtree_monitor, sumtree_display]
+    # callbacks = [true_compute, true_v_display, true_revenue,
+    #              agent_monitor,
+    #              q_compute, v_display, policy_display,
+    #              q_error, q_error_display,
+    #              revenue_compute, revenue_display,
+    #              memory_monitor, memory_display,
+    #              batch_monitor, batch_display, total_batch_display,
+    #              sumtree_monitor, sumtree_display]
+    #
+    # agent.train(nb_episodes, callbacks)
 
-    agent.train(nb_episodes, callbacks)
-    #
-    # results_dir_name = "DQL-Results"
-    # experience_dir_name = "Initialize_networks_with_true_Q_table"
-    #
-    # callbacks_before_train = [true_compute, true_revenue]
-    # callbacks_after_train = [q_compute, q_error, revenue_compute]
-    #
-    # run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
-    #                      number_of_runs=2, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
-    #                      callbacks_after_train=callbacks_after_train, init_with_true_Q_table=True)
-    #
-    # list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=2,
-    #                                                         results_dir_name=results_dir_name,
-    #                                                         experience_dir_name=experience_dir_name)
-    #
-    # x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
-    #     list_of_revenues)
-    #
-    # mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
-    # mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
-    # references_dict = {}
-    # references_dict["DP revenue"] = mean_revenue_DP
-    # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
-    #
-    # plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+    results_dir_name = "DQL-Results"
+
+    # experience_dir_name = "Replay"
+    experience_dir_name = "DQL"
+    # experience_dir_name = "Double_DQL"
+    # experience_dir_name = "Dueling_Network_Architecture"
+    # experience_dir_name = "Init_network_with_true_Q-table"
+    # experience_dir_name = "State_initialization"
+    # experience_dir_name = "Prioritized_experience_replay"
+    # experience_dir_name = "Use_weights"
+
+    # experience_dir_name = "Tuning_target_update"
+    # experience_dir_name = "Tuning_learning_rate"
+    # experience_dir_name = "Tuning_memory_size"
+    # experience_dir_name = "Tuning_batch_size"
+
+    # experience_dir_name = "Rainbow"
+
+
+    callbacks_before_train = [true_compute, true_revenue]
+    callbacks_after_train = [q_compute, q_error, revenue_compute]
+
+    run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
+                         number_of_runs=30, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
+                         callbacks_after_train=callbacks_after_train, init_with_true_Q_table=False)
+
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=30,
+                                                            results_dir_name=results_dir_name,
+                                                            experience_dir_name=experience_dir_name)
+
+    x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
+        list_of_revenues)
+
+    mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
+    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
+    references_dict = {}
+    references_dict["DP revenue"] = mean_revenue_DP
+    references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
+
+    plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
