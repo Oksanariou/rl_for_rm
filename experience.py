@@ -104,52 +104,52 @@ if __name__ == '__main__':
 
     nb_episodes = 10_000
 
-    # agent.init_target_network_with_true_Q_table()
+    agent.init_target_network_with_true_Q_table()
     print(timeit.timeit('exp.test_time()', number=10, setup="import DQL.experience as exp"))
 
-    # before_train = lambda episode: episode == 0
-    # every_episode = lambda episode: True
-    # while_training = lambda episode: episode % (nb_episodes / 20) == 0
-    # after_train = lambda episode: episode == nb_episodes - 1
-    # while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
-    #         nb_episodes / 20) == 0
-    #
-    # true_compute = TrueCompute(before_train, agent)
-    # true_v_display = VDisplay(before_train, agent, true_compute)
-    # true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
-    #
-    # agent_monitor = AgentMonitor(while_training, agent)
-    #
-    # q_compute = QCompute(while_training, agent)
-    # v_display = VDisplay(after_train, agent, q_compute)
-    # policy_display = PolicyDisplay(after_train, agent, q_compute)
-    #
-    # q_error = QErrorMonitor(after_train, agent, true_compute, q_compute)
-    # q_error_display = QErrorDisplay(after_train, agent, q_error)
-    #
-    # revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
-    # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
-    #
-    # memory_monitor = MemoryMonitor(while_training, agent)
-    # memory_display = MemoryDisplay(after_train, agent, memory_monitor)
-    #
-    # batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
-    # batch_display = BatchDisplay(after_train, agent, batch_monitor)
-    # total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
-    #
-    # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
-    # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
-    #
-    # callbacks = [true_compute, true_v_display, true_revenue,
-    #              agent_monitor,
-    #              q_compute, v_display, policy_display,
-    #              q_error, q_error_display,
-    #              revenue_compute, revenue_display,
-    #              memory_monitor, memory_display,
-    #              batch_monitor, batch_display, total_batch_display,
-    #              sumtree_monitor, sumtree_display]
-    #
-    # agent.train(nb_episodes, callbacks)
+    before_train = lambda episode: episode == 0
+    every_episode = lambda episode: True
+    while_training = lambda episode: episode % (nb_episodes / 20) == 0
+    after_train = lambda episode: episode == nb_episodes - 1
+    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
+            nb_episodes / 20) == 0
+
+    true_compute = TrueCompute(before_train, agent)
+    true_v_display = VDisplay(before_train, agent, true_compute)
+    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
+
+    agent_monitor = AgentMonitor(while_training, agent)
+
+    q_compute = QCompute(while_training, agent)
+    v_display = VDisplay(after_train, agent, q_compute)
+    policy_display = PolicyDisplay(after_train, agent, q_compute)
+
+    q_error = QErrorMonitor(after_train, agent, true_compute, q_compute)
+    q_error_display = QErrorDisplay(after_train, agent, q_error)
+
+    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
+    revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
+
+    memory_monitor = MemoryMonitor(while_training, agent)
+    memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+
+    batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
+    batch_display = BatchDisplay(after_train, agent, batch_monitor)
+    total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
+
+    sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
+    sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
+
+    callbacks = [true_compute, true_v_display, true_revenue,
+                 agent_monitor,
+                 q_compute, v_display, policy_display,
+                 q_error, q_error_display,
+                 revenue_compute, revenue_display,
+                 memory_monitor, memory_display,
+                 batch_monitor, batch_display, total_batch_display,
+                 sumtree_monitor, sumtree_display]
+
+    agent.train(nb_episodes, callbacks)
     #
     # results_dir_name = "DQL-Results"
     # experience_dir_name = "Initialize_networks_with_true_Q_table"
