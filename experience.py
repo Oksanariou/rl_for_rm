@@ -60,6 +60,7 @@ if __name__ == '__main__':
                      state_weights=parameters_dict["state_weights"])
 
     nb_episodes = 10_000
+    nb_runs = 20
 
     # agent.init_target_network_with_true_Q_table()
     # print(timeit.timeit('exp.test_time()', number=10, setup="import DQL.experience as exp"))
@@ -131,10 +132,10 @@ if __name__ == '__main__':
     callbacks_after_train = [q_compute, q_error, revenue_compute]
 
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
-                         number_of_runs=30, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
+                         number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
                          callbacks_after_train=callbacks_after_train, init_with_true_Q_table=False)
 
-    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=30,
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
 
