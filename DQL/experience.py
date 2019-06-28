@@ -17,7 +17,7 @@ from keras.layers import K
 import os
 
 
-def main():
+if __name__ == '__main__':
     print(os.getpid())
 
     data_collection_points = 20
