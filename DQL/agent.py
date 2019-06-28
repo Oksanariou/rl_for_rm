@@ -25,6 +25,7 @@ class DQNAgent:
                  state_scaler=None, value_scaler=None,
                  learning_rate=0.001, dueling=False, hidden_layer_size=50,
                  prioritized_experience_replay=False, memory_size=500,
+                 mini_batch_size=64,
                  loss=mean_squared_error,
                  state_weights=None):
 
@@ -32,6 +33,7 @@ class DQNAgent:
         self.input_size = len(self.env.observation_space.spaces)
         self.action_size = self.env.action_space.n
         self.memory = deque(maxlen=memory_size)
+        self.mini_batch_size = mini_batch_size
         self.gamma = gamma  # discount rate
         self.epsilon = epsilon  # exploration rate
         self.epsilon_min = epsilon_min
@@ -53,7 +55,7 @@ class DQNAgent:
         self.dueling = dueling
         self.loss = loss
         self.learning_rate = learning_rate
-        self.state_weights = state_weights
+        self.state_weights = self.compute_state_weights() if state_weights else state_weights
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -294,7 +296,7 @@ class DQNAgent:
         plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
         plt.xlabel("Epochs")
         plt.ylabel("Error between the true Q-table and the agent's Q-table")
-        plt.show()
+        # plt.show()
 
     def init_network_with_true_Q_table(self):
         self.init_with_V()
@@ -319,11 +321,11 @@ class DQNAgent:
     def replay(self, episode):
         self.episode = episode
 
-        if len(self.memory) < self.batch_size:
+        if len(self.memory) < self.mini_batch_size:
             return
 
-        minibatch = self.prioritized_sample(self.batch_size) if self.prioritized_experience_replay else random.sample(
-            self.memory, self.batch_size)
+        minibatch = self.prioritized_sample(self.mini_batch_size) if self.prioritized_experience_replay else random.sample(
+            self.memory, self.mini_batch_size)
 
         state_batch, q_values_batch, action_batch, sample_weights = [], [], [], []
         for i in range(len(minibatch)):
