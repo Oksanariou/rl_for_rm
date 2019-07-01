@@ -31,10 +31,10 @@ print(study.best_params)
 
 
 def objective(trial):
-    data_collection_points = 4
-    micro_times = 3
-    capacity = 4
-    actions = tuple(k for k in range(50, 231, 50))
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 
@@ -43,7 +43,7 @@ def objective(trial):
 
     # learning_rate = trial.suggest_loguniform('learning_rate', 0.0001, 0.01)
     # memory_size = trial.suggest_int('memory_size', 1_000, 20_000)
-    # minibatch_size = trial.suggest_int('mini_batch_size', 30, 200)
+    minibatch_size = trial.suggest_discrete_uniform('mini_batch_size', 10, 170, 40)
     # percent_minibatch_size = trial.suggest_uniform('mini_batch_size', 0.0, 0.3)
     target_model_update = trial.suggest_discrete_uniform('target_model_update', 5, 55, 10)
 
@@ -51,15 +51,15 @@ def objective(trial):
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 10_000
-    parameters_dict["mini_batch_size"] = 30
+    parameters_dict["memory_size"] = 8_000
+    parameters_dict["mini_batch_size"] = minibatch_size
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = int(target_model_update)
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 0.001
-    parameters_dict["epsilon"] = 1.
+    parameters_dict["epsilon"] = 0.01
     parameters_dict["epsilon_min"] = 0.01
     parameters_dict["epsilon_decay"] = 0.9995
     parameters_dict["state_weights"] = True
@@ -79,7 +79,7 @@ def objective(trial):
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
 
-    nb_episodes = 6000
+    nb_episodes = 10_000
     nb_intermediate_values = 3
     nb_episodes_between_intermediate_values = nb_episodes // nb_intermediate_values
 
@@ -89,7 +89,7 @@ def objective(trial):
 
     callbacks = [q_compute, revenue_compute]
 
-    # agent.init_network_with_true_Q_table()
+    agent.init_network_with_true_Q_table()
 
     for step in range(nb_intermediate_values):
         agent.train(nb_episodes_between_intermediate_values, callbacks)
@@ -105,6 +105,6 @@ def objective(trial):
 
 
 study = optuna.create_study(pruner=optuna.pruners.MedianPruner())
-study.optimize(objective, n_trials=5)
+study.optimize(objective, n_trials=100)
 
 print(study.best_params)

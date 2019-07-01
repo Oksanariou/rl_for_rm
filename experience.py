@@ -42,7 +42,7 @@ if __name__ == '__main__':
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 0.001
+    parameters_dict["learning_rate"] = 0.0001
     parameters_dict["epsilon"] = 0.001
     parameters_dict["epsilon_min"] = 0.001
     parameters_dict["epsilon_decay"] = 0.9995
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                      state_weights=parameters_dict["state_weights"])
 
     nb_episodes = 10_000
-    nb_runs = 20
+    nb_runs = 30
 
     # agent.init_target_network_with_true_Q_table()
     agent.init_network_with_true_Q_table()
@@ -111,7 +111,9 @@ if __name__ == '__main__':
 
     agent.train(nb_episodes, callbacks)
 
-    # results_dir_name = "DQL-Results"
+    results_dir_name = "DQL-Results"
+
+    experience_dir_name = "Experience 1 of Optuna - cst epsilon = 0.001"
 
     # experience_dir_name = "Replay"
     # experience_dir_name = "DQL"
@@ -130,25 +132,25 @@ if __name__ == '__main__':
     # experience_dir_name = "Rainbow"
 
 
-    # callbacks_before_train = [true_compute, true_revenue]
-    # callbacks_after_train = [q_compute, q_error, revenue_compute]
-    #
-    # run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
-    #                      number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
-    #                      callbacks_after_train=callbacks_after_train, init_with_true_Q_table=False)
-    #
-    # list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
-    #                                                         results_dir_name=results_dir_name,
-    #                                                         experience_dir_name=experience_dir_name)
-    #
-    # x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
-    #     list_of_revenues)
-    #
-    # mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
-    # mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
-    # references_dict = {}
-    # references_dict["DP revenue"] = mean_revenue_DP
-    # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
-    #
-    # plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+    callbacks_before_train = [true_compute, true_revenue]
+    callbacks_after_train = [q_compute, q_error, revenue_compute]
+
+    run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
+                         number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
+                         callbacks_after_train=callbacks_after_train, init_with_true_Q_table=False)
+
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
+                                                            results_dir_name=results_dir_name,
+                                                            experience_dir_name=experience_dir_name)
+
+    x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
+        list_of_revenues)
+
+    mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
+    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
+    references_dict = {}
+    references_dict["DP revenue"] = mean_revenue_DP
+    references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
+
+    plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
