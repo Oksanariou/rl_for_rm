@@ -19,10 +19,10 @@ import os
 import timeit
 
 def test_time():
-    data_collection_points = 20
+    data_collection_points = 10
     micro_times = 5
-    capacity = 20
-    actions = tuple(k for k in range(50, 231, 20))
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 

@@ -23,7 +23,7 @@ if __name__ == '__main__':
     data_collection_points = 10
     micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 231, 20))
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 
@@ -35,16 +35,16 @@ if __name__ == '__main__':
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 10000
-    parameters_dict["mini_batch_size"] = 64
+    parameters_dict["memory_size"] = 6266
+    parameters_dict["mini_batch_size"] = 148
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 100
+    parameters_dict["target_model_update"] = 92
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 0.001
-    parameters_dict["epsilon"] = 0.01
-    parameters_dict["epsilon_min"] = 0.01
+    parameters_dict["epsilon"] = 0.001
+    parameters_dict["epsilon_min"] = 0.001
     parameters_dict["epsilon_decay"] = 0.9995
     parameters_dict["state_weights"] = True
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
 
-    nb_episodes = 2_000
+    nb_episodes = 10_000
     nb_runs = 20
 
     # agent.init_target_network_with_true_Q_table()
@@ -99,14 +99,15 @@ if __name__ == '__main__':
     sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
     sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
 
-    callbacks = [true_compute, true_v_display, true_revenue,
-                 agent_monitor,
-                 q_compute, v_display, policy_display,
-                 q_error, q_error_display,
-                 revenue_compute, revenue_display,
-                 memory_monitor, memory_display,
-                 batch_monitor, batch_display, total_batch_display,
-                 sumtree_monitor, sumtree_display]
+    # callbacks = [true_compute, true_v_display, true_revenue,
+    #              agent_monitor,
+    #              q_compute, v_display, policy_display,
+    #              q_error, q_error_display,
+    #              revenue_compute, revenue_display,
+    #              memory_monitor, memory_display,
+    #              batch_monitor, batch_display, total_batch_display,
+    #              sumtree_monitor, sumtree_display]
+    callbacks = [q_compute, revenue_compute]
 
     agent.train(nb_episodes, callbacks)
 
