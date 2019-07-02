@@ -42,18 +42,23 @@ class RMDCPEnv(gym.Env):
 
         self.s = (0, 0)
 
-        self.P = self.init_transitions(self.T, self.C, self.A)
+        self.P, self.proba_cumsum = self.init_transitions()
 
-    def init_transitions(self, T, C, A):
 
+    def init_transitions(self):
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
-        P = {(t, x): {a: [] for a in A} for t in range(T) for x in range(C)}
-        for t in range(T):
-            for x in range(C):
+        proba_cumsum = {(t, x): {a: [] for a in self.A} for t in range(self.T) for x in range(self.C)}
+        P = {(t, x): {a: [] for a in self.A} for t in range(self.T) for x in range(self.C)}
+        for t in range(self.T):
+            for x in range(self.C):
                 s = (t, x)
-                for a in A:
-                    P[s][a] = self.transitions(s, a)
-        return P
+                for a in self.A:
+                    transitions = self.transitions(s, a)
+                    P[s][a] = transitions
+                    prob_n = np.asarray([t[0] for t in transitions])
+                    csprob_n = np.cumsum(prob_n)
+                    proba_cumsum[s][a] = csprob_n
+        return P, proba_cumsum
 
     def transitions(self, state, action):
         list_transitions = []
@@ -114,9 +119,10 @@ class RMDCPEnv(gym.Env):
         return self.s
 
     def step(self, a):
-        transitions = self.transitions(self.s, a)
-        transition_idx = self.categorical_sample([t[0] for t in transitions])
-        p, s, r, d = transitions[transition_idx]
+        # transitions = self.transitions(self.s, a)
+        csprob_n = self.proba_cumsum[self.s][a]
+        transition_idx = self.categorical_sample(csprob_n)
+        p, s, r, d = self.P[self.s][a][transition_idx]
         self.s = s
         return s, r, d, {"prob": p}
 
@@ -136,13 +142,11 @@ class RMDCPEnv(gym.Env):
         p, r = self.proba_buy(a)
         return 1 - p, reward
 
-    def categorical_sample(self, prob_n):
+    def categorical_sample(self, csprob_n):
         """
         Sample from categorical distribution
         Each row specifies class probabilities
         """
-        prob_n = np.asarray(prob_n)
-        csprob_n = np.cumsum(prob_n)
         return (csprob_n > self.np_random.rand()).argmax()
 
     def get_state_scaler(self):

@@ -14,12 +14,13 @@ from value_iteration import value_iteration
 from policy_iteration import policy_iteration
 from actor_critic_to_solve_RM_game import train_actor_critic
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
+import time
 
 if __name__ == '__main__':
     data_collection_points = 10
     micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 231, 50))
+    actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
 
@@ -43,7 +44,9 @@ if __name__ == '__main__':
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
     P_DP = P_ref.reshape(env.T * env.C)
+    start_time = time.time()
     print("Average reward over 10000 episodes : " + str(average_n_episodes(env, P_DP, 10000, 0.01)))
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     # q_model = v_to_q(env, V, 1)
     # v = q_to_v(env, q_model)
