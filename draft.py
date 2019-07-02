@@ -5,7 +5,7 @@ from dynamic_programming_env import dynamic_programming_env
 from q_learning import q_learning, q_to_v
 from visualization_and_metrics import visualisation_value_RM, v_to_q, visualize_policy_RM, average_n_episodes, \
     visualizing_epsilon_decay, extract_policy_RM, plot_evolution_difference_between_policies, q_to_policy_RM, \
-    reshape_matrix_of_visits, from_microtimes_to_DCP
+    reshape_matrix_of_visits, from_microtimes_to_DCP, average_and_std_deviation_n_episodes, plot_average_and_std_deviatione
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # from actor_critic_keras import trainer, extract_values_policy
@@ -47,6 +47,14 @@ if __name__ == '__main__':
     start_time = time.time()
     print("Average reward over 10000 episodes : " + str(average_n_episodes(env, P_DP, 10000, 0.01)))
     print("--- %s seconds ---" % (time.time() - start_time))
+
+    nb_runs = 10_000
+    mean, var = average_and_std_deviation_n_episodes(env, P_DP, nb_runs, epsilon = 0.0)
+    print("Average and variance computed on {} runs : {} and {}".format(nb_runs, mean, var))
+
+    list_of_nb_episodes = [k for k in range(10, 50_000, 500)]
+    # list_of_nb_episodes = [10, 100, 1000, 5000, 8000, 10000, 20000, 30000, 50000]
+    plot_average_and_std_deviatione(list_of_nb_episodes, env, P_DP, epsilon=0.)
 
     # q_model = v_to_q(env, V, 1)
     # v = q_to_v(env, q_model)

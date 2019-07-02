@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import gym
+from tqdm import tqdm
 from scipy import stats
 
 def visualize_policy_FL(policy):
@@ -212,4 +213,33 @@ def from_microtimes_to_DCP(policy_microtimes, env_microtimes, env_DCP, way):
             else:
                 print("Specify median or mean")
     return policy_DCP
+
+
+def average_and_std_deviation_n_episodes(env, policy, nb_runs, epsilon = 0.):
+    scores = [run_episode(env, policy, epsilon) for _ in range(nb_runs)]
+    return np.mean(scores), np.sqrt(np.var(scores))
+
+def plot_average_and_std_deviatione(list_of_nb_episodes, env, policy, epsilon = 0.):
+    means, std_deviations = [], []
+
+    for n in tqdm(list_of_nb_episodes):
+        mean, std_deviation = average_and_std_deviation_n_episodes(env, policy, n, epsilon)
+        means.append(mean)
+        std_deviations.append(std_deviation)
+
+    plt.figure(1)
+    plt.plot(list_of_nb_episodes, means)
+    plt.title("Evolution of the average revenue")
+    plt.xlabel("Nb of runs used to compute the average revenue")
+    plt.ylabel("Average revenue")
+    plt.show()
+
+    plt.figure(2)
+    plt.plot(list_of_nb_episodes, std_deviations)
+    plt.title("Evolution of the standard deviation")
+    plt.xlabel("Nb of runs used to compute the standard deviation")
+    plt.ylabel("Standard deviation")
+    plt.show()
+
+
 

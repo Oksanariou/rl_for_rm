@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from keras import Input
-from keras.layers import Dense, BatchNormalization, Lambda, K
+from keras.layers import Dense, BatchNormalization, Lambda
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, logcosh
@@ -15,6 +15,8 @@ from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from SumTree import SumTree
 
+import tensorflow as tf
+from keras import backend as K
 
 class DQNAgent:
     def __init__(self, env, gamma=0.9,
@@ -23,6 +25,7 @@ class DQNAgent:
                  state_scaler=None, value_scaler=None,
                  learning_rate=0.001, dueling=False, hidden_layer_size=50,
                  prioritized_experience_replay=False, memory_size=500,
+                 mini_batch_size=64,
                  loss=mean_squared_error,
                  state_weights=None):
 
@@ -30,6 +33,7 @@ class DQNAgent:
         self.input_size = len(self.env.observation_space.spaces)
         self.action_size = self.env.action_space.n
         self.memory = deque(maxlen=memory_size)
+        self.mini_batch_size = mini_batch_size
         self.gamma = gamma  # discount rate
         self.epsilon = epsilon  # exploration rate
         self.epsilon_min = epsilon_min
@@ -51,7 +55,7 @@ class DQNAgent:
         self.dueling = dueling
         self.loss = loss
         self.learning_rate = learning_rate
-        self.state_weights = state_weights
+        self.state_weights = self.compute_state_weights() if state_weights else state_weights
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -71,6 +75,10 @@ class DQNAgent:
         return model_builder()
 
     def _build_simple_model(self):
+        # with K.tf.device('/gpu:0'):
+        #     config = tf.ConfigProto(device_count={'CPU': 1, 'GPU': 1})
+        #     session = tf.Session(config=config)
+        #     K.set_session(session)
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(self.hidden_layer_size, input_shape=(self.input_size,), activation='relu', name='state'))
@@ -256,7 +264,7 @@ class DQNAgent:
         X = self.normalize_states(X)
         Y = self.normalize_values(Y)
 
-        self.model.fit(X, Y, epochs=epochs, verbose=0)
+        self.model.fit(X, Y, epochs=epochs, verbose=0, batch_size=self.batch_size)
         self.set_target()
 
     def init_with_V(self):
@@ -271,7 +279,7 @@ class DQNAgent:
 
         tol = 10
         epochs = 10
-        while error > tol and total_epochs <= 2000:
+        while error > tol and total_epochs <= 2_000:
             self.init(states, true_Q_table, epochs)
             Q_table = self.compute_q_table()
             error = np.sqrt(np.square(true_Q_table - Q_table).sum())
@@ -288,7 +296,7 @@ class DQNAgent:
         plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
         plt.xlabel("Epochs")
         plt.ylabel("Error between the true Q-table and the agent's Q-table")
-        plt.show()
+        # plt.show()
 
     def init_network_with_true_Q_table(self):
         self.init_with_V()
@@ -313,11 +321,11 @@ class DQNAgent:
     def replay(self, episode):
         self.episode = episode
 
-        if len(self.memory) < self.batch_size:
+        if len(self.memory) < self.mini_batch_size:
             return
 
-        minibatch = self.prioritized_sample(self.batch_size) if self.prioritized_experience_replay else random.sample(
-            self.memory, self.batch_size)
+        minibatch = self.prioritized_sample(self.mini_batch_size) if self.prioritized_experience_replay else random.sample(
+            self.memory, self.mini_batch_size)
 
         state_batch, q_values_batch, action_batch, sample_weights = [], [], [], []
         for i in range(len(minibatch)):
@@ -350,7 +358,7 @@ class DQNAgent:
             sample_weights.append(sample_weight)
 
         history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0,
-                                 sample_weight=np.array(sample_weights))
+                                 sample_weight=np.array(sample_weights), batch_size=self.batch_size)
         self.loss_value = history.history['loss'][0]
 
         self.update_priority_b()
@@ -365,8 +373,8 @@ class DQNAgent:
     def train(self, nb_episodes, callbacks):
         for episode in range(nb_episodes):
 
-            state = self.env.set_random_state()
-            # state = env.reset()
+            # state = self.env.set_random_state()
+            state = self.env.reset()
 
             done = False
 
