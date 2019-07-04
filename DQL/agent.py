@@ -124,6 +124,9 @@ class DQNAgent:
     def set_target(self):
         self.target_model.set_weights(self.model.get_weights())
 
+    def set_model(self, model):
+        self.model = model
+
     def get_discounted_max_q_value(self, next_state):
         next_q_values = self.model.predict(next_state)
         action_idx = np.argmax(next_q_values[0])
@@ -279,7 +282,7 @@ class DQNAgent:
 
         tol = 10
         epochs = 10
-        while error > tol and total_epochs <= 2_000:
+        while error > tol and total_epochs <= 3_000:
             self.init(states, true_Q_table, epochs)
             Q_table = self.compute_q_table()
             error = np.sqrt(np.square(true_Q_table - Q_table).sum())
@@ -296,7 +299,7 @@ class DQNAgent:
         plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
         plt.xlabel("Epochs")
         plt.ylabel("Error between the true Q-table and the agent's Q-table")
-        # plt.show()
+        plt.show()
 
     def init_network_with_true_Q_table(self):
         self.init_with_V()

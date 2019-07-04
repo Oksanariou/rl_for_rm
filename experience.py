@@ -11,7 +11,7 @@ from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay,
 from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     compute_statistical_results_about_list_of_revenues, get_DP_revenue, get_DQL_with_true_Q_table_revenue, \
     extract_same_files_from_several_runs, plot_revenues
-
+from keras.models import load_model
 from keras.layers import K
 
 import os
@@ -67,7 +67,11 @@ if __name__ == '__main__':
     nb_runs = 10
 
     # agent.init_target_network_with_true_Q_table()
-    agent.init_network_with_true_Q_table()
+    model_name = "DQL/model_initialized_with_true_q_table.h5"
+    model = load_model(model_name)
+    agent.set_model(model)
+    agent.set_target()
+
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
@@ -147,7 +151,7 @@ if __name__ == '__main__':
 
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
                          number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
-                         callbacks_after_train=callbacks_after_train, init_with_true_Q_table=True)
+                         callbacks_after_train=callbacks_after_train, model=model, init_with_true_Q_table=True)
 
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=10,
                                                             results_dir_name=results_dir_name,

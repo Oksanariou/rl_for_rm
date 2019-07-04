@@ -12,7 +12,7 @@ from DQL.callbacks import TrueCompute, RevenueMonitor, QCompute, QErrorMonitor
 
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
-                         callbacks_before_train, callbacks_after_train, init_with_true_Q_table=False):
+                         callbacks_before_train, callbacks_after_train, model, init_with_true_Q_table=False):
     os.mkdir(results_dir_name + '/' + experience_dir_name)
 
     pickle_out = open(results_dir_name + '/' + experience_dir_name + "/Environment", "wb")
@@ -39,7 +39,8 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
                          state_weights=parameters_dict["state_weights"])
 
         if init_with_true_Q_table:
-            agent.init_network_with_true_Q_table()
+            agent.set_model(model)
+            agent.set_target()
 
         for callback in callbacks_after_train:
             callback.reset(agent)
