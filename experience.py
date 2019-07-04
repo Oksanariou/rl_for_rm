@@ -43,8 +43,8 @@ if __name__ == '__main__':
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-5
-    parameters_dict["epsilon"] = 0.01
-    parameters_dict["epsilon_min"] = 0.01
+    parameters_dict["epsilon"] = 0.0
+    parameters_dict["epsilon_min"] = 0.0
     parameters_dict["epsilon_decay"] = 0.9995
     parameters_dict["state_weights"] = True
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     #
     # agent.train(nb_episodes, callbacks)
 
-    results_dir_name = "../Daily meetings/Short experiences/Experience 7"
+    results_dir_name = "../Daily meetings/Short experiences/Experience 8"
     #
     # experience_dir_name = "Experience 1 of Optuna - cst epsilon = 0.001"
     # experience_dir_name = "Experience 2 of Optuna - cst epsilon = 0.001"
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     # experience_dir_name = "Epsilon = 0, learning rate = 1e-4, mini batch size = 1_000"
     # experience_dir_name = "Epsilon = 0, learning rate = 1e-3, mini batch size = 1_000"
     # experience_dir_name = "Epsilon = 0.01, learning rate = 1e-5, mini batch size = 1_000"
-    experience_dir_name = "Epsilon = 0.01, learning rate = 1e-5, mini batch size = 1_000"
+    experience_dir_name = "Initialize network with outside model - Epsilon=0, lr=1e-5, mini batch size = 1_000"
 
     # experience_dir_name = "Replay"
     # experience_dir_name = "DQL"
