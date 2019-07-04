@@ -33,23 +33,27 @@ def test_time():
     parameters_dict = {}
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 1024
-    parameters_dict["memory_size"] = 5000
+    parameters_dict["batch_size"] = 32
+    parameters_dict["memory_size"] = 8_000
+    parameters_dict["mini_batch_size"] = 10
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 100
+    parameters_dict["target_model_update"] = 45
     parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = False
+    parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 0.001
-    parameters_dict["epsilon"] = 1.0
-    parameters_dict["epsilon_min"] = 0.02
+    parameters_dict["epsilon"] = 0.001
+    parameters_dict["epsilon_min"] = 0.001
     parameters_dict["epsilon_decay"] = 0.9995
-    parameters_dict["state_weights"] = None
+    parameters_dict["state_weights"] = True
+
+    # minibatch_size = int(parameters_dict["memory_size"] * percent_minibatch_size)
+    # parameters_dict["mini_batch_size"] = minibatch_size
 
     agent = DQNAgent(env=parameters_dict["env"],
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
-                     memory_size=parameters_dict["memory_size"],
+                     memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
                      prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
                      target_model_update=parameters_dict["target_model_update"],
                      hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"],

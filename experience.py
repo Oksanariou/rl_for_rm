@@ -35,18 +35,21 @@ if __name__ == '__main__':
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 8_000
-    parameters_dict["mini_batch_size"] = 10
+    parameters_dict["memory_size"] = 6_000
+    parameters_dict["mini_batch_size"] = 1_000
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 45
+    parameters_dict["target_model_update"] = 90
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 0.001
-    parameters_dict["epsilon"] = 0.001
-    parameters_dict["epsilon_min"] = 0.001
+    parameters_dict["learning_rate"] = 1e-5
+    parameters_dict["epsilon"] = 0.01
+    parameters_dict["epsilon_min"] = 0.01
     parameters_dict["epsilon_decay"] = 0.9995
     parameters_dict["state_weights"] = True
+
+    # minibatch_size = int(parameters_dict["memory_size"] * percent_minibatch_size)
+    # parameters_dict["mini_batch_size"] = minibatch_size
 
     agent = DQNAgent(env=parameters_dict["env"],
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
@@ -60,8 +63,8 @@ if __name__ == '__main__':
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
 
-    nb_episodes = 10_000
-    nb_runs = 30
+    nb_episodes = 2_000
+    nb_runs = 10
 
     # agent.init_target_network_with_true_Q_table()
     agent.init_network_with_true_Q_table()
@@ -107,14 +110,20 @@ if __name__ == '__main__':
     #              memory_monitor, memory_display,
     #              batch_monitor, batch_display, total_batch_display,
     #              sumtree_monitor, sumtree_display]
-    callbacks = [true_compute, true_revenue,
-                 q_compute, revenue_compute]
+    # callbacks = [true_compute, true_revenue,
+    #              q_compute, revenue_compute]
+    #
+    # agent.train(nb_episodes, callbacks)
 
-    agent.train(nb_episodes, callbacks)
-
-    # results_dir_name = "DQL-Results"
+    results_dir_name = "../Daily meetings/Short experiences/Experience 7"
     #
     # experience_dir_name = "Experience 1 of Optuna - cst epsilon = 0.001"
+    # experience_dir_name = "Experience 2 of Optuna - cst epsilon = 0.001"
+    # experience_dir_name = "Epsilon = 0, learning rate = 1e-5, mini batch size = 1_000"
+    # experience_dir_name = "Epsilon = 0, learning rate = 1e-4, mini batch size = 1_000"
+    # experience_dir_name = "Epsilon = 0, learning rate = 1e-3, mini batch size = 1_000"
+    # experience_dir_name = "Epsilon = 0.01, learning rate = 1e-5, mini batch size = 1_000"
+    experience_dir_name = "Epsilon = 0.01, learning rate = 1e-5, mini batch size = 1_000"
 
     # experience_dir_name = "Replay"
     # experience_dir_name = "DQL"
@@ -133,25 +142,26 @@ if __name__ == '__main__':
     # experience_dir_name = "Rainbow"
 
 
-    # callbacks_before_train = [true_compute, true_revenue]
-    # callbacks_after_train = [q_compute, q_error, revenue_compute]
-    #
-    # run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
-    #                      number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
-    #                      callbacks_after_train=callbacks_after_train, init_with_true_Q_table=True)
-    #
-    # list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=13,
-    #                                                         results_dir_name=results_dir_name,
-    #                                                         experience_dir_name=experience_dir_name)
-    #
-    # x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
-    #     list_of_revenues)
-    #
-    # mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
-    # mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
-    # references_dict = {}
-    # references_dict["DP revenue"] = mean_revenue_DP
-    # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
-    #
-    # plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+    callbacks_before_train = [true_compute, true_revenue]
+    callbacks_after_train = [q_compute, revenue_compute]
+
+    run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
+                         number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
+                         callbacks_after_train=callbacks_after_train, init_with_true_Q_table=True)
+
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=10,
+                                                            results_dir_name=results_dir_name,
+                                                            experience_dir_name=experience_dir_name)
+
+    x_axis, mean_revenues, min_revenues, max_revenues = compute_statistical_results_about_list_of_revenues(
+        list_of_revenues)
+
+    mean_revenue_DP = get_DP_revenue(results_dir_name, experience_dir_name)
+    mean_revenue_DQN_with_true_Q_table = get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name)
+    references_dict = {}
+    references_dict["DP revenue"] = mean_revenue_DP
+    references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
+
+    plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+
 

@@ -80,7 +80,7 @@ def objective(trial):
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
 
-    nb_episodes = 10_000
+    nb_episodes = 11_000
     nb_intermediate_values = 3
     nb_episodes_between_intermediate_values = nb_episodes // nb_intermediate_values
 
