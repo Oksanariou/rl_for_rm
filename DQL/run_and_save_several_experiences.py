@@ -120,7 +120,8 @@ def compute_statistical_results_about_list_of_revenues(list_of_revenues, file_na
     nb_episodes = (list_of_revenues[0][file_name].replays[-1] - list_of_revenues[0][file_name].replays[
         -2]) * nb_collection_points
 
-    x_axis = [k for k in range(0, nb_episodes, nb_episodes // nb_collection_points)]
+    x_axis = list_of_revenues[0][file_name].replays
+    # x_axis = [k for k in range(0, nb_episodes, nb_episodes // nb_collection_points)]
 
     all_revenues_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
     for k in range(len(list_of_revenues)):
@@ -169,5 +170,5 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
 
     plt.legend()
     plt.ylabel("Revenues")
-    plt.xlabel("Number of episodes")
+    plt.xlabel("Number of replays")
     plt.show()

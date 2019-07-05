@@ -21,9 +21,10 @@ import timeit
 import matplotlib.pyplot as plt
 
 
-def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model):
+def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table):
+
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
-                         model, init_with_true_Q_table=True)
+                         model, init_with_true_Q_table)
 
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
@@ -41,7 +42,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
     plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
 
-def launch_one_run(parameters_dict, nb_episodes, model):
+def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     agent = DQNAgent(env=parameters_dict["env"],
                      # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                      replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
@@ -53,8 +54,10 @@ def launch_one_run(parameters_dict, nb_episodes, model):
                      epsilon=parameters_dict["epsilon"], epsilon_min=parameters_dict["epsilon_min"],
                      epsilon_decay=parameters_dict["epsilon_decay"],
                      state_weights=parameters_dict["state_weights"])
-    agent.set_model(model)
-    agent.set_target()
+
+    if init_with_true_Q_table:
+        agent.set_model(model)
+        agent.set_target()
 
     before_train = lambda episode: episode == 0
     every_episode = lambda episode: True
@@ -108,13 +111,13 @@ def launch_one_run(parameters_dict, nb_episodes, model):
     plt.show()
 
 
-def tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model):
+def tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table):
     results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
 
     for k in parameter_values:
         parameters_dict[parameter] = k
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
-        launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model)
+        launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table)
 
 
 if __name__ == '__main__':
@@ -129,10 +132,12 @@ if __name__ == '__main__':
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
     nb_episodes = 10_000
-    nb_runs = 30
+    nb_runs = 20
 
     model_name = "DQL/model_initialized_with_true_q_table.h5"
     model = load_model(model_name)
+
+    init_with_true_Q_table = True
 
     parameters_dict = {}
     parameters_dict["env"] = env
@@ -151,18 +156,20 @@ if __name__ == '__main__':
     parameters_dict["epsilon_decay"] = 1
     parameters_dict["state_weights"] = True
 
+    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+
 
     parameter = "learning_rate"
     parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model)
+    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     parameter = "epsilon"
     parameter_values = [1e-4, 1e-3, 1e-2, 1e-1]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model)
+    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     parameter = "mini_batch_size"
-    parameter_values = [1e3, 1e2, 10]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model)
+    parameter_values = [1e3, 500, 1e2, 10]
+    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     # launch_one_run(parameters_dict, nb_episodes, model)
 
