@@ -8,24 +8,23 @@ from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from scipy.stats import sem, t
 
 from DQL.agent import DQNAgent
-from DQL.callbacks import TrueCompute, RevenueMonitor, QCompute, QErrorMonitor
-
+from DQL.callbacks import TrueCompute, RevenueMonitor, QCompute
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
-                         callbacks_before_train, callbacks_after_train, model, init_with_true_Q_table=False):
+                         model, init_with_true_Q_table=False):
+    before_train = lambda episode: episode == 0
+    while_training = lambda episode: episode % (nb_episodes / 20) == 0
+
     os.mkdir(results_dir_name + '/' + experience_dir_name)
 
     pickle_out = open(results_dir_name + '/' + experience_dir_name + "/Environment", "wb")
     pickle.dump(parameters_dict["env"], pickle_out)
     pickle_out.close()
 
-    for callback in callbacks_before_train:
-        callback._run()
-        pickle_out = open(results_dir_name + '/' + experience_dir_name + "/" + callback.name, "wb")
-        pickle.dump(callback, pickle_out)
-        pickle_out.close()
-
     for k in range(number_of_runs):
+        run_dir_name = results_dir_name + '/' + experience_dir_name + '/Run_' + str(k)
+        os.mkdir(run_dir_name)
+
         agent = DQNAgent(env=parameters_dict["env"],
                          # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                          replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
@@ -43,22 +42,35 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
             agent.set_target()
             # agent.init_network_with_true_Q_table()
 
-        for callback in callbacks_after_train:
-            callback.reset(agent)
+        true_compute = TrueCompute(before_train, agent)
+        true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
+        q_compute = QCompute(while_training, agent)
+        revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
 
-        run_dir_name = results_dir_name + '/' + experience_dir_name + '/Run_' + str(k)
-        os.mkdir(run_dir_name)
+        callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
 
-        agent.train(nb_episodes, callbacks_before_train + callbacks_after_train)
+        agent.train(nb_episodes, callbacks)
+
+        if k == 0:
+            pickle_out = open(results_dir_name + '/' + experience_dir_name + "/" + true_compute.name, "wb")
+            pickle.dump(true_compute, pickle_out)
+            pickle_out.close()
+
+            pickle_out = open(results_dir_name + '/' + experience_dir_name + "/" + true_revenue.name, "wb")
+            pickle.dump(true_revenue, pickle_out)
+            pickle_out.close()
 
         pickle_out = open(run_dir_name + "/" + "agent", "wb")
         pickle.dump(agent, pickle_out)
         pickle_out.close()
 
-        for callback in callbacks_after_train:
-            pickle_out = open(run_dir_name + "/" + callback.name, "wb")
-            pickle.dump(callback, pickle_out)
-            pickle_out.close()
+        pickle_out = open(run_dir_name + "/" + q_compute.name, "wb")
+        pickle.dump(q_compute, pickle_out)
+        pickle_out.close()
+
+        pickle_out = open(run_dir_name + "/" + revenue_compute.name, "wb")
+        pickle.dump(revenue_compute, pickle_out)
+        pickle_out.close()
 
 
 def extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, list_of_file_names):
@@ -133,9 +145,10 @@ def get_DP_revenue(results_dir_name, experience_dir_name, file_name="true_revenu
     return DP_revenue
 
 
-def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, run_number=0, agent_name="agent"):
+def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, model, run_number=0, agent_name="agent"):
     agent = extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, [agent_name])[agent_name]
-    agent.init_network_with_true_Q_table()
+    agent.set_model(model)
+    agent.set_target()
     Q_table_init = agent.compute_q_table()
     policy_init = q_to_policy_RM(agent.env, Q_table_init)
     revenue = average_n_episodes(agent.env, policy_init.flatten(), 10000, agent.epsilon_min)
@@ -152,6 +165,7 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
 
     for y_name in references_dict:
         plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)
+        plt.ylim(820, 1070)
 
     plt.legend()
     plt.ylabel("Revenues")
