@@ -71,6 +71,7 @@ if __name__ == '__main__':
     model = load_model(model_name)
     agent.set_model(model)
     agent.set_target()
+    # agent.init_network_with_true_Q_table()
 
 
     before_train = lambda episode: episode == 0
@@ -114,12 +115,12 @@ if __name__ == '__main__':
     #              memory_monitor, memory_display,
     #              batch_monitor, batch_display, total_batch_display,
     #              sumtree_monitor, sumtree_display]
-    # callbacks = [true_compute, true_revenue,
-    #              q_compute, revenue_compute]
-    #
-    # agent.train(nb_episodes, callbacks)
+    callbacks = [true_compute, true_revenue,
+                 q_compute, revenue_compute]
 
-    results_dir_name = "../Daily meetings/Short experiences/Experience 8"
+    agent.train(nb_episodes, callbacks)
+
+    results_dir_name = "../Daily meetings/Short experiences/Experience 9"
     #
     # experience_dir_name = "Experience 1 of Optuna - cst epsilon = 0.001"
     # experience_dir_name = "Experience 2 of Optuna - cst epsilon = 0.001"
@@ -127,7 +128,8 @@ if __name__ == '__main__':
     # experience_dir_name = "Epsilon = 0, learning rate = 1e-4, mini batch size = 1_000"
     # experience_dir_name = "Epsilon = 0, learning rate = 1e-3, mini batch size = 1_000"
     # experience_dir_name = "Epsilon = 0.01, learning rate = 1e-5, mini batch size = 1_000"
-    experience_dir_name = "Initialize network with outside model - Epsilon=0, lr=1e-5, mini batch size = 1_000"
+    # experience_dir_name = "Initialize network with outside model - Epsilon=0.01, lr=1e-4, mini batch size = 500"
+    experience_dir_name = "Initialize network with outside model - Epsilon=0.01, lr=1e-4, mini batch size = 500"
 
     # experience_dir_name = "Replay"
     # experience_dir_name = "DQL"
@@ -153,7 +155,7 @@ if __name__ == '__main__':
                          number_of_runs=nb_runs, nb_episodes=nb_episodes, callbacks_before_train=callbacks_before_train,
                          callbacks_after_train=callbacks_after_train, model=model, init_with_true_Q_table=True)
 
-    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=10,
+    list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=5,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
 

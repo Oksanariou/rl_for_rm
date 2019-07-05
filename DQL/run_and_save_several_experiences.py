@@ -29,7 +29,7 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
         agent = DQNAgent(env=parameters_dict["env"],
                          # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
                          replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
-                         memory_size=parameters_dict["memory_size"],
+                         memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
                          prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
                          target_model_update=parameters_dict["target_model_update"],
                          hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"],
@@ -41,6 +41,7 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
         if init_with_true_Q_table:
             agent.set_model(model)
             agent.set_target()
+            # agent.init_network_with_true_Q_table()
 
         for callback in callbacks_after_train:
             callback.reset(agent)

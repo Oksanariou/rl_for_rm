@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 1e-3
+    parameters_dict["learning_rate"] = 1e-5
     parameters_dict["epsilon"] = 0.0
     parameters_dict["epsilon_min"] = 0.0
     parameters_dict["epsilon_decay"] = 0.9995
@@ -63,5 +63,6 @@ if __name__ == '__main__':
     model = load_model(model_name)
     agent.set_model(model)
     agent.set_target()
+
 
 

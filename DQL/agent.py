@@ -125,7 +125,7 @@ class DQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
     def set_model(self, model):
-        self.model = model
+        self.model.set_weights(model.get_weights())
 
     def get_discounted_max_q_value(self, next_state):
         next_q_values = self.model.predict(next_state)
