@@ -52,7 +52,7 @@ def objective(trial):
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 8_000
-    parameters_dict["mini_batch_size"] = minibatch_size
+    parameters_dict["mini_batch_size"] = int(minibatch_size)
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = int(target_model_update)
     parameters_dict["hidden_layer_size"] = 50
