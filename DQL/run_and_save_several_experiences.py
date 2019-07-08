@@ -29,6 +29,8 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
 
         for key in parameters_dict:
             agent.__setattr__(key, parameters_dict[key])
+        agent.model = agent._build_model()
+        agent.target_model = agent._build_model()
 
         if init_with_true_Q_table:
             agent.set_model(model)
@@ -161,7 +163,7 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
 
     for y_name in references_dict:
         plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)
-        plt.ylim(820, 1070)
+        # plt.ylim(820, 1070)
 
     plt.legend()
     plt.ylabel("Revenues")

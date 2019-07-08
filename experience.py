@@ -50,6 +50,8 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
 
     for key in parameters_dict:
         agent.__setattr__(key, parameters_dict[key])
+    agent.model = agent._build_model()
+    agent.target_model = agent._build_model()
 
     if init_with_true_Q_table:
         agent.set_model(model)
@@ -111,40 +113,49 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     plt.show()
 
 
-def tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table):
-    results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
+def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table):
+
+    # results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
+    results_dir_name = general_dir_name + "/" + parameter
+    os.mkdir(results_dir_name)
 
     for k in parameter_values:
         parameters_dict[parameter] = k
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
         launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table)
 
+def save_optimal_model(parameters_dict, model_name):
+    agent = DQNAgent(parameters_dict["env"])
+    for key in parameters_dict:
+        agent.__setattr__(key, parameters_dict[key])
+    agent.model = agent._build_model()
+    agent.target_model = agent._build_model()
+    agent.init_network_with_true_Q_table()
+
+    agent.model.save(model_name)
 
 if __name__ == '__main__':
-    data_collection_points = 20
+    #Parameters of the environment
+    data_collection_points = 10
     micro_times = 5
-    capacity = 20
-    actions = tuple(k for k in range(50, 331, 10))
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-    nb_episodes = 1_000
-    nb_runs = 20
 
-    model_name = "DQL/model_initialized_with_true_q_table.h5"
-    model = load_model(model_name)
-
-    init_with_true_Q_table = False
+    #Parameters of the agent
+    init_with_true_Q_table = True
 
     parameters_dict = {}
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6_000
-    parameters_dict["mini_batch_size"] = 10
+    parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 90
     parameters_dict["hidden_layer_size"] = 50
@@ -155,42 +166,40 @@ if __name__ == '__main__':
     parameters_dict["epsilon_min"] = 1e-2
     parameters_dict["epsilon_decay"] = 1
     parameters_dict["use_weights"] = True
-    parameters_dict["use_optimal_policy"] = True
-
-    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+    parameters_dict["use_optimal_policy"] = False
 
 
+    #Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
+    dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
+    # save_optimal_model(dueling_model_name)
+    model = load_model(dueling_model_name)
+
+
+    #Parameters of the experience
+    nb_episodes = 10_000
+    nb_runs = 20
+
+    general_dir_name = "../Results"
+    os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
+
+    #Tuning of the parameters
     parameter = "learning_rate"
     parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
+    tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     parameter = "epsilon"
     parameter_values = [1e-4, 1e-3, 1e-2, 1e-1]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
+    tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     parameter = "mini_batch_size"
     parameter_values = [1000, 500, 100, 10]
-    tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
+    tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
     experience_dir_name = parameter + " = " + str(1e-5)
     visualize_revenue_n_runs(1, results_dir_name, experience_dir_name, model)
 
-    # launch_one_run(parameters_dict, nb_episodes, model)
+    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
 
-    # experience_dir_name = "Replay"
-    # experience_dir_name = "DQL"
-    # experience_dir_name = "Double_DQL"
-    # experience_dir_name = "Dueling_Network_Architecture"
-    # experience_dir_name = "Init_network_with_true_Q-table"
-    # experience_dir_name = "State_initialization"
-    # experience_dir_name = "Prioritized_experience_replay"
-    # experience_dir_name = "Use_weights_with_reset"
 
-    # experience_dir_name = "Tuning_target_update"
-    # experience_dir_name = "Tuning_learning_rate"
-    # experience_dir_name = "Tuning_memory_size"
-    # experience_dir_name = "Tuning_batch_size"
-
-    # experience_dir_name = "Rainbow"
 
