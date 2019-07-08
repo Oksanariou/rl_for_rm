@@ -17,10 +17,10 @@ from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 import time
 
 if __name__ == '__main__':
-    data_collection_points = 10
+    data_collection_points = 20
     micro_times = 5
-    capacity = 10
-    actions = tuple(k for k in range(50, 231, 10))
+    capacity = 20
+    actions = tuple(k for k in range(50, 331, 10))
     alpha = 0.8
     lamb = 0.7
 

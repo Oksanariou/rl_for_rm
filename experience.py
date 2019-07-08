@@ -34,7 +34,9 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, mod
     references_dict["DP revenue"] = mean_revenue_DP
     references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
 
-    plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+
+    plt.savefig(results_dir_name + "/" + experience_dir_name + "/" + experience_dir_name + ".png")
 
 def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table):
 
@@ -119,17 +121,17 @@ def tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb
 
 
 if __name__ == '__main__':
-    data_collection_points = 10
+    data_collection_points = 20
     micro_times = 5
-    capacity = 10
-    actions = tuple(k for k in range(50, 231, 10))
+    capacity = 20
+    actions = tuple(k for k in range(50, 331, 10))
     alpha = 0.8
     lamb = 0.7
 
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-    nb_episodes = 5_000
+    nb_episodes = 1_000
     nb_runs = 20
 
     model_name = "DQL/model_initialized_with_true_q_table.h5"
@@ -142,11 +144,11 @@ if __name__ == '__main__':
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6_000
-    parameters_dict["mini_batch_size"] = 50
+    parameters_dict["mini_batch_size"] = 10
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 90
     parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = False
+    parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1e-2
@@ -155,7 +157,7 @@ if __name__ == '__main__':
     parameters_dict["use_weights"] = True
     parameters_dict["use_optimal_policy"] = True
 
-    launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
 
 
     parameter = "learning_rate"
@@ -171,8 +173,8 @@ if __name__ == '__main__':
     tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
-    experience_dir_name = parameter + " = " + str(1e-05)
-    visualize_revenue_n_runs(20, results_dir_name, experience_dir_name, model)
+    experience_dir_name = parameter + " = " + str(1e-5)
+    visualize_revenue_n_runs(1, results_dir_name, experience_dir_name, model)
 
     # launch_one_run(parameters_dict, nb_episodes, model)
 
@@ -191,3 +193,4 @@ if __name__ == '__main__':
     # experience_dir_name = "Tuning_batch_size"
 
     # experience_dir_name = "Rainbow"
+
