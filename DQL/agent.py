@@ -27,7 +27,9 @@ class DQNAgent:
                  prioritized_experience_replay=False, memory_size=500,
                  mini_batch_size=64,
                  loss=mean_squared_error,
-                 state_weights=None):
+                 use_weights = False,
+                 # state_weights=None,
+                 use_optimal_policy=False):
 
         self.env = env
         self.input_size = len(self.env.observation_space.spaces)
@@ -55,7 +57,9 @@ class DQNAgent:
         self.dueling = dueling
         self.loss = loss
         self.learning_rate = learning_rate
-        self.state_weights = self.compute_state_weights() if state_weights else state_weights
+        self.use_weights = use_weights
+        self.state_weights = self.compute_state_weights()
+        # self.state_weights = self.compute_state_weights() if state_weights else state_weights
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -69,6 +73,14 @@ class DQNAgent:
         self.priority_b_increase = 0.9999
 
         self.name = "agent"
+
+        self.use_optimal_policy = use_optimal_policy
+        self.optimal_policy = self.compute_optimal_policy()
+
+
+    def compute_optimal_policy(self):
+        V, P_ref = dynamic_programming_env_DCP(self.env)
+        return P_ref.reshape(self.env.T * self.env.C)
 
     def _build_model(self):
         model_builder = self._build_dueling_model if self.dueling else self._build_simple_model
@@ -136,7 +148,7 @@ class DQNAgent:
         return self.gamma * max_target_value
 
     def remember(self, state, action_idx, reward, next_state, done):
-        sample_weight = self.state_weights[state] if self.state_weights is not None else 1.
+        sample_weight = self.state_weights[state] if self.use_optimal_policy else 1.
 
         state = self.normalize_state(state)
         state = np.reshape(state, [1, self.input_size])
@@ -312,14 +324,17 @@ class DQNAgent:
         self.target_model_update = sys.maxsize
 
     def act(self, state):
+        state_idx = self.env.to_idx(state[0], state[1])
+
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
 
         state = self.normalize_state(state)
         state = np.reshape(state, [1, self.input_size])
         q_values = self.model.predict(state)
+        action = self.env.A.index(self.optimal_policy[state_idx]) if self.use_optimal_policy else np.argmax(q_values[0])
 
-        return np.argmax(q_values[0])  # returns action
+        return action  # returns action
 
     def replay(self, episode):
         self.episode = episode

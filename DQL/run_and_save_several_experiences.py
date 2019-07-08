@@ -25,17 +25,10 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
         run_dir_name = results_dir_name + '/' + experience_dir_name + '/Run_' + str(k)
         os.mkdir(run_dir_name)
 
-        agent = DQNAgent(env=parameters_dict["env"],
-                         # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                         replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
-                         memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
-                         prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
-                         target_model_update=parameters_dict["target_model_update"],
-                         hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"],
-                         loss=parameters_dict["loss"], learning_rate=parameters_dict["learning_rate"],
-                         epsilon=parameters_dict["epsilon"], epsilon_min=parameters_dict["epsilon_min"],
-                         epsilon_decay=parameters_dict["epsilon_decay"],
-                         state_weights=parameters_dict["state_weights"])
+        agent = DQNAgent(parameters_dict["env"])
+
+        for key in parameters_dict:
+            agent.__setattr__(key, parameters_dict[key])
 
         if init_with_true_Q_table:
             agent.set_model(model)

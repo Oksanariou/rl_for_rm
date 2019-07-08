@@ -20,12 +20,7 @@ import timeit
 
 import matplotlib.pyplot as plt
 
-
-def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table):
-
-    run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
-                         model, init_with_true_Q_table)
-
+def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, model):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
@@ -41,19 +36,18 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
 
     plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
+def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name, model, init_with_true_Q_table):
+
+    run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
+                         model, init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, model)
 
 def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
-    agent = DQNAgent(env=parameters_dict["env"],
-                     # state_scaler=env.get_state_scaler(), value_scaler=env.get_value_scaler(),
-                     replay_method=parameters_dict["replay_method"], batch_size=parameters_dict["batch_size"],
-                     memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
-                     prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
-                     target_model_update=parameters_dict["target_model_update"],
-                     hidden_layer_size=parameters_dict["hidden_layer_size"], dueling=parameters_dict["dueling"],
-                     loss=parameters_dict["loss"], learning_rate=parameters_dict["learning_rate"],
-                     epsilon=parameters_dict["epsilon"], epsilon_min=parameters_dict["epsilon_min"],
-                     epsilon_decay=parameters_dict["epsilon_decay"],
-                     state_weights=parameters_dict["state_weights"])
+
+    agent = DQNAgent(parameters_dict["env"])
+
+    for key in parameters_dict:
+        agent.__setattr__(key, parameters_dict[key])
 
     if init_with_true_Q_table:
         agent.set_model(model)
@@ -73,33 +67,37 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     agent_monitor = AgentMonitor(while_training, agent)
 
     q_compute = QCompute(while_training, agent)
-    v_display = VDisplay(after_train, agent, q_compute)
-    policy_display = PolicyDisplay(after_train, agent, q_compute)
+    # v_display = VDisplay(after_train, agent, q_compute)
+    # policy_display = PolicyDisplay(after_train, agent, q_compute)
 
-    q_error = QErrorMonitor(after_train, agent, true_compute, q_compute)
+    q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
     q_error_display = QErrorDisplay(after_train, agent, q_error)
 
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
-    revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
+    # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
 
-    memory_monitor = MemoryMonitor(while_training, agent)
-    memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+    # memory_monitor = MemoryMonitor(while_training, agent)
+    # memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+    #
+    # batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
+    # batch_display = BatchDisplay(after_train, agent, batch_monitor)
+    # total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
+    #
+    # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
+    # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
 
-    batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
-    batch_display = BatchDisplay(after_train, agent, batch_monitor)
-    total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
-
-    sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
-    sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
-
-    callbacks = [true_compute, true_v_display, true_revenue,
+    callbacks = [
+        true_compute, true_v_display, true_revenue,
                  agent_monitor,
-                 q_compute, v_display, policy_display,
+                 q_compute,
+                 # v_display, policy_display,
                  q_error, q_error_display,
-                 revenue_compute, revenue_display,
-                 memory_monitor, memory_display,
-                 batch_monitor, batch_display, total_batch_display,
-                 sumtree_monitor, sumtree_display]
+                 revenue_compute,
+                 # revenue_display,
+                 # memory_monitor, memory_display,
+                 # batch_monitor, batch_display, total_batch_display,
+                 # sumtree_monitor, sumtree_display
+                 ]
 
     agent.train(nb_episodes, callbacks)
 
@@ -131,32 +129,33 @@ if __name__ == '__main__':
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-    nb_episodes = 10_000
+    nb_episodes = 5_000
     nb_runs = 20
 
     model_name = "DQL/model_initialized_with_true_q_table.h5"
     model = load_model(model_name)
 
-    init_with_true_Q_table = True
+    init_with_true_Q_table = False
 
     parameters_dict = {}
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6_000
-    parameters_dict["mini_batch_size"] = 500
+    parameters_dict["mini_batch_size"] = 50
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 90
     parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = True
+    parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1e-2
     parameters_dict["epsilon_min"] = 1e-2
     parameters_dict["epsilon_decay"] = 1
-    parameters_dict["state_weights"] = True
+    parameters_dict["use_weights"] = True
+    parameters_dict["use_optimal_policy"] = True
 
-    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+    launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
 
 
     parameter = "learning_rate"
@@ -168,8 +167,12 @@ if __name__ == '__main__':
     tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
     parameter = "mini_batch_size"
-    parameter_values = [1e3, 500, 1e2, 10]
+    parameter_values = [1000, 500, 100, 10]
     tune_parameter(parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
+
+    results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
+    experience_dir_name = parameter + " = " + str(1e-05)
+    visualize_revenue_n_runs(20, results_dir_name, experience_dir_name, model)
 
     # launch_one_run(parameters_dict, nb_episodes, model)
 
