@@ -20,7 +20,7 @@ if __name__ == '__main__':
     data_collection_points = 20
     micro_times = 5
     capacity = 20
-    actions = tuple(k for k in range(50, 331, 10))
+    actions = tuple(k for k in range(50, 331, 20))
     alpha = 0.8
     lamb = 0.7
 
