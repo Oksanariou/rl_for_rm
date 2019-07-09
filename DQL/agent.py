@@ -18,6 +18,7 @@ from SumTree import SumTree
 import tensorflow as tf
 from keras import backend as K
 
+
 class DQNAgent:
     def __init__(self, env, gamma=0.9,
                  epsilon=1., epsilon_min=0.2, epsilon_decay=0.9999,
@@ -27,7 +28,7 @@ class DQNAgent:
                  prioritized_experience_replay=False, memory_size=500,
                  mini_batch_size=64,
                  loss=mean_squared_error,
-                 use_weights = False,
+                 use_weights=False,
                  # state_weights=None,
                  use_optimal_policy=False):
 
@@ -76,7 +77,6 @@ class DQNAgent:
 
         self.use_optimal_policy = use_optimal_policy
         self.optimal_policy = self.compute_optimal_policy()
-
 
     def compute_optimal_policy(self):
         V, P_ref = dynamic_programming_env_DCP(self.env)
@@ -139,13 +139,15 @@ class DQNAgent:
     def set_model(self, model):
         self.model.set_weights(model.get_weights())
 
-    def get_discounted_max_q_value(self, next_state):
-        next_q_values = self.model.predict(next_state)
-        action_idx = np.argmax(next_q_values[0])
+    def get_discounted_max_q_value(self, next_state_batch):
+        next_q_values = self.model.predict(next_state_batch)
+        # action_idx = np.argmax(next_q_values[0])
+        action_idx = next_q_values.argmax(axis=1)
 
-        max_target_value = self.target_model.predict(next_state)[0][action_idx]
+        target_values = self.target_model.predict(next_state_batch)
+        max_target_values = np.array([target_values[k][action_idx[k]] for k in range(len(next_q_values))])
 
-        return self.gamma * max_target_value
+        return self.gamma * max_target_values
 
     def remember(self, state, action_idx, reward, next_state, done):
         sample_weight = self.state_weights[state] if self.use_optimal_policy else 1.
@@ -218,9 +220,10 @@ class DQNAgent:
     def compute_priority(self, error):
         return (error + self.priority_e) ** self.priority_a
 
-    def prioritized_update(self, idx, error):
-        priority = self.compute_priority(error)
-        self.tree.update(idx, priority)
+    def prioritized_update(self, idx_batch, error_bacth):
+        for k in range(len(idx_batch)):
+            priority = self.compute_priority(error_bacth[k])
+            self.tree.update(idx_batch[k], priority)
 
     def update_priority_b(self):
         self.priority_b = min(1., self.priority_b / self.priority_b_increase)
@@ -342,40 +345,36 @@ class DQNAgent:
         if len(self.memory) < self.mini_batch_size:
             return
 
-        minibatch = self.prioritized_sample(self.mini_batch_size) if self.prioritized_experience_replay else random.sample(
-            self.memory, self.mini_batch_size)
+        if self.prioritized_experience_replay:
+            minibatch = self.prioritized_sample(self.mini_batch_size)
+            idx_batch, (state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights) = zip(*minibatch)
+            idx_batch = np.array(idx_batch)
+        else:
+            minibatch = random.sample(self.memory, self.mini_batch_size)
+            state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
 
-        state_batch, q_values_batch, action_batch, sample_weights = [], [], [], []
-        for i in range(len(minibatch)):
-            if self.prioritized_experience_replay:
-                idx, (state, action_idx, reward, next_state, done, sample_weight) = minibatch[i][0], minibatch[i][1]
-            else:
-                state, action_idx, reward, next_state, done, sample_weight = minibatch[i]
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = np.array(
+            state_batch).reshape(self.mini_batch_size, self.input_size), np.array(action_batch), np.array(
+            reward_batch), np.array(next_state_batch).reshape(self.mini_batch_size, self.input_size), np.array(
+            done_batch), np.array(sample_weights)
 
-            if self.replay_method == "TARGET_ONLY":
-                # To learn the target model Q values directly without accounting for an instant reward
-                q_value = self.target_model.predict(state)[0][action_idx]
-            elif self.replay_method == "DQL":
-                # To learn the instant reward and model V table
-                q_value = reward + self.gamma * np.max(self.model.predict(next_state))
-            elif self.replay_method == "DDQL":
-                # To learn the instant reward, the model optimal action and target model V table
-                q_value = reward + self.get_discounted_max_q_value(next_state)
+        if self.replay_method == "TARGET_ONLY":
+            q_values_target = np.array([self.target_model.predict(state_batch)[k][action_batch[k]] for k in range(self.mini_batch_size)])
+        elif self.replay_method == "DQL":
+            q_values_target = reward_batch + self.gamma *self.model.predict(next_state_batch).max(axis = 1)
+        elif self.replay_method == "DDQL":
+            q_values_target = reward_batch + self.get_discounted_max_q_value(next_state_batch)
 
-            q_values = self.model.predict(state)
-            q_values[0][action_idx] = reward if done else q_value
+        q_values_state = self.model.predict(state_batch)
 
-            state_batch.append(state[0])
-            q_values_batch.append(q_values[0])
-            action_batch.append(action_idx)
+        if self.prioritized_experience_replay:
+            error_batch = np.array([abs(q_values_state[k][action_batch[k]] - q_values_target[k]) for k in range(self.mini_batch_size)])
+            self.prioritized_update(idx_batch, error_batch)
 
-            if self.prioritized_experience_replay:
-                error = abs(q_values[0][action_idx] - q_value)
-                self.prioritized_update(idx, error)
+        for k in range(self.mini_batch_size):
+            q_values_state[k][action_batch[k]] = reward_batch[k] if done_batch[k] else q_values_target[k]
 
-            sample_weights.append(sample_weight)
-
-        history = self.model.fit(np.array(state_batch), np.array(q_values_batch), epochs=1, verbose=0,
+        history = self.model.fit(np.array(state_batch), np.array(q_values_state), epochs=1, verbose=0,
                                  sample_weight=np.array(sample_weights), batch_size=self.batch_size)
         self.loss_value = history.history['loss'][0]
 
@@ -410,4 +409,3 @@ class DQNAgent:
 
             for callback in callbacks:
                 callback.run(episode)
-

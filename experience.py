@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
 
     #Parameters of the agent
-    init_with_true_Q_table = True
+    init_with_true_Q_table = False
 
     parameters_dict = {}
     parameters_dict["env"] = env
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     experience_dir_name = parameter + " = " + str(1e-5)
     visualize_revenue_n_runs(1, results_dir_name, experience_dir_name, model)
 
-    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+    launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
 
 
 

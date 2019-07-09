@@ -15,18 +15,61 @@ from policy_iteration import policy_iteration
 from actor_critic_to_solve_RM_game import train_actor_critic
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 import time
+from DQL.agent import DQNAgent
+from keras.losses import mean_squared_error, logcosh
+from keras.models import load_model
 
 if __name__ == '__main__':
-    data_collection_points = 20
+    data_collection_points = 10
     micro_times = 5
-    capacity = 20
-    actions = tuple(k for k in range(50, 331, 20))
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 
     env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-    env_microtimes = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+
+    #Parameters of the agent
+    init_with_true_Q_table = True
+
+    parameters_dict = {}
+    parameters_dict["env"] = env
+    parameters_dict["replay_method"] = "DDQL"
+    parameters_dict["batch_size"] = 32
+    parameters_dict["memory_size"] = 6_000
+    parameters_dict["mini_batch_size"] = 100
+    parameters_dict["prioritized_experience_replay"] = False
+    parameters_dict["target_model_update"] = 90
+    parameters_dict["hidden_layer_size"] = 50
+    parameters_dict["dueling"] = True
+    parameters_dict["loss"] = mean_squared_error
+    parameters_dict["learning_rate"] = 1e-4
+    parameters_dict["epsilon"] = 1e-2
+    parameters_dict["epsilon_min"] = 1e-2
+    parameters_dict["epsilon_decay"] = 1
+    parameters_dict["use_weights"] = True
+    parameters_dict["use_optimal_policy"] = False
+
+    dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
+    # save_optimal_model(dueling_model_name)
+    model = load_model(dueling_model_name)
+
+    agent = DQNAgent(parameters_dict["env"])
+    for key in parameters_dict:
+        agent.__setattr__(key, parameters_dict[key])
+    agent.model = agent._build_model()
+    agent.target_model = agent._build_model()
+
+    if init_with_true_Q_table:
+        agent.set_model(model)
+        agent.set_target()
+
+    start_time = time.time()
+    agent.replay(0)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
+    # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)
     # env_DCP.visualize_proba_actions()
     #
@@ -39,7 +82,7 @@ if __name__ == '__main__':
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
     # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
 
-    V, P_ref = dynamic_programming_env_DCP(env)
+    V, P_ref = dynamic_programming_env(env)
     V = V.reshape(env.T * env.C)
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
