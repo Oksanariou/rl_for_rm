@@ -346,13 +346,13 @@ class DQNAgent:
             return
 
         if self.prioritized_experience_replay:
-            minibatch = self.prioritized_sample(self.mini_batch_size)
-            idx_batch, (state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights) = zip(*minibatch)
+            minibatch_with_idx = self.prioritized_sample(self.mini_batch_size)
+            idx_batch, minibatch = zip(*minibatch_with_idx)
             idx_batch = np.array(idx_batch)
         else:
             minibatch = random.sample(self.memory, self.mini_batch_size)
-            state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
 
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = np.array(
             state_batch).reshape(self.mini_batch_size, self.input_size), np.array(action_batch), np.array(
             reward_batch), np.array(next_state_batch).reshape(self.mini_batch_size, self.input_size), np.array(

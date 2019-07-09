@@ -31,7 +31,7 @@ if __name__ == '__main__':
                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
     #Parameters of the agent
-    init_with_true_Q_table = True
+    init_with_true_Q_table = False
 
     parameters_dict = {}
     parameters_dict["env"] = env
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6_000
     parameters_dict["mini_batch_size"] = 100
-    parameters_dict["prioritized_experience_replay"] = False
+    parameters_dict["prioritized_experience_replay"] = True
     parameters_dict["target_model_update"] = 90
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
