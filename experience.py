@@ -66,7 +66,7 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
 
     true_compute = TrueCompute(before_train, agent)
     true_v_display = VDisplay(before_train, agent, true_compute)
-    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
+    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
 
     agent_monitor = AgentMonitor(while_training, agent)
 
@@ -77,7 +77,7 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
     # q_error_display = QErrorDisplay(after_train, agent, q_error)
 
-    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
+    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
     # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
 
     # memory_monitor = MemoryMonitor(while_training, agent)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parameters_dict["env"] = env
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 6_000
+    parameters_dict["memory_size"] = 6000
     parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 90
