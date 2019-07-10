@@ -178,7 +178,7 @@ if __name__ == '__main__':
     nb_runs = 30
 
     general_dir_name = "../Results"
-    os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
+    # os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
 
     #Tuning of the parameters
     parameter = "learning_rate"
