@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from keras import Input
-from keras.layers import Dense, BatchNormalization, Lambda
+from keras.layers import Dense, BatchNormalization, Lambda, GaussianNoise
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, logcosh
@@ -100,6 +100,7 @@ class DQNAgent:
         model.add(BatchNormalization())
         # model.add(Dropout(rate=0.2))
         model.add(Dense(self.action_size, activation='relu', name='action'))
+        # model.add(GaussianNoise(0.01))
         model.compile(loss=self.loss, optimizer=Adam(lr=self.learning_rate))
 
         return model
@@ -115,6 +116,7 @@ class DQNAgent:
         action_value_layer = Dense(self.hidden_layer_size, activation='relu')(action_value_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
         action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
+
 
         state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         state_value_layer = BatchNormalization()(state_value_layer)

@@ -74,8 +74,8 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     # v_display = VDisplay(after_train, agent, q_compute)
     # policy_display = PolicyDisplay(after_train, agent, q_compute)
 
-    q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
-    q_error_display = QErrorDisplay(after_train, agent, q_error)
+    # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
+    # q_error_display = QErrorDisplay(after_train, agent, q_error)
 
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
     # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
@@ -95,7 +95,7 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
                  agent_monitor,
                  q_compute,
                  # v_display, policy_display,
-                 q_error, q_error_display,
+                 # q_error, q_error_display,
                  revenue_compute,
                  # revenue_display,
                  # memory_monitor, memory_display,
@@ -106,10 +106,8 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     agent.train(nb_episodes, callbacks)
 
     plt.plot(revenue_compute.replays, revenue_compute.revenues)
-    plt.ylim(820, 1070)
     plt.ylabel("Revenues")
     plt.xlabel("Number of replays")
-    plt.show()
     plt.show()
 
 
@@ -148,7 +146,7 @@ if __name__ == '__main__':
 
 
     #Parameters of the agent
-    init_with_true_Q_table = False
+    init_with_true_Q_table = True
 
     parameters_dict = {}
     parameters_dict["env"] = env
@@ -162,8 +160,8 @@ if __name__ == '__main__':
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-3
-    parameters_dict["epsilon"] = 1e-2
-    parameters_dict["epsilon_min"] = 1e-2
+    parameters_dict["epsilon"] = 0.01
+    parameters_dict["epsilon_min"] = 0.01
     parameters_dict["epsilon_decay"] = 1
     parameters_dict["use_weights"] = True
     parameters_dict["use_optimal_policy"] = False
@@ -171,13 +169,13 @@ if __name__ == '__main__':
 
     #Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
     dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    # save_optimal_model(dueling_model_name)
+    # save_optimal_model(parameters_dict, dueling_model_name)
     model = load_model(dueling_model_name)
 
 
     #Parameters of the experience
-    nb_episodes = 10_000
-    nb_runs = 20
+    nb_episodes = 10000
+    nb_runs = 30
 
     general_dir_name = "../Results"
     os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
@@ -195,11 +193,10 @@ if __name__ == '__main__':
     parameter_values = [1000, 500, 100, 10]
     tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
 
-    results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
-    experience_dir_name = parameter + " = " + str(1e-5)
-    visualize_revenue_n_runs(1, results_dir_name, experience_dir_name, model)
+    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
 
-    launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
+
+
 
 
 
