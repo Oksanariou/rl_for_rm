@@ -299,7 +299,7 @@ class DQNAgent:
 
         tol = 10
         epochs = 10
-        while error > tol and total_epochs <= 3_000:
+        while error > tol and total_epochs <= 3000:
             self.init(states, true_Q_table, epochs)
             Q_table = self.compute_q_table()
             error = np.sqrt(np.square(true_Q_table - Q_table).sum())
