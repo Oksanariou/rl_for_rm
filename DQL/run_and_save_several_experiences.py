@@ -38,9 +38,9 @@ def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict,
             # agent.init_network_with_true_Q_table()
 
         true_compute = TrueCompute(before_train, agent)
-        true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
+        true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
         q_compute = QCompute(while_training, agent)
-        revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
+        revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
 
         callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
 
