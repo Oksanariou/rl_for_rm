@@ -30,6 +30,10 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     run_path.mkdir(parents=True, exist_ok=True)
 
     agent = DQNAgent(parameters_dict["env_builder"]())
+    for key in parameters_dict:
+        agent.__setattr__(key, parameters_dict[key])
+    agent.model = agent._build_model()
+    agent.target_model = agent._build_model()
 
     if init_with_true_Q_table:
         agent.set_model(load_model(optimal_model_path))
