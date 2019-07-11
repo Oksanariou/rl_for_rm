@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import dill as pickle
+from functools import partial
+from multiprocessing import Pool
+from keras.models import load_model
 
 from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from scipy.stats import sem, t
@@ -10,62 +12,62 @@ from scipy.stats import sem, t
 from DQL.agent import DQNAgent
 from DQL.callbacks import TrueCompute, RevenueMonitor, QCompute
 
-def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
-                         model, init_with_true_Q_table=False):
+
+def pickle_that(obj, path):
+    with path.open("wb") as f:
+        pickle.dump(obj, f)
+
+
+def unpickle_that(path):
+    with path.open("rb") as f:
+        return pickle.load(f)
+
+
+def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table, k):
+    print("Run {}".format(k))
+
+    run_path = experience_path / ('Run_' + str(k))
+    run_path.mkdir(parents=True, exist_ok=True)
+
+    agent = DQNAgent(parameters_dict["env_builder"]())
+
+    if init_with_true_Q_table:
+        agent.set_model(load_model(optimal_model_path))
+        agent.set_target()
+        # agent.init_network_with_true_Q_table()
+
     before_train = lambda episode: episode == 0
     while_training = lambda episode: episode % (nb_episodes / 20) == 0
 
-    os.mkdir(results_dir_name + '/' + experience_dir_name)
+    true_compute = TrueCompute(before_train, agent)
+    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
+    q_compute = QCompute(while_training, agent)
+    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
 
-    pickle_out = open(results_dir_name + '/' + experience_dir_name + "/Environment", "wb")
-    pickle.dump(parameters_dict["env"], pickle_out)
-    pickle_out.close()
+    callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
 
-    for k in range(number_of_runs):
-        run_dir_name = results_dir_name + '/' + experience_dir_name + '/Run_' + str(k)
-        os.mkdir(run_dir_name)
+    agent.train(nb_episodes, callbacks)
 
-        agent = DQNAgent(parameters_dict["env"])
+    if k == 0:
+        pickle_that(true_compute, experience_path / true_compute.name)
+        pickle_that(true_revenue, experience_path / true_revenue.name)
 
-        for key in parameters_dict:
-            agent.__setattr__(key, parameters_dict[key])
-        agent.model = agent._build_model()
-        agent.target_model = agent._build_model()
+    pickle_that(agent, run_path / 'agent')
+    pickle_that(q_compute, run_path / q_compute.name)
+    pickle_that(revenue_compute, run_path / revenue_compute.name)
 
-        if init_with_true_Q_table:
-            agent.set_model(model)
-            agent.set_target()
-            # agent.init_network_with_true_Q_table()
 
-        true_compute = TrueCompute(before_train, agent)
-        true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
-        q_compute = QCompute(while_training, agent)
-        revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
+def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
+                         optimal_model_path, init_with_true_Q_table=False):
+    experience_path = results_dir_name / experience_dir_name
+    experience_path.mkdir(parents=True, exist_ok=True)
 
-        callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
+    pickle_that(parameters_dict["env_builder"](), experience_path / 'Environment')
 
-        agent.train(nb_episodes, callbacks)
-
-        if k == 0:
-            pickle_out = open(results_dir_name + '/' + experience_dir_name + "/" + true_compute.name, "wb")
-            pickle.dump(true_compute, pickle_out)
-            pickle_out.close()
-
-            pickle_out = open(results_dir_name + '/' + experience_dir_name + "/" + true_revenue.name, "wb")
-            pickle.dump(true_revenue, pickle_out)
-            pickle_out.close()
-
-        pickle_out = open(run_dir_name + "/" + "agent", "wb")
-        pickle.dump(agent, pickle_out)
-        pickle_out.close()
-
-        pickle_out = open(run_dir_name + "/" + q_compute.name, "wb")
-        pickle.dump(q_compute, pickle_out)
-        pickle_out.close()
-
-        pickle_out = open(run_dir_name + "/" + revenue_compute.name, "wb")
-        pickle.dump(revenue_compute, pickle_out)
-        pickle_out.close()
+    f = partial(run_once_and_save, experience_path, parameters_dict, nb_episodes, optimal_model_path,
+                init_with_true_Q_table)
+    with Pool(number_of_runs) as pool:
+        pool.map(f, range(number_of_runs))
 
 
 def extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, list_of_file_names):
@@ -73,28 +75,32 @@ def extract_files_from_a_run(results_dir_name, experience_dir_name, run_number, 
         Input: Name of the experience, number of the run from which we want to extract the files, list of the names of the files that we want to extract
         Output: Dictionary containing the files of one run which names correspond to the names in callback_name
     """
+
+    run_path = results_dir_name / experience_dir_name / ('Run_' + str(run_number))
+
     dict_of_files = {}
-    for dir_name in sorted(os.listdir(results_dir_name + '/' + experience_dir_name)):
-        if dir_name == "Run_" + str(run_number):
-            for file_name in os.listdir(results_dir_name + '/' + experience_dir_name + "/Run_" + str(run_number)):
-                if file_name in list_of_file_names:
-                    print("Collecting " + file_name + "...")
-                    pickle_in = open(
-                        results_dir_name + '/' + experience_dir_name + "/Run_" + str(run_number) + "/" + file_name,
-                        "rb")
-                    dict_of_files[file_name] = pickle.load(pickle_in)
-                    pickle_in.close()
+
+    for file_path in run_path.iterdir():
+        file_name = file_path.stem
+
+        if file_name in list_of_file_names:
+            print("Collecting " + file_name + "...")
+            dict_of_files[file_name] = unpickle_that(file_path)
+
     return (dict_of_files)
 
 
 def extract_files_from_experience(results_dir_name, experience_dir_name, list_of_file_names):
+    experience_path = results_dir_name / experience_dir_name
+
     dict_of_files = {}
-    for file_name in os.listdir(results_dir_name + '/' + experience_dir_name):
-        if file_name in list_of_file_names:
-            print("Collecting " + file_name + "...")
-            pickle_in = open(results_dir_name + '/' + experience_dir_name + "/" + file_name, "rb")
-            dict_of_files[file_name] = pickle.load(pickle_in)
-            pickle_in.close()
+    for file_path in experience_path.iterdir():
+        if not file_path.is_file():
+            continue
+        file_name = file_path.stem
+        print("Collecting " + file_name + "...")
+        dict_of_files[file_name] = unpickle_that(file_path)
+
     return (dict_of_files)
 
 
@@ -170,5 +176,3 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
     plt.xlabel("Number of replays")
     # plt.show()
     return fig
-
-
