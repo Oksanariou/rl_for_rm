@@ -19,6 +19,20 @@ import tensorflow as tf
 from keras import backend as K
 
 
+def DQNAgent_builder(env, parameters_dict):
+    return DQNAgent(env, gamma=parameters_dict["gamma"], epsilon=parameters_dict["epsilon"],
+                    epsilon_min=parameters_dict["epsilon_min"], epsilon_decay=parameters_dict["epsilon_decay"],
+                    replay_method=parameters_dict["replay_method"],
+                    target_model_update=parameters_dict["target_model_update"],
+                    batch_size=parameters_dict["batch_size"], state_scaler=parameters_dict["state_scaler"],
+                    value_scaler=parameters_dict["value_scaler"], learning_rate=parameters_dict["learning_rate"],
+                    dueling=parameters_dict["dueling"], hidden_layer_size=parameters_dict["hidden_layer_size"],
+                    prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
+                    memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
+                    loss=parameters_dict["loss"], use_weights=parameters_dict["use_weights"],
+                    use_optimal_policy=parameters_dict["use_optimal_policy"])
+
+
 class DQNAgent:
     def __init__(self, env, gamma=0.9,
                  epsilon=1., epsilon_min=0.2, epsilon_decay=0.9999,
@@ -29,7 +43,6 @@ class DQNAgent:
                  mini_batch_size=64,
                  loss=mean_squared_error,
                  use_weights=False,
-                 # state_weights=None,
                  use_optimal_policy=False):
 
         self.env = env
@@ -116,7 +129,6 @@ class DQNAgent:
         action_value_layer = Dense(self.hidden_layer_size, activation='relu')(action_value_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
         action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
-
 
         state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
@@ -361,16 +373,18 @@ class DQNAgent:
             done_batch), np.array(sample_weights)
 
         if self.replay_method == "TARGET_ONLY":
-            q_values_target = np.array([self.target_model.predict(state_batch)[k][action_batch[k]] for k in range(self.mini_batch_size)])
+            q_values_target = np.array(
+                [self.target_model.predict(state_batch)[k][action_batch[k]] for k in range(self.mini_batch_size)])
         elif self.replay_method == "DQL":
-            q_values_target = reward_batch + self.gamma *self.model.predict(next_state_batch).max(axis = 1)
+            q_values_target = reward_batch + self.gamma * self.model.predict(next_state_batch).max(axis=1)
         elif self.replay_method == "DDQL":
             q_values_target = reward_batch + self.get_discounted_max_q_value(next_state_batch)
 
         q_values_state = self.model.predict(state_batch)
 
         if self.prioritized_experience_replay:
-            error_batch = np.array([abs(q_values_state[k][action_batch[k]] - q_values_target[k]) for k in range(self.mini_batch_size)])
+            error_batch = np.array(
+                [abs(q_values_state[k][action_batch[k]] - q_values_target[k]) for k in range(self.mini_batch_size)])
             self.prioritized_update(idx_batch, error_batch)
 
         for k in range(self.mini_batch_size):

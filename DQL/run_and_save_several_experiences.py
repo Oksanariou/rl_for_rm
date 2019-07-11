@@ -9,7 +9,7 @@ from keras.models import load_model
 from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from scipy.stats import sem, t
 
-from DQL.agent import DQNAgent
+from DQL.agent import DQNAgent, DQNAgent_builder
 from DQL.callbacks import TrueCompute, RevenueMonitor, QCompute
 
 
@@ -29,11 +29,7 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     run_path = experience_path / ('Run_' + str(k))
     run_path.mkdir(parents=True, exist_ok=True)
 
-    agent = DQNAgent(parameters_dict["env_builder"]())
-    for key in parameters_dict:
-        agent.__setattr__(key, parameters_dict[key])
-    agent.model = agent._build_model()
-    agent.target_model = agent._build_model()
+    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
 
     if init_with_true_Q_table:
         agent.set_model(load_model(optimal_model_path))

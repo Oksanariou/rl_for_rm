@@ -4,7 +4,7 @@ import gym
 from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
-from DQL.agent import DQNAgent
+from DQL.agent import DQNAgent, DQNAgent_builder
 from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay, AgentMonitor, QCompute, QErrorDisplay, \
     QErrorMonitor, PolicyDisplay, MemoryMonitor, MemoryDisplay, BatchMonitor, BatchDisplay, TotalBatchDisplay, \
     SumtreeMonitor, SumtreeDisplay
@@ -12,7 +12,10 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     compute_statistical_results_about_list_of_revenues, get_DP_revenue, get_DQL_with_true_Q_table_revenue, \
     extract_same_files_from_several_runs, plot_revenues
 from keras.models import load_model
+from pathlib import Path
 from keras.layers import K
+import sys
+import ast
 
 import os
 
@@ -50,12 +53,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
 
 
 def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
-    agent = DQNAgent(parameters_dict["env_builder"]())
-
-    for key in parameters_dict:
-        agent.__setattr__(key, parameters_dict[key])
-    agent.model = agent._build_model()
-    agent.target_model = agent._build_model()
+    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
 
     if init_with_true_Q_table:
         agent.set_model(model)
@@ -129,13 +127,8 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
 
 
 def save_optimal_model(parameters_dict, model_name):
-    agent = DQNAgent(parameters_dict["env_builder"]())
-    for key in parameters_dict:
-        agent.__setattr__(key, parameters_dict[key])
-    agent.model = agent._build_model()
-    agent.target_model = agent._build_model()
+    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
     agent.init_network_with_true_Q_table()
-
     print("Saving optimal model")
     agent.model.save(model_name)
 
@@ -154,9 +147,12 @@ def env_builder():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print("Specify parameter and parameter values")
     # Parameters of the agent
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
+    parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6000
@@ -172,10 +168,12 @@ if __name__ == '__main__':
     parameters_dict["epsilon_decay"] = 1
     parameters_dict["use_weights"] = True
     parameters_dict["use_optimal_policy"] = False
+    parameters_dict["state_scaler"] = None
+    parameters_dict["value_scaler"] = None
 
     # Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
     dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    save_optimal_model(parameters_dict, dueling_model_name)
+    # save_optimal_model(parameters_dict, dueling_model_name)
 
     optimal_model_path = dueling_model_name
     init_with_true_Q_table = True
@@ -184,15 +182,16 @@ if __name__ == '__main__':
     nb_episodes = 100
     nb_runs = 2
 
-    from pathlib import Path
-
     results_path = Path("../Results")
     results_path.mkdir(parents=True, exist_ok=True)
 
     # Tuning of the parameters
-    parameter = "learning_rate"
+    # parameter = "learning_rate"
+    parameter = sys.argv[1]
+    parameter_values_string = sys.argv[2]
+    parameter_values = ast.literal_eval(parameter_values_string)
     # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    parameter_values = [1e-5]
+    # parameter_values = [1e-5]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
                    init_with_true_Q_table)
 
