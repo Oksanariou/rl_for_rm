@@ -148,7 +148,8 @@ def env_builder():
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print("Specify parameter and parameter values")
+        print("Specify parameter and parameter values.")
+        exit(0)
     # Parameters of the agent
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
