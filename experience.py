@@ -70,7 +70,7 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
 
     true_compute = TrueCompute(before_train, agent)
     true_v_display = VDisplay(before_train, agent, true_compute)
-    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10_000, name="true_revenue")
+    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
 
     agent_monitor = AgentMonitor(while_training, agent)
 
@@ -78,10 +78,10 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
     # v_display = VDisplay(after_train, agent, q_compute)
     # policy_display = PolicyDisplay(after_train, agent, q_compute)
 
-    q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
-    q_error_display = QErrorDisplay(after_train, agent, q_error)
+    # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
+    # q_error_display = QErrorDisplay(after_train, agent, q_error)
 
-    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10_000)
+    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
     # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
 
     # memory_monitor = MemoryMonitor(while_training, agent)
@@ -96,24 +96,22 @@ def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
 
     callbacks = [
         true_compute, true_v_display, true_revenue,
-        agent_monitor,
-        q_compute,
-        # v_display, policy_display,
-        q_error, q_error_display,
-        revenue_compute,
-        # revenue_display,
-        # memory_monitor, memory_display,
-        # batch_monitor, batch_display, total_batch_display,
-        # sumtree_monitor, sumtree_display
-    ]
+                 agent_monitor,
+                 q_compute,
+                 # v_display, policy_display,
+                 # q_error, q_error_display,
+                 revenue_compute,
+                 # revenue_display,
+                 # memory_monitor, memory_display,
+                 # batch_monitor, batch_display, total_batch_display,
+                 # sumtree_monitor, sumtree_display
+                 ]
 
     agent.train(nb_episodes, callbacks)
 
     plt.plot(revenue_compute.replays, revenue_compute.revenues)
-    plt.ylim(820, 1070)
     plt.ylabel("Revenues")
     plt.xlabel("Number of replays")
-    plt.show()
     plt.show()
 
 

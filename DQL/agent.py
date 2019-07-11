@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from keras import Input
-from keras.layers import Dense, BatchNormalization, Lambda
+from keras.layers import Dense, BatchNormalization, Lambda, GaussianNoise
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, logcosh
@@ -100,6 +100,7 @@ class DQNAgent:
         model.add(BatchNormalization())
         # model.add(Dropout(rate=0.2))
         model.add(Dense(self.action_size, activation='relu', name='action'))
+        # model.add(GaussianNoise(0.01))
         model.compile(loss=self.loss, optimizer=Adam(lr=self.learning_rate))
 
         return model
@@ -115,6 +116,7 @@ class DQNAgent:
         action_value_layer = Dense(self.hidden_layer_size, activation='relu')(action_value_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
         action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
+
 
         state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
@@ -346,13 +348,13 @@ class DQNAgent:
             return
 
         if self.prioritized_experience_replay:
-            minibatch = self.prioritized_sample(self.mini_batch_size)
-            idx_batch, (state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights) = zip(*minibatch)
+            minibatch_with_idx = self.prioritized_sample(self.mini_batch_size)
+            idx_batch, minibatch = zip(*minibatch_with_idx)
             idx_batch = np.array(idx_batch)
         else:
             minibatch = random.sample(self.memory, self.mini_batch_size)
-            state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
 
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = np.array(
             state_batch).reshape(self.mini_batch_size, self.input_size), np.array(action_batch), np.array(
             reward_batch), np.array(next_state_batch).reshape(self.mini_batch_size, self.input_size), np.array(
