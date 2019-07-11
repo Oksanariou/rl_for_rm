@@ -178,7 +178,7 @@ if __name__ == '__main__':
     save_optimal_model(parameters_dict, dueling_model_name)
 
     optimal_model_path = dueling_model_name
-    init_with_true_Q_table = False
+    init_with_true_Q_table = True
 
     # Parameters of the experience
     nb_episodes = 100
