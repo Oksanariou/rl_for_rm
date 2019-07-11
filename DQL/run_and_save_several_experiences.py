@@ -98,8 +98,9 @@ def extract_files_from_experience(results_dir_name, experience_dir_name, list_of
         if not file_path.is_file():
             continue
         file_name = file_path.stem
-        print("Collecting " + file_name + "...")
-        dict_of_files[file_name] = unpickle_that(file_path)
+        if file_name in list_of_file_names:
+            print("Collecting " + file_name + "...")
+            dict_of_files[file_name] = unpickle_that(file_path)
 
     return (dict_of_files)
 
