@@ -157,6 +157,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     # results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
     # os.mkdir(general_dir_name + "/" + parameter)
     (general_dir_name / parameter).mkdir(parents=True, exist_ok=True)
+    parameter_path = Path(parameter)
 
     for value in parameter_values:
         parameters_dict[parameter] = value
@@ -165,7 +166,8 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value)
         fig = plot_revenues(general_dir_name, parameter, value)
         # fig = run_n_times(env, parameters_dict, number_of_runs, nb_timesteps)
-        plt.savefig(general_dir_name / parameter / (experience_dir_name + ".png"))
+        # plt.savefig(general_dir_name / parameter_path / (experience_dir_name + ".png"))
+        plt.savefig('../'+general_dir_name.name+'/'+parameter+'/'+general_dir_name.name+'.png')
 
 def make_env(env_id, rank, seed=0):
     """
