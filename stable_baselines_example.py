@@ -136,7 +136,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
 
         run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value)
-        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameters_dict,
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                                   value)
         fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
         # fig = run_n_times(env, parameters_dict, number_of_runs, nb_timesteps)
