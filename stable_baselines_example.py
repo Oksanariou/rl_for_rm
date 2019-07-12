@@ -21,21 +21,40 @@ from multiprocessing import Pool
 import glob
 
 
+def agent_builder(env_vec, parameters_dict):
+    return DQN(MlpPolicy, env_vec, gamma=parameters_dict["gamma"], learning_rate=parameters_dict["learning_rate"],
+               buffer_size=parameters_dict["buffer_size"],
+               exploration_fraction=parameters_dict["exploration_fraction"],
+               exploration_final_eps=parameters_dict["exploration_final_eps"],
+               train_freq=parameters_dict["train_freq"], batch_size=parameters_dict["batch_size"],
+               checkpoint_freq=parameters_dict["checkpoint_freq"],
+               checkpoint_path=parameters_dict["checkpoint_path"], learning_starts=parameters_dict["learning_starts"],
+               target_network_update_freq=parameters_dict["target_network_update_freq"],
+               prioritized_replay=parameters_dict["prioritized_replay"],
+               prioritized_replay_alpha=parameters_dict["prioritized_replay_alpha"],
+               prioritized_replay_beta0=parameters_dict["prioritized_replay_beta0"],
+               prioritized_replay_beta_iters=parameters_dict["prioritized_replay_beta_iters"],
+               prioritized_replay_eps=parameters_dict["prioritized_replay_eps"],
+               param_noise=parameters_dict["param_noise"], verbose=parameters_dict["verbose"],
+               tensorboard_log=parameters_dict["tensorboard_log"])
+
+
 def callback(_locals, _globals):
-  """
-  Callback called at each step (for DQN an others) or after n steps (see ACER or PPO2)
-  :param _locals: (dict)
-  :param _globals: (dict)
-  """
-  global n_steps, rewards, steps, env, states, model
-  # Print stats every 1000 calls
-  if (n_steps + 1) % 1000 == 0:
-      policy, q_values, _ = model.step_model.step(states, deterministic=True)
-      policy = np.array([env.A[k] for k in policy])
-      rewards.append(average_n_episodes(env, policy, 10000))
-      steps.append(n_steps)
-  n_steps += 1
-  return True
+    """
+    Callback called at each step (for DQN an others) or after n steps (see ACER or PPO2)
+    :param _locals: (dict)
+    :param _globals: (dict)
+    """
+    global n_steps, rewards, steps, env, states, model
+    # Print stats every 1000 calls
+    if (n_steps + 1) % 1000 == 0:
+        policy, q_values, _ = model.step_model.step(states, deterministic=True)
+        policy = np.array([env.A[k] for k in policy])
+        rewards.append(average_n_episodes(env, policy, 10000))
+        steps.append(n_steps)
+    n_steps += 1
+    return True
+
 
 def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, k):
     global env, rewards, n_steps, steps, model, states
@@ -50,12 +69,11 @@ def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, 
     log_dir = "/tmp/gym/"
     os.makedirs(log_dir, exist_ok=True)
 
-    model = DQN(MlpPolicy, env_vec)
-    for key in parameters_dict:
-        model.__setattr__(key, parameters_dict[key])
+    model = agent_builder(env_vec, parameters_dict)
     model.learn(total_timesteps=nb_timesteps, callback=callback)
 
-    np.save(general_dir_name / parameter / str(value) / ("Run"+str(k)+ ".npy"), rewards)
+    np.save(general_dir_name / parameter / str(value) / ("Run" + str(k) + ".npy"), rewards)
+
 
 def run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value):
     (general_dir_name / parameter / str(value)).mkdir(parents=True, exist_ok=True)
@@ -65,19 +83,14 @@ def run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, numb
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
 
-def plot_revenues(general_dir_name, parameter, value):
-    env = parameters_dict["env_builder"]()
-    V, P_ref = dynamic_programming_env_DCP(env)
-    P_DP = P_ref.reshape(env.T * env.C)
 
+def collect_list_of_mean_revenues(general_dir_name, parameter, value):
     list_of_rewards = []
-    for np_name in glob.glob('../'+general_dir_name.name+'/'+parameter+'/'+str(value)+'/*.np[yz]'):
+    for np_name in glob.glob('../' + general_dir_name.name + '/' + parameter + '/' + str(value) + '/*.np[yz]'):
         list_of_rewards.append(list(np.load(np_name)))
 
     nb_collection_points = len(list_of_rewards[0])
 
-    steps = [k for k in range(1000 - 1, total_timesteps, 1000)]
-
     all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
 
     for k in range(len(list_of_rewards)):
@@ -92,56 +105,15 @@ def plot_revenues(general_dir_name, parameter, value):
     min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
     max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
 
-    fig = plt.figure()
-    plt.plot(steps, mean_revenues, color="gray", label='DQL mean revenue')
-    plt.fill_between(steps, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
-    plt.plot(steps, [average_n_episodes(env, P_DP, 10000)] * len(steps), label="DP Revenue")
-    plt.legend()
-    plt.ylabel("Revenue computed over 10000 episodes")
-    plt.xlabel("Number of timesteps")
-    return fig
+    return mean_revenues, min_revenues, max_revenues
 
-def run_n_times_without_multiprocessing(env, parameters_dict, nb_runs, nb_timesteps):
+
+def plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues):
+    env = parameters_dict["env_builder"]()
     V, P_ref = dynamic_programming_env_DCP(env)
     P_DP = P_ref.reshape(env.T * env.C)
 
-    env_vec = DummyVecEnv([lambda: env])
-
-    global states
-    states = [k for k in range(env.T * env.C)]
-
-    list_of_rewards = []
-
-    for k in range(nb_runs):
-        log_dir = "/tmp/gym/"
-        os.makedirs(log_dir, exist_ok=True)
-
-        global rewards, n_steps, steps, model
-        rewards, n_steps, steps = [], 0, []
-
-        model = DQN(MlpPolicy, env_vec)
-        for key in parameters_dict:
-            model.__setattr__(key, parameters_dict[key])
-        model.learn(total_timesteps=nb_timesteps, callback=callback)
-
-        list_of_rewards.append(rewards)
-
-
-    nb_collection_points = len(rewards)
-
-    all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
-
-    for k in range(len(list_of_rewards)):
-        rewards = list_of_rewards[k]
-        for i in range(nb_collection_points):
-            all_rewards_combined_at_each_collection_point[i].append(rewards[i])
-
-    mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
-    std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
-    confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
-                           range(nb_collection_points)]
-    min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
-    max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+    steps = [k for k in range(1000 - 1, nb_timesteps, 1000)]
 
     fig = plt.figure()
     plt.plot(steps, mean_revenues, color="gray", label='DQL mean revenue')
@@ -152,8 +124,8 @@ def run_n_times_without_multiprocessing(env, parameters_dict, nb_runs, nb_timest
     plt.xlabel("Number of timesteps")
     return fig
 
-def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_timesteps, number_of_runs):
 
+def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_timesteps, number_of_runs):
     # results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
     # os.mkdir(general_dir_name + "/" + parameter)
     (general_dir_name / parameter).mkdir(parents=True, exist_ok=True)
@@ -164,10 +136,13 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
 
         run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value)
-        fig = plot_revenues(general_dir_name, parameter, value)
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameters_dict,
+                                                                                  value)
+        fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
         # fig = run_n_times(env, parameters_dict, number_of_runs, nb_timesteps)
         # plt.savefig(general_dir_name / parameter_path / (experience_dir_name + ".png"))
-        plt.savefig('../'+general_dir_name.name+'/'+parameter+'/'+experience_dir_name+'.png')
+        plt.savefig('../' + general_dir_name.name + '/' + parameter + '/' + experience_dir_name + '.png')
+
 
 def make_env(env_id, rank, seed=0):
     """
@@ -178,21 +153,25 @@ def make_env(env_id, rank, seed=0):
     :param seed: (int) the inital seed for RNG
     :param rank: (int) index of the subprocess
     """
+
     def _init():
         env = gym.make(env_id)
         env.seed(seed + rank)
         return env
+
     set_global_seeds(seed)
     return _init
 
+
 def compute_metric(list_of_revenues):
     starting_point_slope = 0
-    ending_point_slope = 3
+    ending_point_slope = 5
 
     starting_point_mean = 20
 
     mean_revenue = np.mean([list_of_revenues[-starting_point_mean:]])
-    speed = (list_of_revenues[ending_point_slope] - list_of_revenues[starting_point_slope]) / (ending_point_slope - starting_point_slope)
+    speed = (list_of_revenues[ending_point_slope] - list_of_revenues[starting_point_slope]) / (
+                ending_point_slope - starting_point_slope)
 
 
 def env_builder():
@@ -204,11 +183,12 @@ def env_builder():
     alpha = 0.8
     lamb = 0.7
 
-    return gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points, capacity=capacity,
+    return gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
+                    capacity=capacity,
                     micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # env = Monitor(env, log_dir, allow_early_resets=True)
 
     # DQN
@@ -244,7 +224,7 @@ if __name__ == '__main__':
     # parameter = "gamma"
     # parameter_values = [0.6, 0.8, 0.9]
 
-    total_timesteps=30000
+    total_timesteps = 30000
     nb_runs = 30
 
     # os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
