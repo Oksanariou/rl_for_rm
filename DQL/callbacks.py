@@ -211,7 +211,7 @@ class RevenueMonitor(Callback):
         self.replays.append(self.agent.replay_count)
         self.revenues.append(revenue)
 
-        print("Average reward over {} episodes after {} replay : {}".format(self.N, self.agent.replay_count, revenue))
+        # print("Average reward over {} episodes after {} replay : {}".format(self.N, self.agent.replay_count, revenue))
 
     def reset(self, agent):
         self.agent = agent

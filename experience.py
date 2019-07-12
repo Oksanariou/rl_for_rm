@@ -120,6 +120,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     results_dir_name.mkdir(parents=True, exist_ok=True)
 
     for k in parameter_values:
+        print("Running with "+parameter+" = "+str(k))
         parameters_dict[parameter] = k
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
         launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
@@ -153,7 +154,7 @@ if __name__ == '__main__':
     # Parameters of the agent
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
-    parameters_dict["gamma"] = 0.99
+    parameters_dict["gamma"] = 0.9
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 32
     parameters_dict["memory_size"] = 6000
@@ -163,7 +164,7 @@ if __name__ == '__main__':
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 1e-3
+    parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1e-2
     parameters_dict["epsilon_min"] = 1e-2
     parameters_dict["epsilon_decay"] = 1
@@ -180,8 +181,8 @@ if __name__ == '__main__':
     init_with_true_Q_table = True
 
     # Parameters of the experience
-    nb_episodes = 100
-    nb_runs = 2
+    nb_episodes = 15_000
+    nb_runs = 20
 
     results_path = Path("../Results")
     results_path.mkdir(parents=True, exist_ok=True)
