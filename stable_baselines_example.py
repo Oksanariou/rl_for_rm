@@ -224,7 +224,7 @@ if __name__ == '__main__':
     # parameter = "gamma"
     # parameter_values = [0.6, 0.8, 0.9]
 
-    total_timesteps = 30000
+    total_timesteps = 10000
     nb_runs = 30
 
     # os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
