@@ -132,6 +132,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     parameter_path = Path(parameter)
 
     for value in parameter_values:
+        print(parameter + " = "+str(value))
         parameters_dict[parameter] = value
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
 
@@ -211,7 +212,7 @@ if __name__ == '__main__':
     parameters_dict["prioritized_replay_beta_iters"] = None
     parameters_dict["prioritized_replay_eps"] = 1e-6
     parameters_dict["param_noise"] = False
-    parameters_dict["verbose"] = 1
+    parameters_dict["verbose"] = 0
     parameters_dict["tensorboard_log"] = None
 
     results_path = Path("../Results")
