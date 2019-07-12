@@ -167,7 +167,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         fig = plot_revenues(general_dir_name, parameter, value)
         # fig = run_n_times(env, parameters_dict, number_of_runs, nb_timesteps)
         # plt.savefig(general_dir_name / parameter_path / (experience_dir_name + ".png"))
-        plt.savefig('../'+general_dir_name.name+'/'+parameter+'/'+general_dir_name.name+'.png')
+        plt.savefig('../'+general_dir_name.name+'/'+parameter+'/'+experience_dir_name+'.png')
 
 def make_env(env_id, rank, seed=0):
     """
