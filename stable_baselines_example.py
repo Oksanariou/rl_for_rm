@@ -46,13 +46,16 @@ def callback(_locals, _globals):
     :param _locals: (dict)
     :param _globals: (dict)
     """
-    global n_steps, rewards, steps, env, states, model
+    global n_steps, rewards, env, states, model
+    if n_steps == 0:
+        policy, q_values, _ = model.step_model.step(states, deterministic=True)
+        policy = np.array([env.A[k] for k in policy])
+        rewards.append(average_n_episodes(env, policy, 10000))
     # Print stats every 1000 calls
     if (n_steps + 1) % 1000 == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
-        steps.append(n_steps)
     n_steps += 1
     return True
 
@@ -63,7 +66,7 @@ def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, 
     env = parameters_dict["env_builder"]()
     env_vec = DummyVecEnv([lambda: env])
 
-    rewards, n_steps, steps = [], 0, []
+    rewards, n_steps = [], 0
 
     states = [k for k in range(env.T * env.C)]
 
@@ -114,7 +117,9 @@ def plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, ma
     V, P_ref = dynamic_programming_env_DCP(env)
     P_DP = P_ref.reshape(env.T * env.C)
 
-    steps = [k for k in range(1000 - 1, nb_timesteps, 1000)]
+    steps = [0]
+    for k in range(1000 - 1, nb_timesteps, 1000):
+        steps.append(k)
 
     fig = plt.figure()
     plt.plot(steps, mean_revenues, color="gray", label='DQL mean revenue')
@@ -148,25 +153,6 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
 
 
-def make_env(env_id, rank, seed=0):
-    """
-    Utility function for multiprocessed env.
-
-    :param env_id: (str) the environment ID
-    :param num_env: (int) the number of environments you wish to have in subprocesses
-    :param seed: (int) the inital seed for RNG
-    :param rank: (int) index of the subprocess
-    """
-
-    def _init():
-        env = gym.make(env_id)
-        env.seed(seed + rank)
-        return env
-
-    set_global_seeds(seed)
-    return _init
-
-
 def compute_metric(list_of_revenues):
     starting_point_slope = 0
     ending_point_slope = 5
@@ -197,7 +183,9 @@ def compare_plots(general_dir_name, parameter, values, nb_timesteps):
     plt.figure()
 
     for value in values:
-        steps = [k for k in range(1000 - 1, nb_timesteps, 1000)]
+        steps = [0]
+        for k in range(1000 - 1, nb_timesteps, 1000):
+            steps.append(k)
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter, value)
         plt.plot(steps, mean_revenues, label=str(value))
         plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
@@ -221,6 +209,11 @@ def env_builder():
     return gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
                     capacity=capacity,
                     micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+
+
+def compute_weight(env, state):
+    t, x = env.to_coordinate(state)
+    return 1 + max(1. * t / env.T, 1. * x / env.C)
 
 
 if __name__ == '__main__':
@@ -254,8 +247,9 @@ if __name__ == '__main__':
     parameter_values_string = sys.argv[2]
     parameter_values = ast.literal_eval(parameter_values_string)
 
-    total_timesteps = 30000
-    nb_runs = 30
+
+    total_timesteps = 10000
+    nb_runs = 2
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
