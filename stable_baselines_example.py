@@ -23,7 +23,8 @@ import csv
 
 
 def agent_builder(env_vec, parameters_dict):
-    return DQN(MlpPolicy, env_vec, gamma=parameters_dict["gamma"], learning_rate=parameters_dict["learning_rate"],
+    return DQN(MlpPolicy, env_vec, original_weights=parameters_dict["original_weights"],
+               gamma=parameters_dict["gamma"], learning_rate=parameters_dict["learning_rate"],
                buffer_size=parameters_dict["buffer_size"],
                exploration_fraction=parameters_dict["exploration_fraction"],
                exploration_final_eps=parameters_dict["exploration_final_eps"],
@@ -211,12 +212,14 @@ def env_builder():
                     micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
 
-def compute_weight(env, state):
-    t, x = env.to_coordinate(state)
-    return 1 + max(1. * t / env.T, 1. * x / env.C)
+def compute_weights(env):
+    compute_weight = lambda x: 1 + max(1. * x[0] / env.T, 1. * x[1] / env.C)
+    weights = [(s, compute_weight((env.to_coordinate(s)[0], env.to_coordinate(s)[1]))) for s in range(env.T*env.C)]
+    return weights
 
 
 if __name__ == '__main__':
+
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
@@ -239,6 +242,10 @@ if __name__ == '__main__':
     parameters_dict["verbose"] = 0
     parameters_dict["tensorboard_log"] = None
 
+    env = parameters_dict["env_builder"]()
+
+    parameters_dict["original_weights"] = compute_weights(env)
+
     results_path = Path("../Results")
     results_path.mkdir(parents=True, exist_ok=True)
 
@@ -253,4 +260,6 @@ if __name__ == '__main__':
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
+
+
 
