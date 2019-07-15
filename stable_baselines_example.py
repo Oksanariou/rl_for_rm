@@ -248,8 +248,8 @@ if __name__ == '__main__':
     parameter_values = ast.literal_eval(parameter_values_string)
 
 
-    total_timesteps = 10000
-    nb_runs = 2
+    total_timesteps = 30000
+    nb_runs = 30
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
