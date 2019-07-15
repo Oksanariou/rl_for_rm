@@ -263,10 +263,6 @@ if __name__ == '__main__':
     results_path = Path("../Results")
     total_timesteps = 30000
 
-    parameter = "target_network_update_freq"
-    values = [10, 50, 100, 500]
-    compare_plots(results_path, parameter, values, total_timesteps)
-
     parameter = "batch_size"
     values = [10, 50, 100, 300, 500, 1000, 5000]
     compare_plots(results_path, parameter, values, total_timesteps)
