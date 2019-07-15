@@ -193,6 +193,21 @@ def save_metrics(metrics_file_name, parameter, value, mean_revenues, speed):
             writer.writeheader()
             writer.writerow({'parameter': parameter, 'value': value, 'average': mean_revenues, 'slope': speed})
 
+def compare_plots(general_dir_name, parameter, values, nb_timesteps):
+    plt.figure()
+
+    for value in values:
+        steps = [k for k in range(1000 - 1, nb_timesteps, 1000)]
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter, value)
+        plt.plot(steps, mean_revenues, label=str(value))
+        plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
+
+    plt.legend()
+    plt.ylabel("Revenue computed over 10000 episodes")
+    plt.xlabel("Number of timesteps")
+    plt.title(parameter)
+
+    plt.savefig('../' + general_dir_name.name + '/' + parameter + '.png')
 
 def env_builder():
     # Parameters of the environment
@@ -209,40 +224,57 @@ def env_builder():
 
 
 if __name__ == '__main__':
-    DQN
-    parameters_dict = {}
-    parameters_dict["env_builder"] = env_builder
-    parameters_dict["gamma"] = 0.99
-    parameters_dict["learning_rate"] = 0.0005
-    parameters_dict["buffer_size"] = 400000
-    parameters_dict["exploration_fraction"] = 0.2
-    parameters_dict["exploration_final_eps"] = 0.02
-    parameters_dict["train_freq"] = 1
-    parameters_dict["batch_size"] = 100
-    parameters_dict["checkpoint_freq"] = 10000
-    parameters_dict["checkpoint_path"] = None
-    parameters_dict["learning_starts"] = 100
-    parameters_dict["target_network_update_freq"] = 50
-    parameters_dict["prioritized_replay"] = False
-    parameters_dict["prioritized_replay_alpha"] = 0.6
-    parameters_dict["prioritized_replay_beta0"] = 0.4
-    parameters_dict["prioritized_replay_beta_iters"] = None
-    parameters_dict["prioritized_replay_eps"] = 1e-6
-    parameters_dict["param_noise"] = False
-    parameters_dict["verbose"] = 0
-    parameters_dict["tensorboard_log"] = None
+    # parameters_dict = {}
+    # parameters_dict["env_builder"] = env_builder
+    # parameters_dict["gamma"] = 0.99
+    # parameters_dict["learning_rate"] = 0.0005
+    # parameters_dict["buffer_size"] = 400000
+    # parameters_dict["exploration_fraction"] = 0.2
+    # parameters_dict["exploration_final_eps"] = 0.02
+    # parameters_dict["train_freq"] = 1
+    # parameters_dict["batch_size"] = 100
+    # parameters_dict["checkpoint_freq"] = 10000
+    # parameters_dict["checkpoint_path"] = None
+    # parameters_dict["learning_starts"] = 100
+    # parameters_dict["target_network_update_freq"] = 50
+    # parameters_dict["prioritized_replay"] = False
+    # parameters_dict["prioritized_replay_alpha"] = 0.6
+    # parameters_dict["prioritized_replay_beta0"] = 0.4
+    # parameters_dict["prioritized_replay_beta_iters"] = None
+    # parameters_dict["prioritized_replay_eps"] = 1e-6
+    # parameters_dict["param_noise"] = False
+    # parameters_dict["verbose"] = 0
+    # parameters_dict["tensorboard_log"] = None
+    #
+    # results_path = Path("../Results")
+    # results_path.mkdir(parents=True, exist_ok=True)
+    #
+    # # Tuning of the parameters
+    # parameter = sys.argv[1]
+    # parameter_values_string = sys.argv[2]
+    # parameter_values = ast.literal_eval(parameter_values_string)
+    #
+    # total_timesteps = 30000
+    # nb_runs = 30
+    #
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     results_path = Path("../Results")
-    results_path.mkdir(parents=True, exist_ok=True)
-
-    # Tuning of the parameters
-    parameter = sys.argv[1]
-    parameter_values_string = sys.argv[2]
-    parameter_values = ast.literal_eval(parameter_values_string)
-
     total_timesteps = 30000
-    nb_runs = 30
 
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    parameter = "gamma"
+    values = [0.6, 0.8, 0.9, 0.99]
+    compare_plots(results_path, parameter, values, total_timesteps)
 
+    parameter = "learning_rate"
+    values = [1e-5, 1e-4, 1e-3, 1e-2]
+    compare_plots(results_path, parameter, values, total_timesteps)
 
+    parameter = "target_network_update"
+    values = [10, 50, 100, 500]
+    compare_plots(results_path, parameter, values, total_timesteps)
+
+    parameter = "batch_size"
+    values = [10, 50, 100, 300, 500, 1000, 5000]
+    compare_plots(results_path, parameter, values, total_timesteps)
