@@ -194,7 +194,6 @@ def save_metrics(metrics_file_name, parameter, value, mean_revenues, speed):
             writer.writerow({'parameter': parameter, 'value': value, 'average': mean_revenues, 'slope': speed})
 
 
-
 def env_builder():
     # Parameters of the environment
     data_collection_points = 10
@@ -250,6 +249,26 @@ if __name__ == '__main__':
     general_dir_name = Path("../Results")
     parameter = 'learning_rate'
     values = [1e-5, 1e-4, 1e-3, 1e-2]
+    for value in values:
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
+                                                                                  value)
+
+        mean_revenue, speed = compute_metric(mean_revenues)
+        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
+        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
+
+    parameter = 'gamma'
+    values = [0.6, 0.8, 0.9, 0.99]
+    for value in values:
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
+                                                                                  value)
+
+        mean_revenue, speed = compute_metric(mean_revenues)
+        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
+        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
+
+    parameter = 'target_network_update_freq'
+    values = [10, 50, 100, 500]
     for value in values:
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                                   value)
