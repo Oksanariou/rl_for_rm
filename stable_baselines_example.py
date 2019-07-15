@@ -209,70 +209,40 @@ def env_builder():
 
 
 if __name__ == '__main__':
-    # DQN
-    # parameters_dict = {}
-    # parameters_dict["env_builder"] = env_builder
-    # parameters_dict["gamma"] = 0.99
-    # parameters_dict["learning_rate"] = 0.0005
-    # parameters_dict["buffer_size"] = 400000
-    # parameters_dict["exploration_fraction"] = 0.2
-    # parameters_dict["exploration_final_eps"] = 0.02
-    # parameters_dict["train_freq"] = 1
-    # parameters_dict["batch_size"] = 100
-    # parameters_dict["checkpoint_freq"] = 10000
-    # parameters_dict["checkpoint_path"] = None
-    # parameters_dict["learning_starts"] = 100
-    # parameters_dict["target_network_update_freq"] = 50
-    # parameters_dict["prioritized_replay"] = False
-    # parameters_dict["prioritized_replay_alpha"] = 0.6
-    # parameters_dict["prioritized_replay_beta0"] = 0.4
-    # parameters_dict["prioritized_replay_beta_iters"] = None
-    # parameters_dict["prioritized_replay_eps"] = 1e-6
-    # parameters_dict["param_noise"] = False
-    # parameters_dict["verbose"] = 0
-    # parameters_dict["tensorboard_log"] = None
-    #
-    # results_path = Path("../Results")
-    # results_path.mkdir(parents=True, exist_ok=True)
-    #
-    # # Tuning of the parameters
-    # parameter = sys.argv[1]
-    # parameter_values_string = sys.argv[2]
-    # parameter_values = ast.literal_eval(parameter_values_string)
-    #
-    # total_timesteps = 30000
-    # nb_runs = 30
-    #
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    DQN
+    parameters_dict = {}
+    parameters_dict["env_builder"] = env_builder
+    parameters_dict["gamma"] = 0.99
+    parameters_dict["learning_rate"] = 0.0005
+    parameters_dict["buffer_size"] = 400000
+    parameters_dict["exploration_fraction"] = 0.2
+    parameters_dict["exploration_final_eps"] = 0.02
+    parameters_dict["train_freq"] = 1
+    parameters_dict["batch_size"] = 100
+    parameters_dict["checkpoint_freq"] = 10000
+    parameters_dict["checkpoint_path"] = None
+    parameters_dict["learning_starts"] = 100
+    parameters_dict["target_network_update_freq"] = 50
+    parameters_dict["prioritized_replay"] = False
+    parameters_dict["prioritized_replay_alpha"] = 0.6
+    parameters_dict["prioritized_replay_beta0"] = 0.4
+    parameters_dict["prioritized_replay_beta_iters"] = None
+    parameters_dict["prioritized_replay_eps"] = 1e-6
+    parameters_dict["param_noise"] = False
+    parameters_dict["verbose"] = 0
+    parameters_dict["tensorboard_log"] = None
+
+    results_path = Path("../Results")
+    results_path.mkdir(parents=True, exist_ok=True)
+
+    # Tuning of the parameters
+    parameter = sys.argv[1]
+    parameter_values_string = sys.argv[2]
+    parameter_values = ast.literal_eval(parameter_values_string)
+
+    total_timesteps = 30000
+    nb_runs = 30
+
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
 
 
-    general_dir_name = Path("../Results")
-    parameter = 'learning_rate'
-    values = [1e-5, 1e-4, 1e-3, 1e-2]
-    for value in values:
-        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
-                                                                                  value)
-
-        mean_revenue, speed = compute_metric(mean_revenues)
-        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
-        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
-
-    parameter = 'gamma'
-    values = [0.6, 0.8, 0.9, 0.99]
-    for value in values:
-        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
-                                                                                  value)
-
-        mean_revenue, speed = compute_metric(mean_revenues)
-        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
-        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
-
-    parameter = 'target_network_update_freq'
-    values = [10, 50, 100, 500]
-    for value in values:
-        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
-                                                                                  value)
-
-        mean_revenue, speed = compute_metric(mean_revenues)
-        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
-        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
