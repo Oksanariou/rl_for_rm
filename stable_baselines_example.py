@@ -263,15 +263,7 @@ if __name__ == '__main__':
     results_path = Path("../Results")
     total_timesteps = 30000
 
-    parameter = "gamma"
-    values = [0.6, 0.8, 0.9, 0.99]
-    compare_plots(results_path, parameter, values, total_timesteps)
-
-    parameter = "learning_rate"
-    values = [1e-5, 1e-4, 1e-3, 1e-2]
-    compare_plots(results_path, parameter, values, total_timesteps)
-
-    parameter = "target_network_update"
+    parameter = "target_network_update_freq"
     values = [10, 50, 100, 500]
     compare_plots(results_path, parameter, values, total_timesteps)
 
