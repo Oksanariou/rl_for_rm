@@ -19,6 +19,7 @@ import ast
 from functools import partial
 from multiprocessing import Pool
 import glob
+import csv
 
 
 def agent_builder(env_vec, parameters_dict):
@@ -140,9 +141,11 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                                   value)
         fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
-        # fig = run_n_times(env, parameters_dict, number_of_runs, nb_timesteps)
-        # plt.savefig(general_dir_name / parameter_path / (experience_dir_name + ".png"))
         plt.savefig('../' + general_dir_name.name + '/' + parameter + '/' + experience_dir_name + '.png')
+
+        mean_revenue, speed = compute_metric(mean_revenues)
+        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
+        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
 
 
 def make_env(env_id, rank, seed=0):
@@ -174,6 +177,23 @@ def compute_metric(list_of_revenues):
     speed = (list_of_revenues[ending_point_slope] - list_of_revenues[starting_point_slope]) / (
                 ending_point_slope - starting_point_slope)
 
+    return mean_revenue, speed
+
+def save_metrics(metrics_file_name, parameter, value, mean_revenues, speed):
+    file_exists = os.path.isfile(metrics_file_name)
+    fieldnames = ['parameter', 'value', 'average', 'slope']
+
+    if file_exists:
+        with open(metrics_file_name, 'a') as metrics_file:
+            writer = csv.DictWriter(metrics_file, fieldnames=fieldnames)
+            writer.writerow({'parameter': parameter, 'value': value, 'average': mean_revenues, 'slope': speed})
+    else:
+        with open(metrics_file_name, 'a') as metrics_file:
+            writer = csv.DictWriter(metrics_file, delimiter=',', lineterminator='\n', fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerow({'parameter': parameter, 'value': value, 'average': mean_revenues, 'slope': speed})
+
+
 
 def env_builder():
     # Parameters of the environment
@@ -190,44 +210,50 @@ def env_builder():
 
 
 if __name__ == '__main__':
-    # env = Monitor(env, log_dir, allow_early_resets=True)
-
     # DQN
-    parameters_dict = {}
-    parameters_dict["env_builder"] = env_builder
-    parameters_dict["gamma"] = 0.99
-    parameters_dict["learning_rate"] = 0.0005
-    parameters_dict["buffer_size"] = 400000
-    parameters_dict["exploration_fraction"] = 0.2
-    parameters_dict["exploration_final_eps"] = 0.02
-    parameters_dict["train_freq"] = 1
-    parameters_dict["batch_size"] = 100
-    parameters_dict["checkpoint_freq"] = 10000
-    parameters_dict["checkpoint_path"] = None
-    parameters_dict["learning_starts"] = 100
-    parameters_dict["target_network_update_freq"] = 50
-    parameters_dict["prioritized_replay"] = False
-    parameters_dict["prioritized_replay_alpha"] = 0.6
-    parameters_dict["prioritized_replay_beta0"] = 0.4
-    parameters_dict["prioritized_replay_beta_iters"] = None
-    parameters_dict["prioritized_replay_eps"] = 1e-6
-    parameters_dict["param_noise"] = False
-    parameters_dict["verbose"] = 0
-    parameters_dict["tensorboard_log"] = None
+    # parameters_dict = {}
+    # parameters_dict["env_builder"] = env_builder
+    # parameters_dict["gamma"] = 0.99
+    # parameters_dict["learning_rate"] = 0.0005
+    # parameters_dict["buffer_size"] = 400000
+    # parameters_dict["exploration_fraction"] = 0.2
+    # parameters_dict["exploration_final_eps"] = 0.02
+    # parameters_dict["train_freq"] = 1
+    # parameters_dict["batch_size"] = 100
+    # parameters_dict["checkpoint_freq"] = 10000
+    # parameters_dict["checkpoint_path"] = None
+    # parameters_dict["learning_starts"] = 100
+    # parameters_dict["target_network_update_freq"] = 50
+    # parameters_dict["prioritized_replay"] = False
+    # parameters_dict["prioritized_replay_alpha"] = 0.6
+    # parameters_dict["prioritized_replay_beta0"] = 0.4
+    # parameters_dict["prioritized_replay_beta_iters"] = None
+    # parameters_dict["prioritized_replay_eps"] = 1e-6
+    # parameters_dict["param_noise"] = False
+    # parameters_dict["verbose"] = 0
+    # parameters_dict["tensorboard_log"] = None
+    #
+    # results_path = Path("../Results")
+    # results_path.mkdir(parents=True, exist_ok=True)
+    #
+    # # Tuning of the parameters
+    # parameter = sys.argv[1]
+    # parameter_values_string = sys.argv[2]
+    # parameter_values = ast.literal_eval(parameter_values_string)
+    #
+    # total_timesteps = 30000
+    # nb_runs = 30
+    #
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
 
-    results_path = Path("../Results")
-    results_path.mkdir(parents=True, exist_ok=True)
 
-    # Tuning of the parameters
-    parameter = sys.argv[1]
-    parameter_values_string = sys.argv[2]
-    parameter_values = ast.literal_eval(parameter_values_string)
-    # parameter = "gamma"
-    # parameter_values = [0.6, 0.8, 0.9]
+    general_dir_name = Path("../Results")
+    parameter = 'learning_rate'
+    values = [1e-5, 1e-4, 1e-3, 1e-2]
+    for value in values:
+        mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
+                                                                                  value)
 
-    total_timesteps = 30000
-    nb_runs = 30
-
-    # os.mkdir(general_dir_name) #Creation of the folder where the results of the experience will be stocked
-
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+        mean_revenue, speed = compute_metric(mean_revenues)
+        metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
+        save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
