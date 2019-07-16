@@ -208,10 +208,10 @@ def compare_plots(general_dir_name, parameter, values, nb_timesteps):
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 10
-    micro_times = 5
-    capacity = 10
-    actions = tuple(k for k in range(50, 261, 10))
+    data_collection_points = 100
+    micro_times = 10
+    capacity = 150
+    actions = tuple(k for k in range(50, 401, 10))
     alpha = 0.8
     lamb = 0.7
 
