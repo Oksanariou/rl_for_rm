@@ -38,13 +38,12 @@ def compute_probas_nested_logit(nests):
 
 
 if __name__ == '__main__':
-    b0 = 1
-    b1 = 0.001
-    lamb = 0.1
+    beta = 0.01
+    k1 = 1.5
+    k2 = 1.5
 
-    X_nest2 = [1, 2, 3]
-    X_nest2 = [b0 - b1 * k for k in X_nest2]
-    X_logit = [0] + [b0 - b1 * k for k in X_nest2]
+    X = [50, 200]
+    X_logit = [0, k1 - beta * X[0], k2 - beta * X[1]]
 
     print(compute_probas_logit(X_logit))
 
@@ -52,9 +51,10 @@ if __name__ == '__main__':
     nest_1["lambda"] = 1
     nest_1["representative_utilities"] = [0]
 
+    X_nestlogic = [k1 - beta * X[0], k2 - beta * X[1]]
     nest_2 = {}
     nest_2["lambda"] = 0.1
-    nest_2["representative_utilities"] = X_nest2
+    nest_2["representative_utilities"] = X_nestlogic
 
     nests = [nest_1, nest_2]
 

@@ -208,10 +208,10 @@ def compare_plots(general_dir_name, parameter, values, nb_timesteps):
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 100
-    micro_times = 10
-    capacity = 150
-    actions = tuple(k for k in range(50, 401, 10))
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 50))
     alpha = 0.8
     lamb = 0.7
 
@@ -248,7 +248,8 @@ if __name__ == '__main__':
     parameters_dict["prioritized_replay_eps"] = 1e-6
     parameters_dict["param_noise"] = False
     parameters_dict["verbose"] = 0
-    parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
+    # parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
+    parameters_dict["tensorboard_log"] = None
     parameters_dict["policy_kwargs"] = {"dueling" : False}
     parameters_dict["weights"] = False
 
@@ -266,7 +267,7 @@ if __name__ == '__main__':
     parameter_values = ast.literal_eval(parameter_values_string)
 
 
-    total_timesteps = 30000
+    total_timesteps = 5000
     nb_runs = 30
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
