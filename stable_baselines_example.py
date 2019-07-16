@@ -232,7 +232,7 @@ if __name__ == '__main__':
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["learning_rate"] = 0.01
-    parameters_dict["buffer_size"] = 10000
+    parameters_dict["buffer_size"] = 100000
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
