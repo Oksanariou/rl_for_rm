@@ -17,7 +17,8 @@ default_k_airline2 = 1.5
 class CompetitionEnv(discrete.DiscreteEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, micro_times=default_micro_times, capacity_airline_1=default_capacity_airline_1, capacity_airline_2=default_capacity_airline_2, actions=default_actions,
+    def __init__(self, micro_times=default_micro_times, capacity_airline_1=default_capacity_airline_1,
+                 capacity_airline_2=default_capacity_airline_2, actions=default_actions,
                  beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2):
 
         self.T = micro_times
@@ -94,12 +95,13 @@ class CompetitionEnv(discrete.DiscreteEnv):
         return list_transitions
 
     def to_coordinate(self, state_idx):
-        t = int(int(state_idx) / self.C)
-        x = int(state_idx - t * self.C)
-        return t, x
+        t = int(int(state_idx) / self.C1 * self.C2)
+        x2 = int(int(state_idx - self.C1 * self.C2 * t) / self.C1)
+        x1 = int(state_idx - self.C1 * x2 - self.C1 * self.C2 * t)
+        return t, x1, x2
 
-    def to_idx(self, t, x):
-        return t * self.C + x
+    def to_idx(self, t, x1, x2):
+        return x1 + x2 * self.C1 + self.C1 * self.C2 * t
 
     def set_random_state(self):
         self.s = self.observation_space.sample()
