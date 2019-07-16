@@ -20,54 +20,16 @@ from keras.losses import mean_squared_error, logcosh
 from keras.models import load_model
 
 if __name__ == '__main__':
-    data_collection_points = 100
     micro_times = 5
-    capacity = 50
-    actions = tuple(k for k in range(50, 231, 10))
-    alpha = 0.8
-    lamb = 0.7
+    capacity1 = 3
+    capacity2 = 3
+    actions = tuple((k, m) for k in range(50, 231, 50) for m in range(50, 231, 20))
+    beta = 0.001
+    k_airline1 = 1.5
+    k_airline2 = 1.5
 
-    env = gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
-                   micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
-
-    #Parameters of the agent
-    init_with_true_Q_table = False
-
-    parameters_dict = {}
-    parameters_dict["env"] = env
-    parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 6_000
-    parameters_dict["mini_batch_size"] = 100
-    parameters_dict["prioritized_experience_replay"] = True
-    parameters_dict["target_model_update"] = 90
-    parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = True
-    parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 1e-4
-    parameters_dict["epsilon"] = 1e-2
-    parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 1
-    parameters_dict["use_weights"] = True
-    parameters_dict["use_optimal_policy"] = False
-
-    # dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    # # save_optimal_model(dueling_model_name)
-    # model = load_model(dueling_model_name)
-    #
-    # agent = DQNAgent(parameters_dict["env"])
-    # for key in parameters_dict:
-    #     agent.__setattr__(key, parameters_dict[key])
-    # agent.model = agent._build_model()
-    # agent.target_model = agent._build_model()
-    #
-    # if init_with_true_Q_table:
-    #     agent.set_model(model)
-    #     agent.set_target()
-    #
-    # start_time = time.time()
-    # agent.replay(0)
-    # print("--- %s seconds ---" % (time.time() - start_time))
+    env = gym.make('gym_Competition:Competition-v0', micro_times=micro_times, capacity_airline_1=capacity1, capacity_airline_2=capacity2,
+                   actions=actions, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2)
 
     # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)

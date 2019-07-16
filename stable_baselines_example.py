@@ -267,7 +267,7 @@ if __name__ == '__main__':
     parameter_values = ast.literal_eval(parameter_values_string)
 
 
-    total_timesteps = 5000
+    total_timesteps = 15000
     nb_runs = 30
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)

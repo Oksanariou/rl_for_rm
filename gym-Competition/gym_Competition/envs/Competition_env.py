@@ -56,32 +56,64 @@ class CompetitionEnv(discrete.DiscreteEnv):
             for x1 in range(self.C1):
                 for x2 in range(self.C2):
                     state_idx = self.to_idx(t, x1, x2)
-                    for a in range(self.nA):
-                        P[state_idx][a] = self.transitions(state_idx, a)
+                    for action_idx in range(self.nA):
+                        P[state_idx][action_idx] = self.transitions(state_idx, action_idx)
         return P
 
-    def transitions(self, state_idx, action):
+    def transitions(self, state_idx, action_idx):
         list_transitions = []
         t, x1, x2 = self.to_coordinate(state_idx)
+        action = self.A[action_idx]
         a1, a2 = action[0], action[1]
         done = False
         if t == self.T - 1 or (x1 == self.C1 - 1 and x2 == self.C2 - 1):
             list_transitions.append((1, state_idx, 0, True))
         else:
-            proba_buy_airline_1, reward_airline_1 = self.proba_buy(a1)
-            proba_buy_airline_2, reward_airline_2 = self.proba_buy(self.A[action])
-            total_reward = k * reward
-            new_t, new_x = t + 1, x + k
-            new_state = self.to_idx(new_t, new_x)
-            if new_t == self.T - 1 or new_x == self.C - 1:
-                done = True
+            Utilities = [0, self.k_airline1 - self.beta * a1, self.k_airline2 - self.beta * a2]
+            probas_logit = self.compute_probas_logit(Utilities)
 
-            list_transitions.append((proba_next_state, new_state, total_reward, done))
+            # Case no buy
+            new_t, new_x1, new_x2 = t + 1, x1, x2
+            reward1, reward2 = 0, 0
+            proba_next_state = probas_logit[0]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
+                done = True
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
+
+            # Case Airline1
+            new_t, new_x1, new_x2 = t + 1, x1 + 1, x2
+            reward1, reward2 = a1, 0
+            proba_next_state = probas_logit[1]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
+                done = True
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
+
+            # Case Airline2
+            new_t, new_x1, new_x2 = t + 1, x1, x2 + 1
+            reward1, reward2 = 0, a2
+            proba_next_state = probas_logit[2]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
+                done = True
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
 
         return list_transitions
 
+    def compute_probas_logit(self, representative_utilities):
+        """
+            Input: List of the representative utilities of the different alternatives
+            Output: List of the probabilities to choose each of the alternatives
+        """
+        numerators = np.exp([k for k in representative_utilities])
+        normalization = sum(numerators)
+
+        return numerators / normalization
+
     def to_coordinate(self, state_idx):
-        t = int(int(state_idx) / self.C1 * self.C2)
+        t = int(int(state_idx) / (self.C1 * self.C2))
+        print(t)
         x2 = int(int(state_idx - self.C1 * self.C2 * t) / self.C1)
         x1 = int(state_idx - self.C1 * x2 - self.C1 * self.C2 * t)
         return t, x1, x2
@@ -91,25 +123,10 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
     def set_random_state(self):
         self.s = self.observation_space.sample()
-        t, x = self.to_coordinate(self.s)
-        while t == self.T - 1 or x == self.C - 1:
+        t, x1, x2 = self.to_coordinate(self.s)
+        while t == self.T - 1 or (x1 == self.C1 - 1 and x2 == self.C2 - 1):
             self.s = self.observation_space.sample()
-            t, x = self.to_coordinate(self.s)
+            t, x1, x2 = self.to_coordinate(self.s)
 
         return self.s
 
-    def proba_buy(self, a):
-        """Returns:
-            - the probability that a person will buy the ticket at the price p
-            - the reward that the agent gets if the person buys the ticket"""
-        proba = self.lamb * np.exp(-self.alpha * ((a / self.A[0]) - 1))
-        reward = a
-        return proba, reward
-
-    def proba_not_buy(self, a):
-        """Returns:
-            - the probability that a person will not buy the ticket at the price p
-            - the reward that the agent gets if the person does not buy the ticket"""
-        reward = 0
-        p, r = self.proba_buy(a)
-        return 1 - p, reward
