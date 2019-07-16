@@ -5,7 +5,7 @@ from stable_baselines.results_plotter import load_results, ts2xy
 
 from stable_baselines.common import set_global_seeds
 from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines.deepq.policies import MlpPolicy
+from stable_baselines.deepq.policies import MlpPolicy, FeedForwardPolicy
 from stable_baselines.bench import Monitor
 # from stable_baselines.common.policies import MlpPolicy
 from stable_baselines import DQN, A2C, ACER
@@ -23,7 +23,8 @@ import csv
 
 
 def agent_builder(env_vec, parameters_dict):
-    return DQN(MlpPolicy, env_vec, original_weights=parameters_dict["original_weights"],
+    return DQN(MlpPolicy, env_vec, weights=parameters_dict["weights"],
+               original_weights=parameters_dict["original_weights"],
                gamma=parameters_dict["gamma"], learning_rate=parameters_dict["learning_rate"],
                buffer_size=parameters_dict["buffer_size"],
                exploration_fraction=parameters_dict["exploration_fraction"],
@@ -38,6 +39,7 @@ def agent_builder(env_vec, parameters_dict):
                prioritized_replay_beta_iters=parameters_dict["prioritized_replay_beta_iters"],
                prioritized_replay_eps=parameters_dict["prioritized_replay_eps"],
                param_noise=parameters_dict["param_noise"], verbose=parameters_dict["verbose"],
+               policy_kwargs=parameters_dict["policy_kwargs"],
                tensorboard_log=parameters_dict["tensorboard_log"])
 
 
@@ -141,7 +143,11 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     for value in parameter_values:
         print(parameter + " = "+str(value))
         parameters_dict[parameter] = value
-        experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
+
+        if parameter == "policy_kwargs":
+            value = value['dueling']
+
+        experience_dir_name = parameter + " = " + str(value)
 
         run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value)
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
@@ -184,6 +190,8 @@ def compare_plots(general_dir_name, parameter, values, nb_timesteps):
     plt.figure()
 
     for value in values:
+        if parameter == "policy_kwargs":
+            value = value["dueling"]
         steps = [0]
         for k in range(1000 - 1, nb_timesteps, 1000):
             steps.append(k)
@@ -223,10 +231,10 @@ if __name__ == '__main__':
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
-    parameters_dict["learning_rate"] = 0.0005
-    parameters_dict["buffer_size"] = 400000
-    parameters_dict["exploration_fraction"] = 0.2
-    parameters_dict["exploration_final_eps"] = 0.02
+    parameters_dict["learning_rate"] = 0.01
+    parameters_dict["buffer_size"] = 10000
+    parameters_dict["exploration_fraction"] = 0.4
+    parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
     parameters_dict["batch_size"] = 100
     parameters_dict["checkpoint_freq"] = 10000
@@ -240,7 +248,9 @@ if __name__ == '__main__':
     parameters_dict["prioritized_replay_eps"] = 1e-6
     parameters_dict["param_noise"] = False
     parameters_dict["verbose"] = 0
-    parameters_dict["tensorboard_log"] = None
+    parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
+    parameters_dict["policy_kwargs"] = {"dueling" : False}
+    parameters_dict["weights"] = False
 
     env = parameters_dict["env_builder"]()
 
@@ -252,6 +262,7 @@ if __name__ == '__main__':
     # Tuning of the parameters
     parameter = sys.argv[1]
     parameter_values_string = sys.argv[2]
+    print(parameter_values_string)
     parameter_values = ast.literal_eval(parameter_values_string)
 
 
