@@ -55,42 +55,28 @@ class CompetitionEnv(discrete.DiscreteEnv):
         for t in range(self.T):
             for x1 in range(self.C1):
                 for x2 in range(self.C2):
-                    s = self.to_idx(t, x1, x2)
+                    state_idx = self.to_idx(t, x1, x2)
                     for a in range(self.nA):
-                        P[s][a] = self.transitions(s, a)
+                        P[state_idx][a] = self.transitions(state_idx, a)
         return P
 
-    def transitions(self, state, action):
+    def transitions(self, state_idx, action):
         list_transitions = []
-        t, x = self.to_coordinate(state)
+        t, x1, x2 = self.to_coordinate(state_idx)
+        a1, a2 = action[0], action[1]
         done = False
-        if t == self.T - 1 or x == self.C - 1:
-            list_transitions.append((1, state, 0, True))
+        if t == self.T - 1 or (x1 == self.C1 - 1 and x2 == self.C2 - 1):
+            list_transitions.append((1, state_idx, 0, True))
         else:
-            k = 0
-            while k <= self.M:
-                proba_buy, reward = self.proba_buy(self.A[action])
-                proba_next_state = ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
-                    self.M, k)
-                total_reward = k * reward
-                new_t, new_x = t + 1, x + k
-                new_state = self.to_idx(new_t, new_x)
-                if new_t == self.T - 1 or new_x == self.C - 1:
-                    done = True
+            proba_buy_airline_1, reward_airline_1 = self.proba_buy(a1)
+            proba_buy_airline_2, reward_airline_2 = self.proba_buy(self.A[action])
+            total_reward = k * reward
+            new_t, new_x = t + 1, x + k
+            new_state = self.to_idx(new_t, new_x)
+            if new_t == self.T - 1 or new_x == self.C - 1:
+                done = True
 
-                # When we reach maximum capacity before the end of the DCP
-                # The remaining probabilities go to the last valid transition
-                if new_x == self.C - 1:
-                    remaining_proba = 0.
-                    while k + 1 <= self.M:
-                        k = k + 1
-                        remaining_proba += ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
-                            self.M, k)
-
-                    proba_next_state += remaining_proba
-
-                list_transitions.append((proba_next_state, new_state, total_reward, done))
-                k = k + 1
+            list_transitions.append((proba_next_state, new_state, total_reward, done))
 
         return list_transitions
 

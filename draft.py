@@ -20,10 +20,10 @@ from keras.losses import mean_squared_error, logcosh
 from keras.models import load_model
 
 if __name__ == '__main__':
-    data_collection_points = 100
-    micro_times = 10
-    capacity = 150
-    actions = tuple(k for k in range(50, 401, 10))
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
 
