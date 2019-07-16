@@ -211,7 +211,7 @@ def env_builder():
     data_collection_points = 10
     micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 231, 50))
+    actions = tuple(k for k in range(50, 261, 10))
     alpha = 0.8
     lamb = 0.7
 

@@ -23,7 +23,7 @@ if __name__ == '__main__':
     data_collection_points = 10
     micro_times = 5
     capacity = 10
-    actions = tuple(k for k in range(50, 231, 10))
+    actions = tuple(k for k in range(50, 261, 10))
     alpha = 0.8
     lamb = 0.7
 
@@ -51,23 +51,23 @@ if __name__ == '__main__':
     parameters_dict["use_weights"] = True
     parameters_dict["use_optimal_policy"] = False
 
-    dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    # save_optimal_model(dueling_model_name)
-    model = load_model(dueling_model_name)
-
-    agent = DQNAgent(parameters_dict["env"])
-    for key in parameters_dict:
-        agent.__setattr__(key, parameters_dict[key])
-    agent.model = agent._build_model()
-    agent.target_model = agent._build_model()
-
-    if init_with_true_Q_table:
-        agent.set_model(model)
-        agent.set_target()
-
-    start_time = time.time()
-    agent.replay(0)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
+    # # save_optimal_model(dueling_model_name)
+    # model = load_model(dueling_model_name)
+    #
+    # agent = DQNAgent(parameters_dict["env"])
+    # for key in parameters_dict:
+    #     agent.__setattr__(key, parameters_dict[key])
+    # agent.model = agent._build_model()
+    # agent.target_model = agent._build_model()
+    #
+    # if init_with_true_Q_table:
+    #     agent.set_model(model)
+    #     agent.set_target()
+    #
+    # start_time = time.time()
+    # agent.replay(0)
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
     # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
     # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
 
-    V, P_ref = dynamic_programming_env(env)
+    V, P_ref = dynamic_programming_env_DCP(env)
     V = V.reshape(env.T * env.C)
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
