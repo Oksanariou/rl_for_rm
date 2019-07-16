@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
 
     total_timesteps = 5000
-    nb_runs = 30
+    nb_runs = 60
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
