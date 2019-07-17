@@ -42,9 +42,9 @@ if __name__ == '__main__':
     k1 = 1.5
     k2 = 1.5
 
-    X = [50, 200]
+    X = [0, 200]
     X_logit = [0, k1 - beta * X[0], k2 - beta * X[1]]
-
+    X_logit = [0, k2 - beta * X[1]]
     print(compute_probas_logit(X_logit))
 
     nest_1 = {}
@@ -59,3 +59,5 @@ if __name__ == '__main__':
     nests = [nest_1, nest_2]
 
     print(compute_probas_nested_logit(nests))
+
+

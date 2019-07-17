@@ -20,16 +20,16 @@ from keras.losses import mean_squared_error, logcosh
 from keras.models import load_model
 
 if __name__ == '__main__':
+    data_collection_points = 10
     micro_times = 5
-    capacity1 = 3
-    capacity2 = 3
-    actions = tuple((k, m) for k in range(50, 231, 50) for m in range(50, 231, 20))
-    beta = 0.001
-    k_airline1 = 1.5
-    k_airline2 = 1.5
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 50))
+    alpha = 0.8
+    lamb = 0.7
 
-    env = gym.make('gym_Competition:Competition-v0', micro_times=micro_times, capacity_airline_1=capacity1, capacity_airline_2=capacity2,
-                   actions=actions, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2)
+    env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
+                    capacity=capacity,
+                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
     # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)

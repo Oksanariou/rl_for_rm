@@ -65,10 +65,60 @@ class CompetitionEnv(discrete.DiscreteEnv):
         t, x1, x2 = self.to_coordinate(state_idx)
         action = self.A[action_idx]
         a1, a2 = action[0], action[1]
-        done = False
+        done1, done2 = False, False
+
         if t == self.T - 1 or (x1 == self.C1 - 1 and x2 == self.C2 - 1):
-            list_transitions.append((1, state_idx, 0, True))
+            list_transitions.append((1, state_idx, (0,0), (True, True)))
+
+        elif x1 == self.C1 - 1: #Airline1 has sold all its tickets but Airline2 has not
+            done1, reward1, new_x1 = True, 0, x1
+            if t + 1 == self.T - 1:
+                done2 = True
+            Utilities = [0, self.k_airline2 - self.beta * a2]
+            probas_logit = self.compute_probas_logit(Utilities)
+
+            # Case no buy
+            new_t, new_x2 = t + 1, x2
+            reward2 = 0
+            proba_next_state = probas_logit[0]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
+
+            # Case buys Airline2
+            new_t, new_x2 = t + 1, x2 + 1
+            reward2 = a2
+            proba_next_state = probas_logit[1]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            if new_x2 == self.C2 - 1:
+                done2 = True
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
+
+        elif x2 == self.C2 - 1: #Airline2 has sold all its tickets but Airline1 has not
+            done2, reward2, new_x2 = True, 0, x2
+            if t + 1 == self.T - 1:
+                done1 = True
+            Utilities = [0, self.k_airline1 - self.beta * a1]
+            probas_logit = self.compute_probas_logit(Utilities)
+
+            # Case no buy
+            new_t, new_x1 = t + 1, x1
+            reward1 = 0
+            proba_next_state = probas_logit[0]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
+
+            # Case buys Airline1
+            new_t, new_x1 = t + 1, x1 + 1
+            reward1 = a1
+            proba_next_state = probas_logit[1]
+            new_state = self.to_idx(new_t, new_x1, new_x2)
+            if new_x1 == self.C1 - 1:
+                done1 = True
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
+
         else:
+            if t + 1 == self.T - 1:
+                done1, done2 = True, True
             Utilities = [0, self.k_airline1 - self.beta * a1, self.k_airline2 - self.beta * a2]
             probas_logit = self.compute_probas_logit(Utilities)
 
@@ -77,27 +127,23 @@ class CompetitionEnv(discrete.DiscreteEnv):
             reward1, reward2 = 0, 0
             proba_next_state = probas_logit[0]
             new_state = self.to_idx(new_t, new_x1, new_x2)
-            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
-                done = True
-            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
 
-            # Case Airline1
+            # Case buys Airline1
             new_t, new_x1, new_x2 = t + 1, x1 + 1, x2
             reward1, reward2 = a1, 0
             proba_next_state = probas_logit[1]
             new_state = self.to_idx(new_t, new_x1, new_x2)
-            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
-                done = True
-            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
+            new_done1 = True if new_x1 == self.C1 - 1 else done1
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (new_done1, done2)))
 
-            # Case Airline2
+            # Case buys Airline2
             new_t, new_x1, new_x2 = t + 1, x1, x2 + 1
             reward1, reward2 = 0, a2
             proba_next_state = probas_logit[2]
             new_state = self.to_idx(new_t, new_x1, new_x2)
-            if new_t == self.T - 1 or (new_x1 == self.C1 - 1 and new_x2 == self.C2 - 1):
-                done = True
-            list_transitions.append((proba_next_state, new_state, (reward1, reward2), done))
+            new_done2 = True if new_x2 == self.C2 - 1 else done2
+            list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, new_done2)))
 
         return list_transitions
 
@@ -113,7 +159,6 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
     def to_coordinate(self, state_idx):
         t = int(int(state_idx) / (self.C1 * self.C2))
-        print(t)
         x2 = int(int(state_idx - self.C1 * self.C2 * t) / self.C1)
         x1 = int(state_idx - self.C1 * x2 - self.C1 * self.C2 * t)
         return t, x1, x2
