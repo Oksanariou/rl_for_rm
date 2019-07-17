@@ -247,7 +247,7 @@ if __name__ == '__main__':
     parameters_dict["prioritized_replay_beta_iters"] = None
     parameters_dict["prioritized_replay_eps"] = 1e-6
     parameters_dict["param_noise"] = False
-    parameters_dict["verbose"] = 0
+    parameters_dict["verbose"] = 1
     # parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
     parameters_dict["tensorboard_log"] = None
     parameters_dict["policy_kwargs"] = {"dueling" : False}
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     parameters_dict["original_weights"] = compute_weights(env)
 
-    results_path = Path("../Results")
+    results_path = Path("../Results_big_env")
     results_path.mkdir(parents=True, exist_ok=True)
 
     # Tuning of the parameters
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     parameter_values = ast.literal_eval(parameter_values_string)
 
 
-    total_timesteps = 15000
+    total_timesteps = 30000
     nb_runs = 30
 
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
