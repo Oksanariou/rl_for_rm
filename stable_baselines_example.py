@@ -266,33 +266,38 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
+    parameter = "learning_rate"
+    parameter_values = [1e-5, 1e-4, 1e-3]
+    total_timesteps = 30000
+
+    compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     total_timesteps = 30000
     nb_runs = 30
 
-    parameter = "target_network_update_freq"
-    parameter_values = [10, 50, 100, 500]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
-
-    parameter = "buffer_size"
-    parameter_values = [1000, 10000, 20000, 30000]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
-
-    parameter = "batch_size"
-    parameter_values = [10, 100, 1000]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
-
-    parameter = "exploration_final_eps"
-    parameter_values = [0.5, 0.2, 0.01, 0.001]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
-
-    parameter = "gamma"
-    parameter_values = [0.8, 0.9, 0.99, 0.999]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    # parameter = "target_network_update_freq"
+    # parameter_values = [10, 50, 100, 500]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    #
+    # parameter = "buffer_size"
+    # parameter_values = [1000, 10000, 20000, 30000]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    #
+    # parameter = "batch_size"
+    # parameter_values = [10, 100, 1000]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    #
+    # parameter = "exploration_final_eps"
+    # parameter_values = [0.5, 0.2, 0.01, 0.001]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    #
+    # parameter = "gamma"
+    # parameter_values = [0.8, 0.9, 0.99, 0.999]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
 
