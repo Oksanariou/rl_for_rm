@@ -231,7 +231,7 @@ if __name__ == '__main__':
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
-    parameters_dict["learning_rate"] = 0.001
+    parameters_dict["learning_rate"] = 0.0001
     parameters_dict["buffer_size"] = 10000
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
@@ -271,27 +271,27 @@ if __name__ == '__main__':
     nb_runs = 30
 
     parameter = "target_network_update_freq"
-    parameter_values = "[10, 50, 100, 500]"
+    parameter_values = [10, 50, 100, 500]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     parameter = "buffer_size"
-    parameter_values = "[1000, 10000, 20000, 30000]"
+    parameter_values = [1000, 10000, 20000, 30000]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     parameter = "batch_size"
-    parameter_values = "[10, 100, 1000]"
+    parameter_values = [10, 100, 1000]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     parameter = "exploration_final_eps"
-    parameter_values = "[0.5, 0.2, 0.01, 0.001]"
+    parameter_values = [0.5, 0.2, 0.01, 0.001]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
     parameter = "gamma"
-    parameter_values = "[0.8, 0.9, 0.99, 0.999]"
+    parameter_values = [0.8, 0.9, 0.99, 0.999]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
