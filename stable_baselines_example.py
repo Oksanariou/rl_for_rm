@@ -250,7 +250,7 @@ def parameters_dict_builder():
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
-    parameters_dict["batch_size"] = 100
+    parameters_dict["batch_size"] = 1000
     parameters_dict["checkpoint_freq"] = 10000
     parameters_dict["checkpoint_path"] = None
     parameters_dict["learning_starts"] = 100
@@ -286,7 +286,7 @@ if __name__ == '__main__':
     # parameter_values = ast.literal_eval(parameter_values_string)
 
     nb_timesteps = 50000
-    nb_runs = 30
+    nb_runs = 1
 
     parameters_dict = parameters_dict_builder()
     run_n_times(parameters_dict, nb_timesteps, results_path, "all_extensions", nb_runs, 0)
