@@ -255,17 +255,17 @@ def parameters_dict_builder():
     parameters_dict["checkpoint_path"] = None
     parameters_dict["learning_starts"] = 100
     parameters_dict["target_network_update_freq"] = 50
-    parameters_dict["prioritized_replay"] = False
+    parameters_dict["prioritized_replay"] = True
     parameters_dict["prioritized_replay_alpha"] = 0.6
     parameters_dict["prioritized_replay_beta0"] = 0.4
     parameters_dict["prioritized_replay_beta_iters"] = None
     parameters_dict["prioritized_replay_eps"] = 1e-6
-    parameters_dict["param_noise"] = False
+    parameters_dict["param_noise"] = True
     parameters_dict["verbose"] = 0
     # parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
     parameters_dict["tensorboard_log"] = None
-    parameters_dict["policy_kwargs"] = {"dueling" : False}
-    parameters_dict["weights"] = False
+    parameters_dict["policy_kwargs"] = {"dueling" : True}
+    parameters_dict["weights"] = True
 
     env = parameters_dict["env_builder"]()
     parameters_dict["original_weights"] = compute_weights(env)
@@ -289,8 +289,9 @@ if __name__ == '__main__':
     nb_runs = 30
 
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    #
+    run_n_times(parameters_dict, nb_timesteps, results_path, "all_extensions", nb_runs, 0)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+
     # import cv2
     # import os
     #
