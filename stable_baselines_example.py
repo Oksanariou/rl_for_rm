@@ -20,6 +20,7 @@ from functools import partial
 from multiprocessing import Pool
 import glob
 import csv
+from q_learning import q_to_v
 
 
 def agent_builder(env_vec, parameters_dict):
@@ -42,6 +43,18 @@ def agent_builder(env_vec, parameters_dict):
                policy_kwargs=parameters_dict["policy_kwargs"],
                tensorboard_log=parameters_dict["tensorboard_log"])
 
+def save_values(env, q_values, dir_name, figure_name):
+    values = q_to_v(env, q_values).reshape(env.T, env.C)
+    plt.figure()
+    plt.title("Values of the states")
+    plt.xlabel('Number of bookings')
+    plt.ylabel('Number of DCP')
+    plt.imshow(values, aspect='auto')
+    plt.colorbar()
+    if len(figure_name) < 5:
+        for k in range(5 - len(figure_name)):
+            figure_name = str(0) + figure_name
+    plt.savefig(dir_name+ '/' + figure_name + '.png')
 
 def callback(_locals, _globals):
     """
@@ -52,11 +65,13 @@ def callback(_locals, _globals):
     global n_steps, rewards, env, states, model
     if n_steps == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
+        save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
     # Print stats every 1000 calls
-    if (n_steps + 1) % 1000 == 0:
+    if (n_steps + 1) % 500 == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
+        save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
     n_steps += 1
@@ -64,7 +79,7 @@ def callback(_locals, _globals):
 
 
 def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, k):
-    global env, rewards, n_steps, steps, model, states
+    global env, rewards, n_steps, steps, model, states, count
 
     env = parameters_dict["env_builder"]()
     env_vec = DummyVecEnv([lambda: env])
@@ -263,35 +278,60 @@ if __name__ == '__main__':
     results_path = Path("../Results_big_env")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    # Tuning of the parameters
+    # parameters_dict = parameters_dict_builder()
+    #
+    # # Tuning of the parameters
     # parameter = sys.argv[1]
     # parameter_values_string = sys.argv[2]
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
+    #
+    # total_timesteps = 10000
+    # nb_runs = 30
+    #
+    # import cv2
+    # import os
+    #
+    # image_folder = '../Results'
+    # video_name = 'evolution_vof_values.avi'
+    #
+    # images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    # frame = cv2.imread(os.path.join(image_folder, images[0]))
+    # height, width, layers = frame.shape
+    #
+    # video = cv2.VideoWriter(video_name, 0, 5, (width, height))
+    #
+    # for image in images:
+    #     video.write(cv2.imread(os.path.join(image_folder, image)))
+    #
+    # cv2.destroyAllWindows()
+    # video.release()
 
-    total_timesteps = 30000
-    nb_runs = 30
+    plt.figure()
 
-    parameters_dict = parameters_dict_builder()
-    parameter = "weights"
-    parameter_values = [True, False]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
+    parameters = ["weights", "prioritized_replay", "dueling"]
+    nb_timesteps = 30000
 
-    parameters_dict = parameters_dict_builder()
-    parameter = "prioritized_replay"
-    parameter_values = [True]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    for parameter in parameters:
+        values = [True]
+        if parameter == "weights":
+            values = [True, False]
+        for value in values:
+            steps = [0]
+            for k in range(1000 - 1, nb_timesteps, 1000):
+                steps.append(k)
+            mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
+            plt.plot(steps, mean_revenues, label=str(parameter)+str(value))
+            plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
 
-    parameters_dict = parameters_dict_builder()
-    parameter = "dueling"
-    parameter_values = [{'dueling': True}]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    plt.legend()
+    plt.ylabel("Revenue computed over 10000 episodes")
+    plt.xlabel("Number of timesteps")
+    plt.title(parameter)
 
-    parameters_dict = parameters_dict_builder()
-    parameter = "param_noise"
-    parameter_values = [True]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
+    plt.savefig('../' + results_path.name + '/extensions.png')
+
+
 
 
 
