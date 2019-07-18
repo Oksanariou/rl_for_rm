@@ -226,13 +226,12 @@ def compute_weights(env):
     return weights
 
 
-if __name__ == '__main__':
-
+def parameters_dict_builder():
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["learning_rate"] = 0.0001
-    parameters_dict["buffer_size"] = 10000
+    parameters_dict["buffer_size"] = 30000
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
@@ -254,8 +253,12 @@ if __name__ == '__main__':
     parameters_dict["weights"] = False
 
     env = parameters_dict["env_builder"]()
-
     parameters_dict["original_weights"] = compute_weights(env)
+
+    return parameters_dict
+
+
+if __name__ == '__main__':
 
     results_path = Path("../Results_big_env")
     results_path.mkdir(parents=True, exist_ok=True)
@@ -269,29 +272,26 @@ if __name__ == '__main__':
     total_timesteps = 30000
     nb_runs = 30
 
-    parameter = "target_network_update_freq"
-    parameter_values = [10, 50, 100, 500]
+    parameters_dict = parameters_dict_builder()
+    parameter = "weights"
+    parameter_values = [True, False]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
     compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
-    parameter = "buffer_size"
-    parameter_values = [1000, 10000, 20000, 30000]
+    parameters_dict = parameters_dict_builder()
+    parameter = "prioritized_replay"
+    parameter_values = [True]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
-    parameter = "batch_size"
-    parameter_values = [10, 100, 1000]
+    parameters_dict = parameters_dict_builder()
+    parameter = "dueling"
+    parameter_values = [{'dueling': True}]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
-    parameter = "exploration_final_eps"
-    parameter_values = [0.5, 0.2, 0.01, 0.001]
+    parameters_dict = parameters_dict_builder()
+    parameter = "param_noise"
+    parameter_values = [True]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
-    parameter = "gamma"
-    parameter_values = [0.8, 0.9, 0.99, 0.999]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, total_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, total_timesteps)
 
 
