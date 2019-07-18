@@ -278,16 +278,18 @@ if __name__ == '__main__':
     results_path = Path("../Results_big_env")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    # parameters_dict = parameters_dict_builder()
-    #
-    # # Tuning of the parameters
-    # parameter = sys.argv[1]
-    # parameter_values_string = sys.argv[2]
-    # print(parameter_values_string)
-    # parameter_values = ast.literal_eval(parameter_values_string)
-    #
-    # total_timesteps = 10000
-    # nb_runs = 30
+
+    # Tuning of the parameters
+    parameter = sys.argv[1]
+    parameter_values_string = sys.argv[2]
+    print(parameter_values_string)
+    parameter_values = ast.literal_eval(parameter_values_string)
+
+    nb_timesteps = 30000
+    nb_runs = 30
+
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
     #
     # import cv2
     # import os
@@ -307,31 +309,31 @@ if __name__ == '__main__':
     # cv2.destroyAllWindows()
     # video.release()
 
-    plt.figure()
-
-    parameters = ["weights", "prioritized_replay", "dueling"]
-    nb_timesteps = 30000
-
-    for parameter in parameters:
-        values = [True]
-        if parameter == "dueling":
-            values = [{"dueling": True}]
-        if parameter == "weights":
-            values = [True, False]
-        for value in values:
-            steps = [0]
-            for k in range(1000 - 1, nb_timesteps, 1000):
-                steps.append(k)
-            mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
-            plt.plot(steps, mean_revenues, label=str(parameter)+str(value))
-            plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
-
-    plt.legend()
-    plt.ylabel("Revenue computed over 10000 episodes")
-    plt.xlabel("Number of timesteps")
-    plt.title(parameter)
-
-    plt.savefig('../' + results_path.name + '/extensions.png')
+    # plt.figure()
+    #
+    # parameters = ["weights", "prioritized_replay", "dueling"]
+    # nb_timesteps = 30000
+    #
+    # for parameter in parameters:
+    #     values = [True]
+    #     if parameter == "dueling":
+    #         values = [{"dueling": True}]
+    #     if parameter == "weights":
+    #         values = [True, False]
+    #     for value in values:
+    #         steps = [0]
+    #         for k in range(1000 - 1, nb_timesteps, 1000):
+    #             steps.append(k)
+    #         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
+    #         plt.plot(steps, mean_revenues, label=str(parameter)+str(value))
+    #         plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
+    #
+    # plt.legend()
+    # plt.ylabel("Revenue computed over 10000 episodes")
+    # plt.xlabel("Number of timesteps")
+    # plt.title(parameter)
+    #
+    # plt.savefig('../' + results_path.name + '/extensions.png')
 
 
 
