@@ -250,22 +250,22 @@ def parameters_dict_builder():
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
-    parameters_dict["batch_size"] = 1000
+    parameters_dict["batch_size"] = 100
     parameters_dict["checkpoint_freq"] = 10000
     parameters_dict["checkpoint_path"] = None
     parameters_dict["learning_starts"] = 100
     parameters_dict["target_network_update_freq"] = 50
-    parameters_dict["prioritized_replay"] = True
+    parameters_dict["prioritized_replay"] = False
     parameters_dict["prioritized_replay_alpha"] = 0.6
     parameters_dict["prioritized_replay_beta0"] = 0.4
     parameters_dict["prioritized_replay_beta_iters"] = None
     parameters_dict["prioritized_replay_eps"] = 1e-6
-    parameters_dict["param_noise"] = True
+    parameters_dict["param_noise"] = False
     parameters_dict["verbose"] = 0
     # parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
     parameters_dict["tensorboard_log"] = None
-    parameters_dict["policy_kwargs"] = {"dueling" : True}
-    parameters_dict["weights"] = True
+    parameters_dict["policy_kwargs"] = {"dueling": False}
+    parameters_dict["weights"] = False
 
     env = parameters_dict["env_builder"]()
     parameters_dict["original_weights"] = compute_weights(env)
@@ -275,7 +275,7 @@ def parameters_dict_builder():
 
 if __name__ == '__main__':
 
-    results_path = Path("../Results_big_env")
+    results_path = Path("../Results_18_07_19")
     results_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -285,12 +285,52 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    nb_timesteps = 50000
-    nb_runs = 1
+    nb_timesteps = 40000
+    nb_runs = 30
 
+    parameter = "exploration_final_eps"
+    parameter_values = [0.01, 0.05, 0.1, 0.2, 0.5]
     parameters_dict = parameters_dict_builder()
-    run_n_times(parameters_dict, nb_timesteps, results_path, "all_extensions", nb_runs, 0)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+
+    parameter = "weights"
+    parameter_values = [True, False]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+
+    parameter = "prioritized_replay"
+    parameter_values = [True]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+
+    parameter = "param_noise"
+    parameter_values = [True]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+
+    parameter = "policy_kwargs"
+    parameter_values = [{"dueling": True}]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+
+    # parameter = "buffer_size"
+    # parameter_values = [1000, 10000, 20000, 30000]
+    # parameters_dict = parameters_dict_builder()
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    #
+    # parameter = "batch_size"
+    # parameter_values = [10, 100, 10000]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    #
+    # parameter = "learning_rate"
+    # parameter_values = [1e-4, 1e-3, 1e-2]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
 
     # import cv2
     # import os
