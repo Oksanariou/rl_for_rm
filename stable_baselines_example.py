@@ -314,6 +314,8 @@ if __name__ == '__main__':
 
     for parameter in parameters:
         values = [True]
+        if parameter == "dueling":
+            values = [{"dueling": True}]
         if parameter == "weights":
             values = [True, False]
         for value in values:
