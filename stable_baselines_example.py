@@ -65,13 +65,13 @@ def callback(_locals, _globals):
     global n_steps, rewards, env, states, model
     if n_steps == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
-        save_values(env, q_values, '../Results', str(n_steps))
+        # save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
     # Print stats every 1000 calls
     if (n_steps + 1) % 500 == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
-        save_values(env, q_values, '../Results', str(n_steps))
+        # save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
     n_steps += 1
