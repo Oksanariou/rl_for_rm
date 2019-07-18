@@ -280,10 +280,10 @@ if __name__ == '__main__':
 
 
     # Tuning of the parameters
-    parameter = sys.argv[1]
-    parameter_values_string = sys.argv[2]
-    print(parameter_values_string)
-    parameter_values = ast.literal_eval(parameter_values_string)
+    # parameter = sys.argv[1]
+    # parameter_values_string = sys.argv[2]
+    # print(parameter_values_string)
+    # parameter_values = ast.literal_eval(parameter_values_string)
 
     nb_timesteps = 50000
     nb_runs = 30
