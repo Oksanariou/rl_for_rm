@@ -290,11 +290,40 @@ if __name__ == '__main__':
     nb_runs = 2
     callback_frequency = 500
 
-    parameter = "exploration_final_eps"
-    parameter_values = [0.01, 0.05, 0.1, 0.2, 0.5]
+    # parameter = "exploration_final_eps"
+    # parameter_values = [0.05, 0.1, 0.2, 0.5]
+    # parameters_dict = parameters_dict_builder()
+    #
+    # # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+    #
+    # parameter = "weights"
+    # parameter_values = [True, False]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "prioritized_replay"
+    # parameter_values = [True]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "param_noise"
+    # parameter_values = [True]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "policy_kwargs"
+    # parameter_values = [{"dueling": True}]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+
+    parameter = "buffer_size"
+    parameter_values = [1000, 10000, 20000, 30000]
     parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     general_dir_name = results_path
-    value = 0.01
+    value = 1000
     experience_dir_name = parameter + " = " + str(value)
     mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                               value)
@@ -305,35 +334,6 @@ if __name__ == '__main__':
     metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
     save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
 
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
-
-    parameter = "weights"
-    parameter_values = [True, False]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "prioritized_replay"
-    parameter_values = [True]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "param_noise"
-    parameter_values = [True]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "policy_kwargs"
-    parameter_values = [{"dueling": True}]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    # parameter = "buffer_size"
-    # parameter_values = [1000, 10000, 20000, 30000]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
-    #
     # parameter = "batch_size"
     # parameter_values = [10, 100, 10000]
     # parameters_dict = parameters_dict_builder()
