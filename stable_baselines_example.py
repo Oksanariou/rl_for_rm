@@ -322,12 +322,12 @@ if __name__ == '__main__':
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
-    parameter = "batch_size"
-    parameter_values = [1000]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    parameter_values = [10, 100, 1000]
-    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+    # parameter = "batch_size"
+    # parameter_values = [1000]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    # parameter_values = [10, 100, 1000]
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     parameter = "learning_rate"
     parameter_values = [1e-4, 1e-3, 1e-2]
