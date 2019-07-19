@@ -299,13 +299,16 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    nb_timesteps = 15000
-    nb_runs = 10
-    callback_frequency = 1000
-    parameters_dict = parameters_dict_builder()
+    # nb_timesteps = 150
+    # nb_runs = 1
+    # callback_frequency = 10
+    # parameters_dict = parameters_dict_builder()
 
-    compare_computation_time("with_GPU", results_path, parameters_dict, "batch_size", [10, 100, 1000, 10000], nb_runs,
-                             callback_frequency)
+    # compare_computation_time("with_GPU", results_path, parameters_dict, "batch_size", [10, 100], nb_runs,
+    #                          callback_frequency)
+    file_name = "with_GPU"
+    time = np.load(results_path / (file_name + ".npy"))
+    print(time)
 
     # parameter = "exploration_final_eps"
     # parameter_values = [0.05, 0.1, 0.2, 0.5]
