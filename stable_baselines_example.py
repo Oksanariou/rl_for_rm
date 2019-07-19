@@ -263,9 +263,9 @@ def parameters_dict_builder():
     parameters_dict["prioritized_replay_eps"] = 1e-6
     parameters_dict["param_noise"] = False
     parameters_dict["verbose"] = 0
-    # parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
-    parameters_dict["tensorboard_log"] = None
-    parameters_dict["policy_kwargs"] = {"dueling": False}
+    parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
+    # parameters_dict["tensorboard_log"] = None
+    parameters_dict["policy_kwargs"] = {"dueling": False, "layers": [100, 100]}
     parameters_dict["weights"] = False
 
     env = parameters_dict["env_builder"]()
@@ -322,17 +322,18 @@ if __name__ == '__main__':
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
-    # parameter = "batch_size"
-    # parameter_values = [10, 100, 10000]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
-    #
-    # parameter = "learning_rate"
-    # parameter_values = [1e-4, 1e-3, 1e-2]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+    parameter = "batch_size"
+    parameter_values = [1000]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    parameter_values = [10, 100, 1000]
+    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+
+    parameter = "learning_rate"
+    parameter_values = [1e-4, 1e-3, 1e-2]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     # import cv2
     # import os
@@ -352,31 +353,31 @@ if __name__ == '__main__':
     # cv2.destroyAllWindows()
     # video.release()
 
-    plt.figure()
-
-    parameters = ["exploration_final_eps"]
-    nb_timesteps = 40000
-
-    for parameter in parameters:
-        values = [0.01, 0.05, 0.1]
-        if parameter == "dueling":
-            values = [{"dueling": True}]
-        if parameter == "weights":
-            values = [True, False]
-        for value in values:
-            steps = [0]
-            for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
-                steps.append(k)
-            mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
-            plt.plot(steps, mean_revenues, label=str(value))
-            plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
-
-    plt.legend()
-    plt.ylabel("Revenue computed over 10000 episodes")
-    plt.xlabel("Number of timesteps")
-    plt.title(parameter)
-
-    plt.savefig('../' + results_path.name + '/'+ parameter+'.png')
+    # plt.figure()
+    #
+    # parameters = ["exploration_final_eps"]
+    # nb_timesteps = 40000
+    #
+    # for parameter in parameters:
+    #     values = [0.01, 0.05, 0.1]
+    #     if parameter == "dueling":
+    #         values = [{"dueling": True}]
+    #     if parameter == "weights":
+    #         values = [True, False]
+    #     for value in values:
+    #         steps = [0]
+    #         for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
+    #             steps.append(k)
+    #         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
+    #         plt.plot(steps, mean_revenues, label=str(value))
+    #         plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
+    #
+    # plt.legend()
+    # plt.ylabel("Revenue computed over 10000 episodes")
+    # plt.xlabel("Number of timesteps")
+    # plt.title(parameter)
+    #
+    # plt.savefig('../' + results_path.name + '/'+ parameter+'.png')
 
 
 
