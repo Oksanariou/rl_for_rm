@@ -288,6 +288,7 @@ if __name__ == '__main__':
 
     nb_timesteps = 40000
     nb_runs = 2
+    callback_frequency = 500
 
     parameter = "exploration_final_eps"
     parameter_values = [0.01, 0.05, 0.1, 0.2, 0.5]
@@ -310,39 +311,39 @@ if __name__ == '__main__':
     parameter = "weights"
     parameter_values = [True, False]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     parameter = "prioritized_replay"
     parameter_values = [True]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     parameter = "param_noise"
     parameter_values = [True]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     parameter = "policy_kwargs"
     parameter_values = [{"dueling": True}]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     # parameter = "buffer_size"
     # parameter_values = [1000, 10000, 20000, 30000]
     # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
     # parameter = "batch_size"
     # parameter_values = [10, 100, 10000]
     # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
     # parameter = "learning_rate"
     # parameter_values = [1e-4, 1e-3, 1e-2]
     # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     # import cv2
