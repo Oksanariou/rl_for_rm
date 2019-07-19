@@ -376,7 +376,7 @@ if __name__ == '__main__':
     plt.xlabel("Number of timesteps")
     plt.title(parameter)
 
-    plt.savefig('../' + results_path.name + '/extensions.png')
+    plt.savefig('../' + results_path.name + '/'+ parameter+'.png')
 
 
 

@@ -136,9 +136,9 @@ def save_optimal_model(parameters_dict, model_name):
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 10
+    data_collection_points = 100
     micro_times = 5
-    capacity = 10
+    capacity = 50
     actions = tuple(k for k in range(50, 231, 10))
     alpha = 0.8
     lamb = 0.7
