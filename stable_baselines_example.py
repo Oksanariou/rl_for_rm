@@ -290,31 +290,31 @@ if __name__ == '__main__':
     nb_runs = 30
     callback_frequency = 500
 
-    parameter = "exploration_final_eps"
-    parameter_values = [0.05, 0.1, 0.2, 0.5]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
-
-    parameter = "weights"
-    parameter_values = [True, False]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "prioritized_replay"
-    parameter_values = [True]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "param_noise"
-    parameter_values = [True]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-
-    parameter = "policy_kwargs"
-    parameter_values = [{"dueling": True}]
-    parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    # parameter = "exploration_final_eps"
+    # parameter_values = [0.05, 0.1, 0.2, 0.5]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+    #
+    # parameter = "weights"
+    # parameter_values = [True, False]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "prioritized_replay"
+    # parameter_values = [True]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "param_noise"
+    # parameter_values = [True]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    #
+    # parameter = "policy_kwargs"
+    # parameter_values = [{"dueling": True}]
+    # parameters_dict = parameters_dict_builder()
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     # parameter = "buffer_size"
     # parameter_values = [10000, 20000, 30000]
@@ -352,31 +352,31 @@ if __name__ == '__main__':
     # cv2.destroyAllWindows()
     # video.release()
 
-    # plt.figure()
-    #
-    # parameters = ["weights", "prioritized_replay", "dueling"]
-    # nb_timesteps = 30000
-    #
-    # for parameter in parameters:
-    #     values = [True]
-    #     if parameter == "dueling":
-    #         values = [{"dueling": True}]
-    #     if parameter == "weights":
-    #         values = [True, False]
-    #     for value in values:
-    #         steps = [0]
-    #         for k in range(1000 - 1, nb_timesteps, 1000):
-    #             steps.append(k)
-    #         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
-    #         plt.plot(steps, mean_revenues, label=str(parameter)+str(value))
-    #         plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
-    #
-    # plt.legend()
-    # plt.ylabel("Revenue computed over 10000 episodes")
-    # plt.xlabel("Number of timesteps")
-    # plt.title(parameter)
-    #
-    # plt.savefig('../' + results_path.name + '/extensions.png')
+    plt.figure()
+
+    parameters = ["buffer_size"]
+    nb_timesteps = 40000
+
+    for parameter in parameters:
+        values = [1000, 10000, 20000, 30000]
+        if parameter == "dueling":
+            values = [{"dueling": True}]
+        if parameter == "weights":
+            values = [True, False]
+        for value in values:
+            steps = [0]
+            for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
+                steps.append(k)
+            mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
+            plt.plot(steps, mean_revenues, label=str(value))
+            plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
+
+    plt.legend()
+    plt.ylabel("Revenue computed over 10000 episodes")
+    plt.xlabel("Number of timesteps")
+    plt.title(parameter)
+
+    plt.savefig('../' + results_path.name + '/extensions.png')
 
 
 

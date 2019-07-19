@@ -148,52 +148,52 @@ def env_builder():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Specify parameter and parameter values.")
-        exit(0)
+    # if len(sys.argv) != 3:
+    #     print("Specify parameter and parameter values.")
+    #     exit(0)
     # Parameters of the agent
     parameters_dict = {}
     parameters_dict["env_builder"] = env_builder
-    parameters_dict["gamma"] = 0.9
+    parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 32
-    parameters_dict["memory_size"] = 6000
+    parameters_dict["batch_size"] = 64
+    parameters_dict["memory_size"] = 1000
     parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 90
+    parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = True
+    parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-4
-    parameters_dict["epsilon"] = 1e-2
+    parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 1
-    parameters_dict["use_weights"] = True
+    parameters_dict["epsilon_decay"] = 0.99975
+    parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
 
     # Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
     dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    # save_optimal_model(parameters_dict, dueling_model_name)
+    save_optimal_model(parameters_dict, dueling_model_name)
 
     optimal_model_path = dueling_model_name
-    init_with_true_Q_table = True
+    init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 15_000
-    nb_runs = 20
+    nb_episodes = 40000
+    nb_runs = 1
 
     results_path = Path("../Results")
     results_path.mkdir(parents=True, exist_ok=True)
 
     # Tuning of the parameters
-    # parameter = "learning_rate"
-    parameter = sys.argv[1]
-    parameter_values_string = sys.argv[2]
-    parameter_values = ast.literal_eval(parameter_values_string)
+    parameter = "learning_rate"
+    # parameter = sys.argv[1]
+    # parameter_values_string = sys.argv[2]
+    # parameter_values = ast.literal_eval(parameter_values_string)
     # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    # parameter_values = [1e-5]
+    parameter_values = [1e-4]
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
                    init_with_true_Q_table)
 
