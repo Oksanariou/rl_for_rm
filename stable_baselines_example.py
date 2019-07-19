@@ -354,11 +354,11 @@ if __name__ == '__main__':
 
     plt.figure()
 
-    parameters = ["buffer_size"]
+    parameters = ["exploration_final_eps"]
     nb_timesteps = 40000
 
     for parameter in parameters:
-        values = [1000, 10000, 20000, 30000]
+        values = [0.01, 0.05, 0.1]
         if parameter == "dueling":
             values = [{"dueling": True}]
         if parameter == "weights":
