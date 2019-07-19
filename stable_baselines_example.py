@@ -62,14 +62,14 @@ def callback(_locals, _globals):
     :param _locals: (dict)
     :param _globals: (dict)
     """
-    global n_steps, rewards, env, states, model
+    global n_steps, rewards, env, states, model, callback_frequency
     if n_steps == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
         # save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
         rewards.append(average_n_episodes(env, policy, 10000))
     # Print stats every 1000 calls
-    if (n_steps + 1) % 500 == 0:
+    if (n_steps + 1) % callback_frequency == 0:
         policy, q_values, _ = model.step_model.step(states, deterministic=True)
         # save_values(env, q_values, '../Results', str(n_steps))
         policy = np.array([env.A[k] for k in policy])
@@ -78,8 +78,9 @@ def callback(_locals, _globals):
     return True
 
 
-def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, k):
-    global env, rewards, n_steps, steps, model, states, count
+def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, frequency, k):
+    global env, rewards, n_steps, steps, model, states, count, callback_frequency
+    callback_frequency = frequency
 
     env = parameters_dict["env_builder"]()
     env_vec = DummyVecEnv([lambda: env])
@@ -97,10 +98,10 @@ def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, 
     np.save(general_dir_name / parameter / str(value) / ("Run" + str(k) + ".npy"), rewards)
 
 
-def run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value):
+def run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value, callback_frequency):
     (general_dir_name / parameter / str(value)).mkdir(parents=True, exist_ok=True)
 
-    f = partial(run_once, parameters_dict, nb_timesteps, general_dir_name, parameter, value)
+    f = partial(run_once, parameters_dict, nb_timesteps, general_dir_name, parameter, value, callback_frequency)
 
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
@@ -130,13 +131,13 @@ def collect_list_of_mean_revenues(general_dir_name, parameter, value):
     return mean_revenues, min_revenues, max_revenues
 
 
-def plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues):
+def plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues, callback_frequency):
     env = parameters_dict["env_builder"]()
     V, P_ref = dynamic_programming_env_DCP(env)
     P_DP = P_ref.reshape(env.T * env.C)
 
     steps = [0]
-    for k in range(1000 - 1, nb_timesteps, 1000):
+    for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
         steps.append(k)
 
     fig = plt.figure()
@@ -149,7 +150,7 @@ def plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, ma
     return fig
 
 
-def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_timesteps, number_of_runs):
+def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_timesteps, number_of_runs, callback_frequency):
     # results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
     # os.mkdir(general_dir_name + "/" + parameter)
     (general_dir_name / parameter).mkdir(parents=True, exist_ok=True)
@@ -164,10 +165,10 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
 
         experience_dir_name = parameter + " = " + str(value)
 
-        run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value)
+        run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value, callback_frequency)
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                                   value)
-        fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
+        fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues, callback_frequency)
         plt.savefig('../' + general_dir_name.name + '/' + parameter + '/' + experience_dir_name + '.png')
 
         mean_revenue, speed = compute_metric(mean_revenues)
@@ -201,14 +202,14 @@ def save_metrics(metrics_file_name, parameter, value, mean_revenues, speed):
             writer.writeheader()
             writer.writerow({'parameter': parameter, 'value': value, 'average': mean_revenues, 'slope': speed})
 
-def compare_plots(general_dir_name, parameter, values, nb_timesteps):
+def compare_plots(general_dir_name, parameter, values, nb_timesteps, callback_frequency):
     plt.figure()
 
     for value in values:
         if parameter == "policy_kwargs":
             value = value["dueling"]
         steps = [0]
-        for k in range(1000 - 1, nb_timesteps, 1000):
+        for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
             steps.append(k)
         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter, value)
         plt.plot(steps, mean_revenues, label=str(value))
@@ -296,7 +297,7 @@ if __name__ == '__main__':
     experience_dir_name = parameter + " = " + str(value)
     mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
                                                                               value)
-    fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
+    fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues, callback_frequency)
     plt.savefig('../' + general_dir_name.name + '/' + parameter + '/' + experience_dir_name + '.png')
 
     mean_revenue, speed = compute_metric(mean_revenues)
@@ -304,7 +305,7 @@ if __name__ == '__main__':
     save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
 
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     parameter = "weights"
     parameter_values = [True, False]
@@ -330,19 +331,19 @@ if __name__ == '__main__':
     # parameter_values = [1000, 10000, 20000, 30000]
     # parameters_dict = parameters_dict_builder()
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
     # parameter = "batch_size"
     # parameter_values = [10, 100, 10000]
     # parameters_dict = parameters_dict_builder()
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
     # parameter = "learning_rate"
     # parameter_values = [1e-4, 1e-3, 1e-2]
     # parameters_dict = parameters_dict_builder()
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     # import cv2
     # import os
