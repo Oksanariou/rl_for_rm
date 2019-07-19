@@ -286,13 +286,25 @@ if __name__ == '__main__':
     # parameter_values = ast.literal_eval(parameter_values_string)
 
     nb_timesteps = 40000
-    nb_runs = 30
+    nb_runs = 2
 
     parameter = "exploration_final_eps"
     parameter_values = [0.01, 0.05, 0.1, 0.2, 0.5]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
-    compare_plots(results_path, parameter, parameter_values, nb_timesteps)
+    general_dir_name = results_path
+    value = 0.01
+    experience_dir_name = parameter + " = " + str(value)
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(general_dir_name, parameter,
+                                                                              value)
+    fig = plot_revenues(parameters_dict, nb_timesteps, mean_revenues, min_revenues, max_revenues)
+    plt.savefig('../' + general_dir_name.name + '/' + parameter + '/' + experience_dir_name + '.png')
+
+    mean_revenue, speed = compute_metric(mean_revenues)
+    metrics_file_name = '../' + general_dir_name.name + '/metrics_file.csv'
+    save_metrics(metrics_file_name, parameter, value, mean_revenue, speed)
+
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps)
 
     parameter = "weights"
     parameter_values = [True, False]
