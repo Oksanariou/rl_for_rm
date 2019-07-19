@@ -293,7 +293,7 @@ if __name__ == '__main__':
     parameter = "exploration_final_eps"
     parameter_values = [0.05, 0.1, 0.2, 0.5]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
 
     parameter = "weights"
