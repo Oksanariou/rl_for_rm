@@ -320,8 +320,8 @@ if __name__ == '__main__':
     parameter = "buffer_size"
     parameter_values = [1000, 10000, 20000, 30000]
     parameters_dict = parameters_dict_builder()
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     general_dir_name = results_path
     value = 1000
     experience_dir_name = parameter + " = " + str(value)
