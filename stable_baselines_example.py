@@ -274,7 +274,7 @@ def parameters_dict_builder():
 
     return parameters_dict
 
-def compare_computation_time(file_name, general_dir_name, parameters_dict, parameter, parameter_values, nb_runs, callback_frequency):
+def compare_computation_time(file_name, general_dir_name, parameters_dict, parameter, parameter_values, nb_runs, callback_frequency, nb_timesteps):
     computation_times = []
 
     for value in parameter_values:
@@ -289,7 +289,7 @@ def compare_computation_time(file_name, general_dir_name, parameters_dict, param
 
 if __name__ == '__main__':
 
-    results_path = Path("../Computation_time")
+    results_path = Path("../Results_18_07_19")
     results_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -299,16 +299,15 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    # nb_timesteps = 150
-    # nb_runs = 1
-    # callback_frequency = 10
-    # parameters_dict = parameters_dict_builder()
+    nb_timesteps = 40000
+    nb_runs = 30
+    callback_frequency = 500
 
     # compare_computation_time("with_GPU", results_path, parameters_dict, "batch_size", [10, 100], nb_runs,
-    #                          callback_frequency)
-    file_name = "with_GPU"
-    time = np.load(results_path / (file_name + ".npy"))
-    print(time)
+    #                          callback_frequency, nb_timesteps)
+    # file_name = "with_GPU"
+    # time = np.load(results_path / (file_name + ".npy"))
+    # print(time)
 
     # parameter = "exploration_final_eps"
     # parameter_values = [0.05, 0.1, 0.2, 0.5]
@@ -316,25 +315,25 @@ if __name__ == '__main__':
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
     # compare_plots(results_path, parameter, parameter_values, nb_timesteps, callback_frequency)
     #
-    # parameter = "weights"
-    # parameter_values = [True, False]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    #
-    # parameter = "prioritized_replay"
-    # parameter_values = [True]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    #
-    # parameter = "param_noise"
-    # parameter_values = [True]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
-    #
-    # parameter = "policy_kwargs"
-    # parameter_values = [{"dueling": True}]
-    # parameters_dict = parameters_dict_builder()
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+    parameter = "weights"
+    parameter_values = [False]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+
+    parameter = "prioritized_replay"
+    parameter_values = [True]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+
+    parameter = "param_noise"
+    parameter_values = [True]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
+
+    parameter = "policy_kwargs"
+    parameter_values = [{"dueling": True}]
+    parameters_dict = parameters_dict_builder()
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_timesteps, nb_runs, callback_frequency)
 
     # parameter = "buffer_size"
     # parameter_values = [10000, 20000, 30000]
