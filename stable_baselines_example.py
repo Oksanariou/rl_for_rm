@@ -313,8 +313,10 @@ if __name__ == '__main__':
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    file_names = ["without_GPU", "with_GPU"]
-    general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
+    # file_names = ["without_GPU", "with_GPU"]
+    # general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
+    file_names = ["without_GPU"]
+    general_dir_names = [Path("../Computation_time_without_gpu")]
     parameter = "batch_size"
     parameter_values = [10, 100, 1000, 10000]
 

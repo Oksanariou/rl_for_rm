@@ -163,7 +163,7 @@ if __name__ == '__main__':
     parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 64
     parameters_dict["dueling"] = False
-    parameters_dict["loss"] = logcosh
+    parameters_dict["loss"] = mean_squared_error
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
