@@ -157,17 +157,17 @@ if __name__ == '__main__':
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 100
-    parameters_dict["memory_size"] = 30000
+    parameters_dict["memory_size"] = 10000
     parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 64
     parameters_dict["dueling"] = False
-    parameters_dict["loss"] = mean_squared_error
+    parameters_dict["loss"] = logcosh
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.9
+    parameters_dict["epsilon_decay"] = 0.9998
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -182,12 +182,13 @@ if __name__ == '__main__':
 
     # Parameters of the experience
     nb_episodes = 40000
-    nb_runs = 1
+    nb_runs = 30
 
-    results_path = Path("../Results")
+    results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-
-    launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
+    experience_dir_name = "control_experiment"
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
 
     # Tuning of the parameters
     # parameter = "learning_rate"
