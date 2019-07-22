@@ -320,11 +320,11 @@ if __name__ == '__main__':
     parameter = "batch_size"
     parameter_values = [10, 100, 1000, 10000]
 
-    save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
-                          callback_frequency, nb_timesteps)
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
-                          callback_frequency, nb_timesteps)
+    # save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
+    #                       callback_frequency, nb_timesteps)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    # save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
+    #                       callback_frequency, nb_timesteps)
     compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
 
 
