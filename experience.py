@@ -186,14 +186,15 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "without DQN"
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    experience_dir_name = "control_experiment"
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
 
-    parameters_dict["dueling"] = True
-    experience_dir_name = "with DQN"
+    # parameters_dict["dueling"] = True
+    # experience_dir_name = "with DQN"
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
     #                     init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
+    # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
 
     # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
 
