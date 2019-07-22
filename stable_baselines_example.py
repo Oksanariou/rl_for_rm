@@ -255,7 +255,7 @@ def parameters_dict_builder():
     parameters_dict["batch_size"] = 100
     parameters_dict["checkpoint_freq"] = 10000
     parameters_dict["checkpoint_path"] = None
-    parameters_dict["learning_starts"] = 100
+    parameters_dict["learning_starts"] = 10000
     parameters_dict["target_network_update_freq"] = 50
     parameters_dict["prioritized_replay"] = False
     parameters_dict["prioritized_replay_alpha"] = 0.6
@@ -278,6 +278,8 @@ def save_computation_time(file_name, general_dir_name, parameters_dict, paramete
     computation_times = []
 
     for value in parameter_values:
+        run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, nb_runs, value,
+                        callback_frequency)
         start_time = time.time()
         run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, nb_runs, value,
                     callback_frequency)
@@ -291,10 +293,10 @@ def compare_computation_time(file_names, general_dir_names, parameter, parameter
     for k in range(len(file_names)):
         times = np.load(general_dir_names[k] / (file_names[k] + ".npy"))
         plt.plot(np.log(parameter_values), times, label = file_names[k])
-    plt.xlabel(parameter)
+    plt.xlabel(parameter+" (log)")
     plt.ylabel("Computation_time")
     plt.legend()
-    plt.savefig('../' + general_dir_names[0].name + '/with_gpu.png')
+    plt.savefig('../' + general_dir_names[0].name + '/comparison.png')
 
 
 if __name__ == '__main__':
@@ -313,18 +315,16 @@ if __name__ == '__main__':
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    # file_names = ["without_GPU", "with_GPU"]
-    # general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
-    file_names = ["with_GPU"]
-    general_dir_names = [Path("../Computation_time_with_gpu")]
+    file_names = ["without_GPU", "with_GPU"]
+    general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
     parameter = "batch_size"
-    parameter_values = [10, 100, 1000, 10000]
+    parameter_values = [10, 50, 100, 1000, 3000, 5000, 7000, 10000]
 
-    # save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
-    #                       callback_frequency, nb_timesteps)
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    # save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
-    #                       callback_frequency, nb_timesteps)
+    save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
+                          callback_frequency, nb_timesteps)
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
+                          callback_frequency, nb_timesteps)
     compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
 
 
