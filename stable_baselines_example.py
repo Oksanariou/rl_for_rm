@@ -296,7 +296,7 @@ def compare_computation_time(file_names, general_dir_names, parameter, parameter
     plt.xlabel(parameter+" (log)")
     plt.ylabel("Computation_time")
     plt.legend()
-    plt.savefig('../' + general_dir_names[0].name + '/comparison.png')
+    plt.savefig('../' + general_dir_names[0].name + '/plot.png')
 
 
 if __name__ == '__main__':
@@ -315,16 +315,16 @@ if __name__ == '__main__':
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    file_names = ["without_GPU", "with_GPU"]
-    general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
+    file_names = ["without_GPU"]
+    general_dir_names = [Path("../Computation_time_without_gpu")]
     parameter = "batch_size"
     parameter_values = [10, 50, 100, 1000, 3000, 5000, 7000, 10000]
 
-    save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
-                          callback_frequency, nb_timesteps)
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
-                          callback_frequency, nb_timesteps)
+    # save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
+    #                       callback_frequency, nb_timesteps)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    # save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
+    #                       callback_frequency, nb_timesteps)
     compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
 
 
