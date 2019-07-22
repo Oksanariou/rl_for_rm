@@ -22,6 +22,7 @@ from multiprocessing import Pool
 import glob
 import csv
 from q_learning import q_to_v
+import tensorflow as tf
 
 
 def agent_builder(env_vec, parameters_dict):
@@ -292,6 +293,12 @@ if __name__ == '__main__':
     results_path = Path("../Computation_time")
     results_path.mkdir(parents=True, exist_ok=True)
 
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+    if tf.test.gpu_device_name():
+        print('GPU found')
+    else:
+        print("No GPU found")
 
     # Tuning of the parameters
     # parameter = sys.argv[1]
@@ -299,16 +306,16 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    nb_timesteps = 40000
-    nb_runs = 30
-    callback_frequency = 500
+    nb_timesteps = 15000
+    nb_runs = 10
+    callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    # compare_computation_time("with_GPU", results_path, parameters_dict, "batch_size", [10, 100], nb_runs,
-    #                          callback_frequency, nb_timesteps)
-    file_name = "with_GPU"
-    time = np.load(results_path / (file_name + ".npy"))
-    print(time)
+    compare_computation_time("without_GPU", results_path, parameters_dict, "batch_size", [10, 100, 1000, 1000], nb_runs,
+                             callback_frequency, nb_timesteps)
+    # file_name = "with_GPU"
+    # time = np.load(results_path / (file_name + ".npy"))
+    # print(time)
 
     # parameter = "exploration_final_eps"
     # parameter_values = [0.05, 0.1, 0.2, 0.5]
