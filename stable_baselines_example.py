@@ -292,7 +292,7 @@ if __name__ == '__main__':
     results_path = Path("../Computation_time_without_gpu")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     # Tuning of the parameters
     # parameter = sys.argv[1]
@@ -305,7 +305,7 @@ if __name__ == '__main__':
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    compare_computation_time("without_GPU", results_path, parameters_dict, "batch_size", [10, 100, 1000, 1000], nb_runs,
+    compare_computation_time("without_GPU", results_path, parameters_dict, "batch_size", [10, 100, 1000, 10000], nb_runs,
                              callback_frequency, nb_timesteps)
     # file_name = "with_GPU"
     # time = np.load(results_path / (file_name + ".npy"))
