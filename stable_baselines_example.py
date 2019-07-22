@@ -311,7 +311,7 @@ if __name__ == '__main__':
     # parameter_values = ast.literal_eval(parameter_values_string)
 
     nb_timesteps = 15000
-    nb_runs = 10
+    nb_runs = 16
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
