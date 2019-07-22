@@ -384,7 +384,6 @@ if __name__ == '__main__':
             label = parameter
         if parameter == "policy_kwargs":
             label = "dueling"
-            values = ["policy_kwargs = True"]
         if parameter == "weights":
             values = [True, False]
         for value in values:
