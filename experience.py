@@ -42,7 +42,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
 
     fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
-    plt.savefig(results_dir_name / experience_dir_name / (experience_dir_name + ".png"))
+    plt.savefig(results_dir_name.name + "/" + experience_dir_name +"/"+ experience_dir_name + ".png")
 
 
 def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
@@ -190,41 +190,44 @@ if __name__ == '__main__':
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    parameters_dict = parameter_dict_builder()
-    experience_dir_name = "no_extension"
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    experience_dir_name = "control_experiment"
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
 
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["dueling"] = True
-    experience_dir_name = "dueling"
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
-
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["use_weights"] = True
-    experience_dir_name = "weights"
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
-
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["use_weights"] = True
-    parameters_dict["dueling"] = True
-    parameter = "epsilon_decay"
-    parameter_values = [0.9, 0.99, 0.999, 0.9999, 0.99999]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
-
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["use_weights"] = True
-    parameters_dict["dueling"] = True
-    parameter = "hidden_layer_size"
-    parameter_values = [10, 30, 65, 100, 200]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
-
-
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["use_weights"] = True
-    parameters_dict["dueling"] = True
-    parameter = "learning_rate"
-    parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
+    # parameters_dict = parameter_dict_builder()
+    # experience_dir_name = "no_extension"
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    #
+    # parameters_dict = parameter_dict_builder()
+    # parameters_dict["dueling"] = True
+    # experience_dir_name = "dueling"
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    #
+    # parameters_dict = parameter_dict_builder()
+    # parameters_dict["use_weights"] = True
+    # experience_dir_name = "weights"
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    #
+    # parameters_dict = parameter_dict_builder()
+    # parameters_dict["use_weights"] = True
+    # parameters_dict["dueling"] = True
+    # parameter = "epsilon_decay"
+    # parameter_values = [0.9, 0.99, 0.999, 0.9999, 0.99999]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
+    #
+    # parameters_dict = parameter_dict_builder()
+    # parameters_dict["use_weights"] = True
+    # parameters_dict["dueling"] = True
+    # parameter = "hidden_layer_size"
+    # parameter_values = [10, 30, 65, 100, 200]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
+    #
+    #
+    # parameters_dict = parameter_dict_builder()
+    # parameters_dict["use_weights"] = True
+    # parameters_dict["dueling"] = True
+    # parameter = "learning_rate"
+    # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
 
 
     # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
