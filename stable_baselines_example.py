@@ -287,7 +287,7 @@ def save_computation_time(file_name, general_dir_name, parameters_dict, paramete
     np.save(general_dir_name / (file_name + ".npy"), computation_times)
 
 def compare_computation_time(file_names, general_dir_names, parameter, parameter_values):
-    plt.fig()
+    plt.figure()
     for k in range(len(file_names)):
         times = np.load(general_dir_names[k] / (file_names[k] + ".npy"))
         plt.plot(parameter_values, times, label = file_names[k])
