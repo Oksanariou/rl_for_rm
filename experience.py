@@ -52,11 +52,11 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
     visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path)
 
 
-def launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table):
+def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
     agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
 
     if init_with_true_Q_table:
-        agent.set_model(model)
+        agent.set_model(load_model(optimal_model_path))
         agent.set_target()
 
     before_train = lambda episode: episode == 0
@@ -156,18 +156,18 @@ if __name__ == '__main__':
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 64
-    parameters_dict["memory_size"] = 1000
+    parameters_dict["batch_size"] = 100
+    parameters_dict["memory_size"] = 30000
     parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
-    parameters_dict["hidden_layer_size"] = 50
+    parameters_dict["hidden_layer_size"] = 64
     parameters_dict["dueling"] = False
-    parameters_dict["loss"] = mean_squared_error
+    parameters_dict["loss"] = logcosh
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.99975
+    parameters_dict["epsilon_decay"] = 0.9
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -187,15 +187,16 @@ if __name__ == '__main__':
     results_path = Path("../Results")
     results_path.mkdir(parents=True, exist_ok=True)
 
+    launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
+
     # Tuning of the parameters
-    parameter = "learning_rate"
+    # parameter = "learning_rate"
     # parameter = sys.argv[1]
     # parameter_values_string = sys.argv[2]
     # parameter_values = ast.literal_eval(parameter_values_string)
     # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    parameter_values = [1e-4]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-                   init_with_true_Q_table)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+    #                init_with_true_Q_table)
 
     # parameter = "epsilon"
     # parameter_values = [1e-4, 1e-3, 1e-2, 1e-1]

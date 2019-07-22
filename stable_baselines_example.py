@@ -274,7 +274,7 @@ def parameters_dict_builder():
 
     return parameters_dict
 
-def compare_computation_time(file_name, general_dir_name, parameters_dict, parameter, parameter_values, nb_runs, callback_frequency, nb_timesteps):
+def save_computation_time(file_name, general_dir_name, parameters_dict, parameter, parameter_values, nb_runs, callback_frequency, nb_timesteps):
     computation_times = []
 
     for value in parameter_values:
@@ -285,6 +285,16 @@ def compare_computation_time(file_name, general_dir_name, parameters_dict, param
         computation_times.append(end_time)
 
     np.save(general_dir_name / (file_name + ".npy"), computation_times)
+
+def compare_computation_time(file_names, general_dir_names, parameter, parameter_values):
+    plt.fig()
+    for k in range(len(file_names)):
+        times = np.load(general_dir_names[k] / (file_names[k] + ".npy"))
+        plt.plot(parameter_values, times, label = file_names[k])
+    plt.xlabel(parameter)
+    plt.ylabel("Computation_time")
+    plt.legend()
+    plt.savefig('../' + general_dir_names[0] + '/comparison.png')
 
 
 if __name__ == '__main__':
@@ -305,11 +315,15 @@ if __name__ == '__main__':
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
 
-    compare_computation_time("without_GPU", results_path, parameters_dict, "batch_size", [10, 100, 1000, 10000], nb_runs,
-                             callback_frequency, nb_timesteps)
-    # file_name = "with_GPU"
-    # time = np.load(results_path / (file_name + ".npy"))
-    # print(time)
+    file_names = ["without_GPU", "with_GPU"]
+    general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
+    parameter = "batch_size"
+    parameter_values = [10, 100, 1000, 10000]
+
+    save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
+                          callback_frequency, nb_timesteps)
+    compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
+
 
     # parameter = "exploration_final_eps"
     # parameter_values = [0.05, 0.1, 0.2, 0.5]
