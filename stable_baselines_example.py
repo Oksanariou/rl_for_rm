@@ -294,7 +294,7 @@ def compare_computation_time(file_names, general_dir_names, parameter, parameter
     plt.xlabel(parameter)
     plt.ylabel("Computation_time")
     plt.legend()
-    plt.savefig('../' + general_dir_names[0].name + '/comparison.png')
+    plt.savefig('../' + general_dir_names[0].name + '/without_gpu.png')
 
 
 if __name__ == '__main__':
