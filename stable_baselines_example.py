@@ -290,7 +290,7 @@ def compare_computation_time(file_names, general_dir_names, parameter, parameter
     plt.figure()
     for k in range(len(file_names)):
         times = np.load(general_dir_names[k] / (file_names[k] + ".npy"))
-        plt.plot(parameter_values, times, label = file_names[k])
+        plt.plot(np.log(parameter_values), times, label = file_names[k])
     plt.xlabel(parameter)
     plt.ylabel("Computation_time")
     plt.legend()
