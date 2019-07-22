@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     # Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
     dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
-    save_optimal_model(parameters_dict, dueling_model_name)
+    # save_optimal_model(parameters_dict, dueling_model_name)
 
     optimal_model_path = dueling_model_name
     init_with_true_Q_table = False
