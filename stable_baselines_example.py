@@ -378,6 +378,7 @@ if __name__ == '__main__':
     nb_timesteps = 40000
 
     for parameter in parameters:
+        print(parameter)
         values = [True]
         if parameter == "param_noise" or parameter == "prioritized_replay" or parameter == "weights":
             label = parameter
@@ -387,6 +388,7 @@ if __name__ == '__main__':
         if parameter == "weights":
             values = [True, False]
         for value in values:
+            print(value)
             if not value:
                 label = "No extension"
             steps = [0]
