@@ -22,7 +22,6 @@ from multiprocessing import Pool
 import glob
 import csv
 from q_learning import q_to_v
-import tensorflow as tf
 
 
 def agent_builder(env_vec, parameters_dict):
@@ -294,11 +293,6 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
 
     # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
-    if tf.test.gpu_device_name():
-        print('GPU found')
-    else:
-        print("No GPU found")
 
     # Tuning of the parameters
     # parameter = sys.argv[1]
