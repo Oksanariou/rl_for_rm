@@ -289,7 +289,7 @@ def compare_computation_time(file_name, general_dir_name, parameters_dict, param
 
 if __name__ == '__main__':
 
-    results_path = Path("../Results_18_07_19")
+    results_path = Path("../Computation_time")
     results_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -302,12 +302,13 @@ if __name__ == '__main__':
     nb_timesteps = 40000
     nb_runs = 30
     callback_frequency = 500
+    parameters_dict = parameters_dict_builder()
 
     # compare_computation_time("with_GPU", results_path, parameters_dict, "batch_size", [10, 100], nb_runs,
     #                          callback_frequency, nb_timesteps)
-    # file_name = "with_GPU"
-    # time = np.load(results_path / (file_name + ".npy"))
-    # print(time)
+    file_name = "with_GPU"
+    time = np.load(results_path / (file_name + ".npy"))
+    print(time)
 
     # parameter = "exploration_final_eps"
     # parameter_values = [0.05, 0.1, 0.2, 0.5]
@@ -372,37 +373,37 @@ if __name__ == '__main__':
     # cv2.destroyAllWindows()
     # video.release()
 
-    plt.figure()
-
-    parameters = ["param_noise", "prioritized_replay", "weights", "policy_kwargs"]
-    nb_timesteps = 40000
-
-    for parameter in parameters:
-        print(parameter)
-        values = [True]
-        if parameter == "param_noise" or parameter == "prioritized_replay" or parameter == "weights":
-            label = parameter
-        if parameter == "policy_kwargs":
-            label = "dueling"
-        if parameter == "weights":
-            values = [True, False]
-        for value in values:
-            print(value)
-            if not value:
-                label = "No extension"
-            steps = [0]
-            for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
-                steps.append(k)
-            mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
-            plt.plot(steps, mean_revenues, label=label)
-            plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
-
-    plt.legend()
-    plt.ylabel("Revenue computed over 10000 episodes")
-    plt.xlabel("Number of timesteps")
-    plt.title("Extensions")
-
-    plt.savefig('../' + results_path.name + '/extensions.png')
+    # plt.figure()
+    #
+    # parameters = ["param_noise", "prioritized_replay", "weights", "policy_kwargs"]
+    # nb_timesteps = 40000
+    #
+    # for parameter in parameters:
+    #     print(parameter)
+    #     values = [True]
+    #     if parameter == "param_noise" or parameter == "prioritized_replay" or parameter == "weights":
+    #         label = parameter
+    #     if parameter == "policy_kwargs":
+    #         label = "dueling"
+    #     if parameter == "weights":
+    #         values = [True, False]
+    #     for value in values:
+    #         print(value)
+    #         if not value:
+    #             label = "No extension"
+    #         steps = [0]
+    #         for k in range(callback_frequency - 1, nb_timesteps, callback_frequency):
+    #             steps.append(k)
+    #         mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(results_path, parameter, value)
+    #         plt.plot(steps, mean_revenues, label=label)
+    #         plt.fill_between(steps, min_revenues, max_revenues, alpha=0.2)
+    #
+    # plt.legend()
+    # plt.ylabel("Revenue computed over 10000 episodes")
+    # plt.xlabel("Number of timesteps")
+    # plt.title("Extensions")
+    #
+    # plt.savefig('../' + results_path.name + '/extensions.png')
 
 
 
