@@ -294,7 +294,7 @@ def compare_computation_time(file_names, general_dir_names, parameter, parameter
     plt.xlabel(parameter)
     plt.ylabel("Computation_time")
     plt.legend()
-    plt.savefig('../' + general_dir_names[0].name + '/without_gpu.png')
+    plt.savefig('../' + general_dir_names[0].name + '/with_gpu.png')
 
 
 if __name__ == '__main__':
@@ -315,8 +315,8 @@ if __name__ == '__main__':
 
     # file_names = ["without_GPU", "with_GPU"]
     # general_dir_names = [Path("../Computation_time_without_gpu"), Path("../Computation_time_with_gpu")]
-    file_names = ["without_GPU"]
-    general_dir_names = [Path("../Computation_time_without_gpu")]
+    file_names = ["with_GPU"]
+    general_dir_names = [Path("../Computation_time_with_gpu")]
     parameter = "batch_size"
     parameter_values = [10, 100, 1000, 10000]
 
