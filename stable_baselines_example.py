@@ -290,7 +290,7 @@ def compare_computation_time(file_name, general_dir_name, parameters_dict, param
 
 if __name__ == '__main__':
 
-    results_path = Path("../Computation_time")
+    results_path = Path("../Computation_time_without_gpu")
     results_path.mkdir(parents=True, exist_ok=True)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
