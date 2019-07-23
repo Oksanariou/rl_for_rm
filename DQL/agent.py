@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from keras import Input
-from keras.layers import Dense, BatchNormalization, Lambda, GaussianNoise
+from keras.layers import Dense, BatchNormalization, Lambda, K, GaussianNoise
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.losses import mean_squared_error, logcosh
@@ -16,7 +16,6 @@ from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from SumTree import SumTree
 
 import tensorflow as tf
-from keras import backend as K
 
 
 def DQNAgent_builder(env, parameters_dict):
