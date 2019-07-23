@@ -16,6 +16,7 @@ from pathlib import Path
 from keras.layers import K
 import sys
 import ast
+import time
 
 import os
 
@@ -115,12 +116,11 @@ def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_t
                  # sumtree_monitor, sumtree_display
                  ]
 
+    start_time = time.time()
     agent.train(nb_episodes, callbacks)
+    end_time = time.time() - start_time
 
-    plt.plot(revenue_compute.replays, revenue_compute.revenues)
-    plt.ylabel("Revenues")
-    plt.xlabel("Number of replays")
-    plt.show()
+    return end_time
 
 
 def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
@@ -142,6 +142,27 @@ def save_optimal_model(parameters_dict, model_name):
     agent.init_network_with_true_Q_table()
     print("Saving optimal model")
     agent.model.save(model_name)
+
+def save_computing_time(results_dir_name, experience_name, nb_runs, nb_episodes, optimal_model_path, init_with_true_Q_table, parameter, parameter_values):
+    computing_times = []
+    experience_name.mkdir(parents=True, exist_ok=True)
+
+    for value in parameter_values:
+        print("{} = {}".format(parameter, value))
+        computing_times_value = []
+        parameters_dict = parameter_dict_builder()
+        parameters_dict[parameter] = value
+        for k in (nb_runs):
+            print("Run {}".format(k))
+            time = launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table)
+            computing_times_value.append(time)
+        computing_times.append(np.mean(computing_times_value))
+
+    plt.figure()
+    plt.plot(parameter_values, computing_times)
+    plt.xlabel(parameter)
+    plt.ylabel("Computation time")
+    plt.savefig('../' + results_dir_name.name + '/' + experience_name + '/computation_time.png')
 
 def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
     computation_times = []
@@ -216,29 +237,19 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 15000
-    nb_runs = 10
+    nb_episodes = 500
+    nb_runs = 2
 
-    # parameters_dict = parameter_dict_builder()
-    # results_path = Path("../our_DQN_with gpu")
-    # results_path.mkdir(parents=True, exist_ok=True)
-    # parameter = "mini_batch_size"
-    # parameter_values = [10, 100, 500, 1000, 5000, 10000]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-    #                init_with_true_Q_table)
-    # plot_computation_times(parameter, parameter_values, nb_runs, results_path)
+    results_path = Path("../our_DQN_with gpu")
+    results_path.mkdir(parents=True, exist_ok=True)
+    experience_name = "without_gpu"
+    parameter = "mini_batch_size"
+    parameter_values = [10, 100, 500, 1000, 5000, 10000]
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-    parameters_dict = parameter_dict_builder()
-    results_path = Path("../our_DQN_without gpu")
-    results_path.mkdir(parents=True, exist_ok=True)
-    parameter = "mini_batch_size"
-    parameter_values = [10, 100, 500, 1000, 5000, 10000]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-                   init_with_true_Q_table)
-    plot_computation_times(parameter, parameter_values, nb_runs, results_path)
-
+    save_computing_time(results_path, experience_name, nb_runs, nb_episodes, optimal_model_path,
+                        init_with_true_Q_table, parameter, parameter_values)
 
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
     #                     init_with_true_Q_table)
