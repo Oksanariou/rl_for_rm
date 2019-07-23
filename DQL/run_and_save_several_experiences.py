@@ -163,7 +163,7 @@ def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, mod
     return revenue
 
 
-def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, comparison=[]):
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, parameters_dict, comparison=[]):
     fig = plt.figure()
 
     plt.plot(x_axis, mean_revenues, color="gray", label='DQL mean revenue')
@@ -179,5 +179,6 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
     plt.legend()
     plt.ylabel("Revenues")
     plt.xlabel("Number of replays")
+    plt.text()
     # plt.show()
     return fig
