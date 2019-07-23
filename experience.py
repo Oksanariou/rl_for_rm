@@ -70,52 +70,52 @@ def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_t
         agent.set_model(load_model(optimal_model_path))
         agent.set_target()
 
-    before_train = lambda episode: episode == 0
-    every_episode = lambda episode: True
-    while_training = lambda episode: episode % (nb_episodes / 20) == 0
-    after_train = lambda episode: episode == nb_episodes - 1
-    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
-            nb_episodes / 20) == 0
-
-    true_compute = TrueCompute(before_train, agent)
-    true_v_display = VDisplay(before_train, agent, true_compute)
-    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
-
-    agent_monitor = AgentMonitor(while_training, agent)
-
-    q_compute = QCompute(while_training, agent)
-    # v_display = VDisplay(after_train, agent, q_compute)
-    # policy_display = PolicyDisplay(after_train, agent, q_compute)
-
-    # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
-    # q_error_display = QErrorDisplay(after_train, agent, q_error)
-
-    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
-    # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
-
-    # memory_monitor = MemoryMonitor(while_training, agent)
-    # memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+    # before_train = lambda episode: episode == 0
+    # every_episode = lambda episode: True
+    # while_training = lambda episode: episode % (nb_episodes / 20) == 0
+    # after_train = lambda episode: episode == nb_episodes - 1
+    # while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
+    #         nb_episodes / 20) == 0
     #
-    # batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
-    # batch_display = BatchDisplay(after_train, agent, batch_monitor)
-    # total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
+    # true_compute = TrueCompute(before_train, agent)
+    # true_v_display = VDisplay(before_train, agent, true_compute)
+    # true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
     #
-    # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
-    # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
-
-    callbacks = [
-        true_compute, true_v_display, true_revenue,
-                 agent_monitor,
-                 q_compute,
-                 # v_display, policy_display,
-                 # q_error, q_error_display,
-                 revenue_compute,
-                 # revenue_display,
-                 # memory_monitor, memory_display,
-                 # batch_monitor, batch_display, total_batch_display,
-                 # sumtree_monitor, sumtree_display
-                 ]
-
+    # agent_monitor = AgentMonitor(while_training, agent)
+    #
+    # q_compute = QCompute(while_training, agent)
+    # # v_display = VDisplay(after_train, agent, q_compute)
+    # # policy_display = PolicyDisplay(after_train, agent, q_compute)
+    #
+    # # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
+    # # q_error_display = QErrorDisplay(after_train, agent, q_error)
+    #
+    # revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
+    # # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
+    #
+    # # memory_monitor = MemoryMonitor(while_training, agent)
+    # # memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+    # #
+    # # batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
+    # # batch_display = BatchDisplay(after_train, agent, batch_monitor)
+    # # total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
+    # #
+    # # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
+    # # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
+    #
+    # callbacks = [
+    #     true_compute, true_v_display, true_revenue,
+    #              agent_monitor,
+    #              q_compute,
+    #              # v_display, policy_display,
+    #              # q_error, q_error_display,
+    #              revenue_compute,
+    #              # revenue_display,
+    #              # memory_monitor, memory_display,
+    #              # batch_monitor, batch_display, total_batch_display,
+    #              # sumtree_monitor, sumtree_display
+    #              ]
+    callbacks = []
     start_time = time.time()
     agent.train(nb_episodes, callbacks)
     end_time = time.time() - start_time
@@ -143,16 +143,16 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
-def save_computing_time(results_dir_name, experience_name, nb_runs, nb_episodes, optimal_model_path, init_with_true_Q_table, parameter, parameter_values):
+def save_computing_time(results_dir_path, experience_path, nb_runs, nb_episodes, optimal_model_path, init_with_true_Q_table, parameter, parameter_values):
     computing_times = []
-    experience_name.mkdir(parents=True, exist_ok=True)
+    (results_dir_path / experience_path).mkdir(parents=True, exist_ok=True)
 
     for value in parameter_values:
         print("{} = {}".format(parameter, value))
         computing_times_value = []
         parameters_dict = parameter_dict_builder()
         parameters_dict[parameter] = value
-        for k in (nb_runs):
+        for k in range(nb_runs):
             print("Run {}".format(k))
             time = launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table)
             computing_times_value.append(time)
@@ -162,7 +162,7 @@ def save_computing_time(results_dir_name, experience_name, nb_runs, nb_episodes,
     plt.plot(parameter_values, computing_times)
     plt.xlabel(parameter)
     plt.ylabel("Computation time")
-    plt.savefig('../' + results_dir_name.name + '/' + experience_name + '/computation_time.png')
+    plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
 
 def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
     computation_times = []
@@ -240,15 +240,17 @@ if __name__ == '__main__':
     nb_episodes = 500
     nb_runs = 2
 
-    results_path = Path("../our_DQN_with gpu")
+    results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_name = "without_gpu"
+
+    experience_path = Path("without_gpu")
+
     parameter = "mini_batch_size"
-    parameter_values = [10, 100, 500, 1000, 5000, 10000]
+    parameter_values = [10, 100]
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-    save_computing_time(results_path, experience_name, nb_runs, nb_episodes, optimal_model_path,
+    save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
                         init_with_true_Q_table, parameter, parameter_values)
 
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
