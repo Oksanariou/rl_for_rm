@@ -46,9 +46,7 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
 
     callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
 
-    start_time = time.time()
     agent.train(nb_episodes, callbacks)
-    end_time = time.time() - start_time
 
     if k == 0:
         pickle_that(true_compute, experience_path / true_compute.name)
@@ -58,7 +56,6 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     pickle_that(q_compute, run_path / q_compute.name)
     pickle_that(revenue_compute, run_path / revenue_compute.name)
 
-    np.save(experience_path / ('Run_' + str(k)) / ("computation_time" + str(k) + ".npy"), end_time)
 
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,

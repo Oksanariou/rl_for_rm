@@ -162,7 +162,8 @@ def save_computing_time(results_dir_path, experience_path, nb_runs, nb_episodes,
     plt.plot(parameter_values, computing_times)
     plt.xlabel(parameter)
     plt.ylabel("Computation time")
-    plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
+    # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
+    plt.savefig("../" + results_dir_path.name + "/" + experience_path + "/computation_time.png")
 
 def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
     computation_times = []

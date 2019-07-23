@@ -410,26 +410,25 @@ class DQNAgent:
     def train(self, nb_episodes, callbacks):
         for episode in range(nb_episodes):
             # print("episode {}, max number of samples = {}, actual number of samples = {}".format(episode, self.maximum_number_of_total_samples, self.number_of_total_samples))
-            if self.number_of_total_samples < self.maximum_number_of_total_samples:
-
-                # state = self.env.set_random_state()
-                state = self.env.reset()
-
-                done = False
-
-                while not done:
-                    action_idx = self.act(state)
-                    next_state, reward, done, _ = self.env.step(self.env.A[action_idx])
-
-                    self.remember(state, action_idx, reward, next_state, done)
-
-                    state = next_state
-
-                self.replay(episode)
-
-                for callback in callbacks:
-                    callback.run(episode)
-
-            else:
+            if self.number_of_total_samples >= self.maximum_number_of_total_samples:
                 print("Number of samples superior to max number of samples")
                 break
+
+            # state = self.env.set_random_state()
+            state = self.env.reset()
+
+            done = False
+
+            while not done:
+                action_idx = self.act(state)
+                next_state, reward, done, _ = self.env.step(self.env.A[action_idx])
+
+                self.remember(state, action_idx, reward, next_state, done)
+
+                state = next_state
+
+            self.replay(episode)
+
+            for callback in callbacks:
+                callback.run(episode)
+
