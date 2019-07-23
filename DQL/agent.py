@@ -398,6 +398,7 @@ class DQNAgent:
         self.loss_value = history.history['loss'][0]
 
         self.update_priority_b()
+        self.update_epsilon()
 
         self.last_visited = zip(state_batch, action_batch)
 
@@ -425,8 +426,6 @@ class DQNAgent:
                     state = next_state
 
                 self.replay(episode)
-
-                self.update_epsilon()
 
                 for callback in callbacks:
                     callback.run(episode)
