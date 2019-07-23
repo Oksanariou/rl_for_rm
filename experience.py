@@ -208,14 +208,10 @@ if __name__ == '__main__':
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
     #     exit(0)
-    # Parameters of the agent
 
-    # Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
-
-    dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
+    optimal_model_path = "DQL/model_initialized_with_true_q_table.h5"
     # save_optimal_model(parameters_dict, dueling_model_name)
 
-    optimal_model_path = dueling_model_name
     init_with_true_Q_table = False
 
     # Parameters of the experience
@@ -230,52 +226,10 @@ if __name__ == '__main__':
     parameter = "mini_batch_size"
     parameter_values = [10, 100]
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
                         init_with_true_Q_table, parameter, parameter_values)
-
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-    #                     init_with_true_Q_table)
-
-    # experience_dir_name = "control_experiment"
-    # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
-    #
-    # parameters_dict = parameter_dict_builder()
-    # experience_dir_name = "no_extension"
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
-
-    # parameters_dict = parameter_dict_builder()
-    # parameters_dict["dueling"] = True
-    # experience_dir_name = "dueling"
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
-    #
-    # parameters_dict = parameter_dict_builder()
-    # parameters_dict["use_weights"] = True
-    # experience_dir_name = "weights"
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
-    #
-    # parameters_dict = parameter_dict_builder()
-    # parameters_dict["use_weights"] = True
-    # parameters_dict["dueling"] = True
-    # parameter = "epsilon_decay"
-    # parameter_values = [0.9, 0.99, 0.999, 0.9999, 0.99999]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
-    #
-    # parameters_dict = parameter_dict_builder()
-    # parameters_dict["use_weights"] = True
-    # parameters_dict["dueling"] = True
-    # parameter = "hidden_layer_size"
-    # parameter_values = [10, 30, 65, 100, 200]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
-    #
-    #
-    # parameters_dict = parameter_dict_builder()
-    # parameters_dict["use_weights"] = True
-    # parameters_dict["dueling"] = True
-    # parameter = "learning_rate"
-    # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
 
 
     # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
@@ -285,17 +239,4 @@ if __name__ == '__main__':
     # parameter = sys.argv[1]
     # parameter_values_string = sys.argv[2]
     # parameter_values = ast.literal_eval(parameter_values_string)
-    # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-    #                init_with_true_Q_table)
 
-
-    # parameter = "mini_batch_size"
-    # parameter_values = [1000, 500, 100, 10]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, model, init_with_true_Q_table)
-    #
-    # results_dir_name = "../Daily meetings/Stabilization experiences/" + parameter
-    # experience_dir_name = parameter + " = " + str(1e-5)
-    # visualize_revenue_n_runs(1, results_dir_name, experience_dir_name, model)
-    #
-    # launch_one_run(parameters_dict, nb_episodes, model, init_with_true_Q_table)
