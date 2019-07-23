@@ -15,8 +15,6 @@ from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from SumTree import SumTree
 
-import tensorflow as tf
-
 
 def DQNAgent_builder(env, parameters_dict):
     return DQNAgent(env, gamma=parameters_dict["gamma"], epsilon=parameters_dict["epsilon"],
@@ -29,7 +27,8 @@ def DQNAgent_builder(env, parameters_dict):
                     prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
                     memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
                     loss=parameters_dict["loss"], use_weights=parameters_dict["use_weights"],
-                    use_optimal_policy=parameters_dict["use_optimal_policy"])
+                    use_optimal_policy=parameters_dict["use_optimal_policy"],
+                    maximum_number_of_total_samples=parameters_dict["maximum_number_of_total_samples"])
 
 
 class DQNAgent:
@@ -42,7 +41,8 @@ class DQNAgent:
                  mini_batch_size=64,
                  loss=mean_squared_error,
                  use_weights=False,
-                 use_optimal_policy=False):
+                 use_optimal_policy=False,
+                 maximum_number_of_total_samples=1e6):
 
         self.env = env
         self.input_size = len(self.env.observation_space.spaces)
@@ -89,6 +89,9 @@ class DQNAgent:
 
         self.use_optimal_policy = use_optimal_policy
         self.optimal_policy = self.compute_optimal_policy()
+
+        self.number_of_total_samples = 0
+        self.maximum_number_of_total_samples = maximum_number_of_total_samples
 
     def compute_optimal_policy(self):
         V, P_ref = dynamic_programming_env_DCP(self.env)
@@ -365,6 +368,8 @@ class DQNAgent:
         else:
             minibatch = random.sample(self.memory, self.mini_batch_size)
 
+        self.number_of_total_samples += self.mini_batch_size
+
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = np.array(
             state_batch).reshape(self.mini_batch_size, self.input_size), np.array(action_batch), np.array(
@@ -388,10 +393,8 @@ class DQNAgent:
 
         for k in range(self.mini_batch_size):
             q_values_state[k][action_batch[k]] = reward_batch[k] if done_batch[k] else q_values_target[k]
-        print("before fit")
         history = self.model.fit(np.array(state_batch), np.array(q_values_state), epochs=1, verbose=0,
                                  sample_weight=np.array(sample_weights), batch_size=self.batch_size)
-        print("after fit")
         self.loss_value = history.history['loss'][0]
 
         self.update_priority_b()
@@ -405,23 +408,28 @@ class DQNAgent:
 
     def train(self, nb_episodes, callbacks):
         for episode in range(nb_episodes):
+            print("episode {}, max number of samples = {}, actual number of samples = {}".format(episode, self.maximum_number_of_total_samples, self.number_of_total_samples))
+            if self.number_of_total_samples < self.maximum_number_of_total_samples:
 
-            # state = self.env.set_random_state()
-            state = self.env.reset()
+                # state = self.env.set_random_state()
+                state = self.env.reset()
 
-            done = False
+                done = False
 
-            while not done:
-                action_idx = self.act(state)
-                next_state, reward, done, _ = self.env.step(self.env.A[action_idx])
+                while not done:
+                    action_idx = self.act(state)
+                    next_state, reward, done, _ = self.env.step(self.env.A[action_idx])
 
-                self.remember(state, action_idx, reward, next_state, done)
+                    self.remember(state, action_idx, reward, next_state, done)
 
-                state = next_state
+                    state = next_state
 
-            self.replay(episode)
+                self.replay(episode)
 
-            self.update_epsilon()
+                self.update_epsilon()
 
-            for callback in callbacks:
-                callback.run(episode)
+                for callback in callbacks:
+                    callback.run(episode)
+
+            else:
+                break

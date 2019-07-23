@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 import dill as pickle
 from functools import partial
 from multiprocessing import Pool
@@ -24,13 +25,12 @@ def unpickle_that(path):
 
 
 def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table, k):
-    print("Run {}".format(k))
 
     run_path = experience_path / ('Run_' + str(k))
     run_path.mkdir(parents=True, exist_ok=True)
 
     agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
-    print("Run {}.0".format(k))
+
     if init_with_true_Q_table:
         agent.set_model(load_model(optimal_model_path))
         agent.set_target()
@@ -38,23 +38,27 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
 
     before_train = lambda episode: episode == 0
     while_training = lambda episode: episode % (nb_episodes / 20) == 0
-    print("Run {}.1".format(k))
+
     true_compute = TrueCompute(before_train, agent)
     true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
     q_compute = QCompute(while_training, agent)
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
 
     callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
-    print("Run {}.2".format(k))
+
+    start_time = time.time()
     agent.train(nb_episodes, callbacks)
-    print("Run {}.3".format(k))
+    end_time = time.time() - start_time
+
     if k == 0:
         pickle_that(true_compute, experience_path / true_compute.name)
         pickle_that(true_revenue, experience_path / true_revenue.name)
-    print("Run {}.1".format(k))
+
     pickle_that(agent, run_path / 'agent')
     pickle_that(q_compute, run_path / q_compute.name)
     pickle_that(revenue_compute, run_path / revenue_compute.name)
+
+    np.save(experience_path / ('Run_' + str(k)) / ("computation_time" + str(k) + ".npy"), end_time)
 
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
