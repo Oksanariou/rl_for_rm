@@ -164,7 +164,7 @@ class DQNAgent:
         return self.gamma * max_target_values
 
     def remember(self, state, action_idx, reward, next_state, done):
-        sample_weight = self.state_weights[state] if self.use_optimal_policy else 1.
+        sample_weight = self.state_weights[state] if self.use_weights else 1.
 
         state = self.normalize_state(state)
         state = np.reshape(state, [1, self.input_size])
