@@ -143,7 +143,24 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
-# def save_computation_time():
+def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
+    computation_times = []
+    for value in parameter_values:
+        computation_times_value = []
+        experience_dir_name = str(value)
+        for k in range(nb_runs):
+            run_path = results_dir_name / experience_dir_name / ('Run_' + str(k))
+            for file_path in run_path.iterdir():
+                file_name = file_path.stem
+                if file_name == ("computation_time"+str(k)):
+                    computation_times_value.append(np.load(file_path))
+        computation_times.append(np.mean(computation_times_value))
+
+    plt.figure()
+    plt.plot(parameter_values, computation_times)
+    plt.xlabel(parameter)
+    plt.ylabel("Computation time")
+    plt.savefig('../' + results_dir_name.name + '/computation_time.png')
 
 
 def env_builder():
@@ -199,14 +216,18 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 40000
+    nb_episodes = 1000
     nb_runs = 30
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "no_extension"
-
+    experience_dir_name = "dueling"
+    parameter = "mini_batch_size"
+    parameter_values = [10, 100]
     plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+    #                init_with_true_Q_table)
+    # plot_computation_times(parameter, parameter_values, nb_runs, results_path)
 
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
     #                     init_with_true_Q_table)
