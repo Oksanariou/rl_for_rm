@@ -5,6 +5,7 @@ from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 from DQL.agent import DQNAgent, DQNAgent_builder
+from DQL.agent_time import DQNAgent_time
 from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay, AgentMonitor, QCompute, QErrorDisplay, \
     QErrorMonitor, PolicyDisplay, MemoryMonitor, MemoryDisplay, BatchMonitor, BatchDisplay, TotalBatchDisplay, \
     SumtreeMonitor, SumtreeDisplay
@@ -143,29 +144,26 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
-def save_computing_time(results_dir_path, experience_path, nb_runs, nb_episodes, optimal_model_path, init_with_true_Q_table, parameter, parameter_values):
+def computation_time(results_dir_path, experience_path, nb_runs, parameter_values):
     computing_times = []
     (results_dir_path / experience_path).mkdir(parents=True, exist_ok=True)
 
+    env = env_builder()
+
     for value in parameter_values:
-        print("{} = {}".format(parameter, value))
-        computing_times_value = []
-        parameters_dict = parameter_dict_builder()
-        parameters_dict[parameter] = value
-        for k in range(nb_runs):
-            print("Run {}".format(k))
-            time = launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table)
-            computing_times_value.append(time)
-        computing_times.append(np.mean(computing_times_value))
+        print(value)
+        agent = DQNAgent_time(env, mini_batch_size=value, batch_size=value, memory_size=20000, maximum_number_of_total_samples=50000)
+        agent.fill_memory_buffer()
+        agent.train_time(nb_runs)
+        computing_times.append(agent.training_time)
 
     plt.figure()
     plt.plot(parameter_values, computing_times)
-    plt.xlabel(parameter)
+    plt.xlabel('batch_size')
     plt.ylabel("Computation time")
     # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
     np.save('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.npy', computing_times)
     plt.savefig('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.png')
-
 
 def env_builder():
     # Parameters of the environment
@@ -200,7 +198,7 @@ def parameter_dict_builder():
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
-    parameters_dict["maximum_number_of_total_samples"] = 50000
+    parameters_dict["maximum_number_of_total_samples"] = 10000
     return parameters_dict
 
 
@@ -216,29 +214,22 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 1000
-    nb_runs = 2
+    nb_runs = 1000
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    parameter = "mini_batch_size"
-    parameter_values = [10, 100]
+    parameter_values = [10, 100, 1000, 10000]
 
     experience_path = Path("with_gpu")
-    save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
-                        init_with_true_Q_table, parameter, parameter_values)
+    computation_time(results_path, experience_path, nb_runs, parameter_values)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     experience_path = Path("without_gpu")
-    save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
-                        init_with_true_Q_table, parameter, parameter_values)
+    computation_time(results_path, experience_path, nb_runs, parameter_values)
 
 
-    # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
 
-    # Tuning of the parameters
-    # parameter = "learning_rate"
     # parameter = sys.argv[1]
     # parameter_values_string = sys.argv[2]
     # parameter_values = ast.literal_eval(parameter_values_string)

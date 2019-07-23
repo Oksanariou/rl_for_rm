@@ -47,6 +47,7 @@ class DQNAgent:
         self.env = env
         self.input_size = len(self.env.observation_space.spaces)
         self.action_size = self.env.action_space.n
+        self.memory_size = memory_size
         self.memory = deque(maxlen=memory_size)
         self.mini_batch_size = mini_batch_size
         self.gamma = gamma  # discount rate
