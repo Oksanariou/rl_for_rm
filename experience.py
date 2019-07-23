@@ -219,14 +219,14 @@ if __name__ == '__main__':
     nb_episodes = 15000
     nb_runs = 10
 
-    parameters_dict = parameter_dict_builder()
-    results_path = Path("../our_DQN_with gpu")
-    results_path.mkdir(parents=True, exist_ok=True)
-    parameter = "mini_batch_size"
-    parameter_values = [10, 100, 500, 1000, 5000, 10000]
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-                   init_with_true_Q_table)
-    plot_computation_times(parameter, parameter_values, nb_runs, results_path)
+    # parameters_dict = parameter_dict_builder()
+    # results_path = Path("../our_DQN_with gpu")
+    # results_path.mkdir(parents=True, exist_ok=True)
+    # parameter = "mini_batch_size"
+    # parameter_values = [10, 100, 500, 1000, 5000, 10000]
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+    #                init_with_true_Q_table)
+    # plot_computation_times(parameter, parameter_values, nb_runs, results_path)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
