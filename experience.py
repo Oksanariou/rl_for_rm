@@ -152,7 +152,7 @@ def computation_time(results_dir_path, experience_path, nb_runs, parameter_value
 
     for value in parameter_values:
         print(value)
-        agent = DQNAgent_time(env, mini_batch_size=value, batch_size=value, memory_size=20000, maximum_number_of_total_samples=50000)
+        agent = DQNAgent_time(env, mini_batch_size=value, batch_size=value, memory_size=30000, maximum_number_of_total_samples=1e6)
         agent.fill_memory_buffer()
         agent.train_time(nb_runs)
         computing_times.append(agent.training_time)
@@ -198,7 +198,7 @@ def parameter_dict_builder():
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
-    parameters_dict["maximum_number_of_total_samples"] = 10000
+    parameters_dict["maximum_number_of_total_samples"] = 1e6
     return parameters_dict
 
 
@@ -214,12 +214,12 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_runs = 1000
+    nb_runs = 100000
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    parameter_values = [10, 100, 1000, 10000]
+    parameter_values = [10, 100, 500, 1000, 3000, 5000, 7000, 10000]
 
     experience_path = Path("with_gpu")
     computation_time(results_path, experience_path, nb_runs, parameter_values)
