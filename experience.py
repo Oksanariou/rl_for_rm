@@ -59,7 +59,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
                         optimal_model_path, init_with_true_Q_table):
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
                          optimal_model_path, init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
+    # visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
@@ -235,8 +235,8 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
     parameter = "mini_batch_size"
     parameter_values = [10, 100, 500, 1000, 5000, 10000]
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-    #                init_with_true_Q_table)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+                   init_with_true_Q_table)
     plot_computation_times(parameter, parameter_values, nb_runs, results_path)
 
 
