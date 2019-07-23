@@ -186,7 +186,7 @@ def parameter_dict_builder():
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 64
-    parameters_dict["dueling"] = False
+    parameters_dict["dueling"] = True
     parameters_dict["loss"] = logcosh
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
