@@ -52,7 +52,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
 
     fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
-    plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + experience_dir_name + '.png')
+    plt.savefig(results_dir_name / (experience_dir_name + '/' + experience_dir_name + '.png'))
 
 
 def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
@@ -132,7 +132,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     for k in parameter_values:
         print("Running with "+parameter+" = "+str(k))
         parameters_dict[parameter] = k
-        experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
+        experience_dir_name = str(k)
         launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
                             optimal_model_path, init_with_true_Q_table)
 
@@ -149,7 +149,7 @@ def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_nam
         computation_times_value = []
         experience_dir_name = str(value)
         for k in range(nb_runs):
-            run_path = results_dir_name / experience_dir_name / ('Run_' + str(k))
+            run_path = results_dir_name / parameter / experience_dir_name / ('Run_' + str(k))
             for file_path in run_path.iterdir():
                 file_name = file_path.stem
                 if file_name == ("computation_time"+str(k)):
@@ -196,7 +196,7 @@ def parameter_dict_builder():
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
-    parameters_dict["maximum_number_of_total_samples"] = 10000000000
+    parameters_dict["maximum_number_of_total_samples"] = 50000
     return parameters_dict
 
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     # Parameters of the agent
 
     # Loading the model with the optimal weights which will be used to initialize the network of the agent if init_with_true_Q_table
-    parameters_dict = parameter_dict_builder()
+
     dueling_model_name = "DQL/model_initialized_with_true_q_table.h5"
     # save_optimal_model(parameters_dict, dueling_model_name)
 
@@ -216,21 +216,32 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 40000
-    nb_runs = 30
+    nb_episodes = 15000
+    nb_runs = 10
 
-    results_path = Path("../Our DQN")
+    parameters_dict = parameter_dict_builder()
+    results_path = Path("../our_DQN_with gpu")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "dueling with epsilon decaying slowly"
-    # parameter = "mini_batch_size"
-    # parameter_values = [10, 100]
-    # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
-    #                init_with_true_Q_table)
-    # plot_computation_times(parameter, parameter_values, nb_runs, results_path)
+    parameter = "mini_batch_size"
+    parameter_values = [10, 100, 500, 1000, 5000, 10000]
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+                   init_with_true_Q_table)
+    plot_computation_times(parameter, parameter_values, nb_runs, results_path)
 
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-                        init_with_true_Q_table)
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+    parameters_dict = parameter_dict_builder()
+    results_path = Path("../our_DQN_without gpu")
+    results_path.mkdir(parents=True, exist_ok=True)
+    parameter = "mini_batch_size"
+    parameter_values = [10, 100, 500, 1000, 5000, 10000]
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
+                   init_with_true_Q_table)
+    plot_computation_times(parameter, parameter_values, nb_runs, results_path)
+
+
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+    #                     init_with_true_Q_table)
 
     # experience_dir_name = "control_experiment"
     # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
