@@ -182,7 +182,7 @@ def parameter_dict_builder():
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 100
     parameters_dict["memory_size"] = 30000
-    parameters_dict["mini_batch_size"] = 200
+    parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 64
@@ -191,12 +191,12 @@ def parameter_dict_builder():
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.9
+    parameters_dict["epsilon_decay"] = 0.9998
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
-    parameters_dict["maximum_number_of_total_samples"] = 1000000
+    parameters_dict["maximum_number_of_total_samples"] = 10000000000
     return parameters_dict
 
 
@@ -216,21 +216,21 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 1000
+    nb_episodes = 40000
     nb_runs = 30
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "dueling"
-    parameter = "mini_batch_size"
-    parameter_values = [10, 100]
-    plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
+    experience_dir_name = "dueling with epsilon decaying slowly"
+    # parameter = "mini_batch_size"
+    # parameter_values = [10, 100]
+    # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
     #                init_with_true_Q_table)
     # plot_computation_times(parameter, parameter_values, nb_runs, results_path)
 
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-    #                     init_with_true_Q_table)
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+                        init_with_true_Q_table)
 
     # experience_dir_name = "control_experiment"
     # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
