@@ -163,6 +163,7 @@ def save_computing_time(results_dir_path, experience_path, nb_runs, nb_episodes,
     plt.xlabel(parameter)
     plt.ylabel("Computation time")
     # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
+    np.save('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.npy', computing_times)
     plt.savefig('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.png')
 
 
@@ -215,19 +216,21 @@ if __name__ == '__main__':
     init_with_true_Q_table = False
 
     # Parameters of the experience
-    nb_episodes = 500
+    nb_episodes = 1000
     nb_runs = 2
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
 
-    experience_path = Path("without_gpu")
-
     parameter = "mini_batch_size"
     parameter_values = [10, 100]
 
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    experience_path = Path("with_gpu")
+    save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
+                        init_with_true_Q_table, parameter, parameter_values)
 
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    experience_path = Path("without_gpu")
     save_computing_time(results_path, experience_path, nb_runs, nb_episodes, optimal_model_path,
                         init_with_true_Q_table, parameter, parameter_values)
 
