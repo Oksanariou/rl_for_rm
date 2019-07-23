@@ -163,26 +163,7 @@ def save_computing_time(results_dir_path, experience_path, nb_runs, nb_episodes,
     plt.xlabel(parameter)
     plt.ylabel("Computation time")
     # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
-    plt.savefig("../" + results_dir_path.name + "/" + experience_path + "/computation_time.png")
-
-def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
-    computation_times = []
-    for value in parameter_values:
-        computation_times_value = []
-        experience_dir_name = str(value)
-        for k in range(nb_runs):
-            run_path = results_dir_name / parameter / experience_dir_name / ('Run_' + str(k))
-            for file_path in run_path.iterdir():
-                file_name = file_path.stem
-                if file_name == ("computation_time"+str(k)):
-                    computation_times_value.append(np.load(file_path))
-        computation_times.append(np.mean(computation_times_value))
-
-    plt.figure()
-    plt.plot(parameter_values, computation_times)
-    plt.xlabel(parameter)
-    plt.ylabel("Computation time")
-    plt.savefig('../' + results_dir_name.name + '/computation_time.png')
+    plt.savefig('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.png')
 
 
 def env_builder():
