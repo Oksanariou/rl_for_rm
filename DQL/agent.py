@@ -389,9 +389,10 @@ class DQNAgent:
 
         for k in range(self.mini_batch_size):
             q_values_state[k][action_batch[k]] = reward_batch[k] if done_batch[k] else q_values_target[k]
-
+        print("before fit")
         history = self.model.fit(np.array(state_batch), np.array(q_values_state), epochs=1, verbose=0,
                                  sample_weight=np.array(sample_weights), batch_size=self.batch_size)
+        print("after fit")
         self.loss_value = history.history['loss'][0]
 
         self.update_priority_b()

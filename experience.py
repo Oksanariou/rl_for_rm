@@ -42,7 +42,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
 
     fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
 
-    plt.savefig("../" + results_dir_name.name + "/" + experience_dir_name +"/"+ experience_dir_name + ".png")
+    plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + experience_dir_name + '.png')
 
 
 def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
@@ -192,10 +192,10 @@ if __name__ == '__main__':
 
     # experience_dir_name = "control_experiment"
     # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
-
-    parameters_dict = parameter_dict_builder()
-    experience_dir_name = "no_extension"
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
+    #
+    # parameters_dict = parameter_dict_builder()
+    # experience_dir_name = "no_extension"
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path, init_with_true_Q_table)
 
     parameters_dict = parameter_dict_builder()
     parameters_dict["dueling"] = True
