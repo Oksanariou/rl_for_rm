@@ -220,11 +220,11 @@ if __name__ == '__main__':
 
 
     nb_episodes = 40000
-    nb_runs = 2
+    nb_runs = 30
 
     init_with_true_Q_table = False
 
-    parameters_dict = parameter_dict_builder()
+
 
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
     # save_optimal_model(parameters_dict, optimal_model_path)
@@ -235,6 +235,32 @@ if __name__ == '__main__':
     #                optimal_model_path, init_with_true_Q_table)
 
     experience_dir_name = "learning_rate/0.1"
+    parameters_dict = parameter_dict_builder()
+    parameters_dict["learning_rate"] = 0.1
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+    #                     init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+
+    experience_dir_name = "learning_rate/0.01"
+    parameters_dict = parameter_dict_builder()
+    parameters_dict["learning_rate"] = 0.01
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+    #                     init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+
+    experience_dir_name = "learning_rate/0.001"
+    parameters_dict = parameter_dict_builder()
+    parameters_dict["learning_rate"] = 0.001
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+                        init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+
+    experience_dir_name = "mini_batch_size/1000"
+    parameters_dict = parameter_dict_builder()
+    parameters_dict["mini_batch_size"] = 1000
+    parameters_dict["batch_size"] = 1000
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
+                        init_with_true_Q_table)
     visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
 
 
