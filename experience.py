@@ -222,12 +222,19 @@ if __name__ == '__main__':
     parameter_values = [10, 100, 500, 1000, 3000, 5000, 7000, 10000]
 
     experience_path = Path("with_gpu")
-    computation_time(results_path, experience_path, nb_runs, parameter_values)
+    # computation_time(results_path, experience_path, nb_runs, parameter_values)
+    with_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     experience_path = Path("without_gpu")
-    computation_time(results_path, experience_path, nb_runs, parameter_values)
+    # computation_time(results_path, experience_path, nb_runs, parameter_values)
+    without_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
 
+    plt.figure()
+    plt.plot(parameter_values, with_gpu, parameter_values, without_gpu)
+    plt.ylabel("Computation time")
+    plt.xlabel("batch size")
+    plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
 
     # parameter = sys.argv[1]
