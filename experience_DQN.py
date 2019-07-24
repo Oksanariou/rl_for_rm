@@ -216,7 +216,7 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "dueling with epsilon decaying slowly"
+    experience_dir_name = Path("dueling with epsilon decaying slowly")
 
     nb_episodes = 20000
     nb_runs = 2
