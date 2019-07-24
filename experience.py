@@ -231,7 +231,8 @@ if __name__ == '__main__':
     without_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
 
     plt.figure()
-    plt.plot(parameter_values, with_gpu, parameter_values, without_gpu)
+    plt.plot(parameter_values, with_gpu, label="with gpu")
+    plt.plot(parameter_values, without_gpu, label="without gpu")
     plt.ylabel("Computation time")
     plt.xlabel("batch size")
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
