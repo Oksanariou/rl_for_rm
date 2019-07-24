@@ -27,8 +27,7 @@ def DQNAgent_builder(env, parameters_dict):
                     prioritized_experience_replay=parameters_dict["prioritized_experience_replay"],
                     memory_size=parameters_dict["memory_size"], mini_batch_size=parameters_dict["mini_batch_size"],
                     loss=parameters_dict["loss"], use_weights=parameters_dict["use_weights"],
-                    use_optimal_policy=parameters_dict["use_optimal_policy"],
-                    maximum_number_of_total_samples=parameters_dict["maximum_number_of_total_samples"])
+                    use_optimal_policy=parameters_dict["use_optimal_policy"])
 
 
 class DQNAgent:
@@ -41,8 +40,7 @@ class DQNAgent:
                  mini_batch_size=64,
                  loss=mean_squared_error,
                  use_weights=False,
-                 use_optimal_policy=False,
-                 maximum_number_of_total_samples=1e6):
+                 use_optimal_policy=False):
 
         self.env = env
         self.input_size = len(self.env.observation_space.spaces)
@@ -91,8 +89,6 @@ class DQNAgent:
         self.use_optimal_policy = use_optimal_policy
         self.optimal_policy = self.compute_optimal_policy()
 
-        self.number_of_total_samples = 0
-        self.maximum_number_of_total_samples = maximum_number_of_total_samples
 
     def compute_optimal_policy(self):
         V, P_ref = dynamic_programming_env_DCP(self.env)
@@ -369,7 +365,6 @@ class DQNAgent:
         else:
             minibatch = random.sample(self.memory, self.mini_batch_size)
 
-        self.number_of_total_samples += self.mini_batch_size
 
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = zip(*minibatch)
         state_batch, action_batch, reward_batch, next_state_batch, done_batch, sample_weights = np.array(
@@ -410,10 +405,6 @@ class DQNAgent:
 
     def train(self, nb_episodes, callbacks):
         for episode in range(nb_episodes):
-            # print("episode {}, max number of samples = {}, actual number of samples = {}".format(episode, self.maximum_number_of_total_samples, self.number_of_total_samples))
-            if self.number_of_total_samples >= self.maximum_number_of_total_samples:
-                print("Number of samples superior to max number of samples")
-                break
 
             # state = self.env.set_random_state()
             state = self.env.reset()

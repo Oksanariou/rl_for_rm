@@ -180,7 +180,6 @@ def parameter_dict_builder():
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
     parameters_dict["value_scaler"] = None
-    parameters_dict["maximum_number_of_total_samples"] = 1e6
     return parameters_dict
 
 def run_debug(parameters_dict, nb_episodes, k):
