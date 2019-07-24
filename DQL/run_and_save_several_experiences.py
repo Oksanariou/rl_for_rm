@@ -45,7 +45,6 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
 
     callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
-    print("agent {}, Q_table {}".format(k, agent.compute_q_table()))
 
     agent.train(nb_episodes, callbacks)
 
@@ -161,14 +160,18 @@ def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, mod
     return revenue
 
 
-def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, parameters_dict, comparison=[]):
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, comparison=[]):
     fig = plt.figure()
 
-    plt.plot(x_axis, mean_revenues, color="gray", label='DQL mean revenue')
+    plt.plot(x_axis, mean_revenues, color="red", label='DQL mean revenue')
     plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
 
     if len(comparison) > 0:
         plt.plot(x_axis, comparison)
+
+    for k in range(len(list_of_revenues)):
+        revenues = list_of_revenues[k]["revenue_compute"].revenues
+        plt.plot(x_axis, revenues, color="blue", alpha=0.2)
 
     for y_name in references_dict:
         plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)

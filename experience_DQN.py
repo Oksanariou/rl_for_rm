@@ -39,7 +39,7 @@ def plot_revenue_of_each_run(nb_runs, results_dir_name, experience_dir_name):
         plt.plot(x_axis, list_of_revenues[k]["revenue_compute"].revenues)
         plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + str(k) + '.png')
 
-def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict):
+def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
@@ -55,7 +55,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
     references_dict["DP revenue"] = mean_revenue_DP
     # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
 
-    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, parameters_dict, references_dict)
+    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues)
 
     plt.savefig(results_dir_name / (experience_dir_name + '/' + experience_dir_name + '.png'))
 
@@ -64,7 +64,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
                         optimal_model_path, init_with_true_Q_table):
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
                          optimal_model_path, init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
+    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path)
 
 
 def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
@@ -183,7 +183,7 @@ def parameter_dict_builder():
     parameters_dict["maximum_number_of_total_samples"] = 1e6
     return parameters_dict
 
-def run(parameters_dict, nb_episodes, k):
+def run_debug(parameters_dict, nb_episodes, k):
     agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
     weights = agent.model.get_weights()
     print("agent {}, weights: {}".format(k, weights))
@@ -198,8 +198,8 @@ def run(parameters_dict, nb_episodes, k):
 
 
 
-def run_several_times(parameters_dict, number_of_runs, nb_episodes):
-    f = partial(run, parameters_dict, nb_episodes)
+def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
+    f = partial(run_debug, parameters_dict, nb_episodes)
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
 
@@ -217,10 +217,10 @@ if __name__ == '__main__':
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "test initialization when using pool"
+    experience_dir_name = "dueling with epsilon decaying slowly"
 
     nb_episodes = 20000
-    nb_runs = 2
+    nb_runs = 30
 
     init_with_true_Q_table = False
 
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
     # save_optimal_model(parameters_dict, optimal_model_path)
 
-    run_several_times(parameters_dict, nb_runs, nb_episodes)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path)
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
