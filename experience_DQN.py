@@ -4,6 +4,7 @@ import gym
 from keras.losses import mean_squared_error, logcosh
 from functools import partial
 from multiprocessing import Pool
+import multiprocessing as mp
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 from DQL.agent import DQNAgent, DQNAgent_builder
@@ -200,6 +201,8 @@ def run_several_times(parameters_dict, number_of_runs, nb_episodes):
 
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
+
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
     #     exit(0)
