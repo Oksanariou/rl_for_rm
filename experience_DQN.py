@@ -188,11 +188,15 @@ def run(parameters_dict, nb_episodes, k):
     weights = agent.model.get_weights()
     print("agent {}, weights: {}".format(k, weights))
     if k==0:
-        time.sleep(10)
+        for i in range(10):
+            time.sleep(20)
+            print("agent {}, weights: {}".format(k, weights))
     else:
         agent.train(nb_episodes, [])
-    weights = agent.model.get_weights()
-    print("agent {}, Q-values: {}".format(k, weights))
+        weights = agent.model.get_weights()
+        print("agent {}, weights: {}".format(k, weights))
+
+
 
 def run_several_times(parameters_dict, number_of_runs, nb_episodes):
     f = partial(run, parameters_dict, nb_episodes)
