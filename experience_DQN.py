@@ -217,10 +217,10 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "learning_rate"
+
 
     nb_episodes = 40000
-    nb_runs = 30
+    nb_runs = 2
 
     init_with_true_Q_table = False
 
@@ -231,10 +231,11 @@ if __name__ == '__main__':
 
     # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
-    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
-                   optimal_model_path, init_with_true_Q_table)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
+    #                optimal_model_path, init_with_true_Q_table)
 
-
+    experience_dir_name = "learning_rate/0.1"
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 
