@@ -201,7 +201,7 @@ def run_several_times(parameters_dict, number_of_runs, nb_episodes):
 
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn', force=True)
+    # mp.set_start_method('spawn', force=True)
 
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
