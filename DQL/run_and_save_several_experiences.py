@@ -179,7 +179,7 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
 
     for k in range(len(list_of_revenues)):
         revenues = list_of_revenues[k]["revenue_compute"].revenues
-        plt.plot(x_axis, revenues, color="blue", alpha=0.2)
+        plt.plot(x_axis, revenues, alpha=0.2)
 
     for y_name in references_dict:
         plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)

@@ -207,13 +207,13 @@ def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
 
-    # if len(sys.argv) != 3:
-    #     print("Specify parameter and parameter values.")
-    #     exit(0)
-    #
-    # parameter = sys.argv[1]
-    # parameter_values_string = sys.argv[2]
-    # parameter_values = ast.literal_eval(parameter_values_string)
+    if len(sys.argv) != 3:
+        print("Specify parameter and parameter values.")
+        exit(0)
+
+    parameter = sys.argv[1]
+    parameter_values_string = sys.argv[2]
+    parameter_values = ast.literal_eval(parameter_values_string)
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
@@ -231,8 +231,8 @@ if __name__ == '__main__':
 
     visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
-    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
-    #                optimal_model_path, init_with_true_Q_table)
+    tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
+                   optimal_model_path, init_with_true_Q_table)
 
 
 
