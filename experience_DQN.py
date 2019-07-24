@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "learning_rate/0.1"
+    experience_dir_name = "learning_rate"
 
     nb_episodes = 40000
     nb_runs = 30
