@@ -222,8 +222,8 @@ if __name__ == '__main__':
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
     # save_optimal_model(parameters_dict, optimal_model_path)
 
-    # run_several_times(parameters_dict, nb_runs, nb_episodes)
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
+    run_several_times(parameters_dict, nb_runs, nb_episodes)
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
 
