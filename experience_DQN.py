@@ -185,14 +185,14 @@ def parameter_dict_builder():
 
 def run(parameters_dict, nb_episodes, k):
     agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
-    q_values = agent.compute_q_table()
-    print("agent {}, Q-values before train: {}".format(k, q_values))
+    weights = agent.model.get_weights()
+    print("agent {}, weights: {}".format(k, weights))
     if k==0:
-        agent.train(1000, [])
+        time.sleep(10)
     else:
-        agent.train(10000, [])
-    q_values = agent.compute_q_table()
-    print("agent {}, Q-values: {}".format(k, q_values))
+        agent.train(nb_episodes, [])
+    weights = agent.model.get_weights()
+    print("agent {}, Q-values: {}".format(k, weights))
 
 def run_several_times(parameters_dict, number_of_runs, nb_episodes):
     f = partial(run, parameters_dict, nb_episodes)
@@ -201,7 +201,7 @@ def run_several_times(parameters_dict, number_of_runs, nb_episodes):
 
 
 if __name__ == '__main__':
-    # mp.set_start_method('spawn', force=True)
+    mp.set_start_method('spawn', force=True)
 
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     experience_dir_name = "test initialization when using pool"
 
     nb_episodes = 20000
-    nb_runs = 30
+    nb_runs = 2
 
     init_with_true_Q_table = False
 
