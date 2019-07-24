@@ -45,6 +45,7 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
 
     callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
+    print("agent {}, Q_table {}".format(k, agent.compute_q_table()))
 
     agent.train(nb_episodes, callbacks)
 

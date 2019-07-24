@@ -2,6 +2,8 @@
 import numpy as np
 import gym
 from keras.losses import mean_squared_error, logcosh
+from functools import partial
+from multiprocessing import Pool
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 from DQL.agent import DQNAgent, DQNAgent_builder
@@ -61,7 +63,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
                         optimal_model_path, init_with_true_Q_table):
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
                          optimal_model_path, init_with_true_Q_table)
-    # visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
+    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
@@ -180,43 +182,57 @@ def parameter_dict_builder():
     parameters_dict["maximum_number_of_total_samples"] = 1e6
     return parameters_dict
 
+def run(parameters_dict, nb_episodes, k):
+    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
+    q_values = agent.compute_q_table()
+    print("agent {}, Q-values before train: {}".format(k, q_values))
+    if k==0:
+        agent.train(1000, [])
+    else:
+        agent.train(10000, [])
+    q_values = agent.compute_q_table()
+    print("agent {}, Q-values: {}".format(k, q_values))
+
+def run_several_times(parameters_dict, number_of_runs, nb_episodes):
+    f = partial(run, parameters_dict, nb_episodes)
+    with Pool(number_of_runs) as pool:
+        pool.map(f, range(number_of_runs))
 
 
 if __name__ == '__main__':
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
     #     exit(0)
-
-    optimal_model_path = "DQL/model_initialized_with_true_q_table.h5"
-    # save_optimal_model(parameters_dict, dueling_model_name)
-
-    init_with_true_Q_table = False
-
-    # Parameters of the experience
-    nb_runs = 100000
+    #
+    # parameter = sys.argv[1]
+    # parameter_values_string = sys.argv[2]
+    # parameter_values = ast.literal_eval(parameter_values_string)
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
+    experience_dir_name = "test initialization when using pool"
 
-    parameter_values = [10, 100, 500, 1000, 3000, 5000, 7000, 10000]
+    nb_episodes = 20000
+    nb_runs = 30
 
-    experience_path = Path("with_gpu")
-    # computation_time(results_path, experience_path, nb_runs, parameter_values)
-    with_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
+    init_with_true_Q_table = False
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    experience_path = Path("without_gpu")
-    # computation_time(results_path, experience_path, nb_runs, parameter_values)
-    without_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
+    parameters_dict = parameter_dict_builder()
 
-    fig, ax = plt.subplots()
-    plt.plot(parameter_values, with_gpu, label="with gpu")
-    plt.plot(parameter_values, without_gpu, label="without gpu")
-    plt.ylabel("Computation time")
-    plt.xlabel("batch size")
-    plt.text(0, 1, "Maximum number of total samples: 1e6", transform=ax.transAxes)
-    plt.legend()
-    plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
+    optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
+    # save_optimal_model(parameters_dict, optimal_model_path)
+
+    # run_several_times(parameters_dict, nb_runs, nb_episodes)
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
+    # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
+    #                optimal_model_path, init_with_true_Q_table)
+
+
+
+
+
+
+
 
 
 
