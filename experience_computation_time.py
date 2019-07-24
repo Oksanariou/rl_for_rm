@@ -112,7 +112,7 @@ if __name__ == '__main__':
     # maximum_number_of_total_samples = ast.literal_eval(maximum_number_of_total_samples_string)
 
     batch_size_values = [100, 500] + [k for k in range(1000, 20000, 1000)]
-    maximum_number_of_total_samples = 2e6
+    maximum_number_of_total_samples = 2000000
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
