@@ -58,7 +58,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
     fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict)
 
     # plt.savefig(results_dir_name / (experience_dir_name + '/' + experience_dir_name + '.png'))
-    plt.savefig("../" + results_dir_name.name + "/" + experience_dir_name + '/' + experience_dir_name + '.png')
+    plt.savefig("../" + results_dir_name.name + "/" + experience_dir_name + '/' + 'revenues.png')
 
 
 def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
