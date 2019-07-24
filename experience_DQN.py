@@ -5,7 +5,7 @@ from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 
 from DQL.agent import DQNAgent, DQNAgent_builder
-from DQL.agent_time import DQNAgent_time
+
 from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay, AgentMonitor, QCompute, QErrorDisplay, \
     QErrorMonitor, PolicyDisplay, MemoryMonitor, MemoryDisplay, BatchMonitor, BatchDisplay, TotalBatchDisplay, \
     SumtreeMonitor, SumtreeDisplay
@@ -144,27 +144,6 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
-def computation_time(results_dir_path, experience_path, nb_runs, parameter_values):
-    computing_times = []
-    (results_dir_path / experience_path).mkdir(parents=True, exist_ok=True)
-
-    env = env_builder()
-
-    for value in parameter_values:
-        print(value)
-        agent = DQNAgent_time(env, mini_batch_size=value, batch_size=value, memory_size=30000, maximum_number_of_total_samples=1e6)
-        agent.fill_memory_buffer()
-        agent.train_time(nb_runs)
-        computing_times.append(agent.training_time)
-
-    plt.figure()
-    plt.plot(parameter_values, computing_times)
-    plt.xlabel('batch_size')
-    plt.ylabel("Computation time")
-    # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
-    np.save('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.npy', computing_times)
-    plt.savefig('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.png')
-
 def env_builder():
     # Parameters of the environment
     data_collection_points = 100
@@ -240,7 +219,5 @@ if __name__ == '__main__':
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
 
-    # parameter = sys.argv[1]
-    # parameter_values_string = sys.argv[2]
-    # parameter_values = ast.literal_eval(parameter_values_string)
+
 

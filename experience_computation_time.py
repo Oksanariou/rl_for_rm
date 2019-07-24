@@ -51,7 +51,7 @@ def parameter_dict_builder():
 
 
 def computation_time(results_dir_path, experience_path, nb_runs, parameter_values, maximum_number_of_total_samples):
-    computing_times = []
+    mean_computing_times, sum_computing_time = [], []
     (results_dir_path / experience_path).mkdir(parents=True, exist_ok=True)
 
     env = env_builder()
@@ -67,27 +67,41 @@ def computation_time(results_dir_path, experience_path, nb_runs, parameter_value
         agent = DQNAgent_time_builder(env, parameters_dict)
         agent.fill_memory_buffer()
         agent.train_time(nb_runs)
-        computing_times.append(agent.training_time)
+        mean_computing_times.append(agent.mean_training_time)
+        sum_computing_time.append(agent.sum_training_time)
 
     plt.figure()
-    plt.plot(parameter_values, computing_times)
+    plt.plot(parameter_values, mean_computing_times)
     plt.xlabel('batch_size')
     plt.ylabel("Computation time")
     # plt.savefig(results_dir_path / experience_path / ('computation_time.png'))
-    np.save('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.npy', computing_times)
+    np.save('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.npy', [mean_computing_times, sum_computing_time])
     plt.savefig('../' + results_dir_path.name + '/' + experience_path.name + '/computation_time.png')
 
-def plot_comparison_computing_times(results_path, experience_path_with_gpu, experience_path_without_gpu, batch_size_values):
+def plot_comparison_computing_times(results_path, experience_path_with_gpu, experience_path_without_gpu, batch_size_values, maximum_number_of_total_samples):
     with_gpu = np.load(results_path / experience_path_with_gpu / ("computation_time.npy"))
     without_gpu = np.load(results_path / experience_path_without_gpu / ("computation_time.npy"))
 
-    fig, ax = plt.subplots()
-    plt.plot(batch_size_values, with_gpu, label="with gpu")
-    plt.plot(batch_size_values, without_gpu, label="without gpu")
+    mean_with_gpu, sum_with_gpu = with_gpu[0], with_gpu[1]
+    mean_without_gpu, sum_without_gpu = without_gpu[0], without_gpu[1]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    ax1.plot(batch_size_values, mean_with_gpu, label="with gpu")
+    ax1.plot(batch_size_values, mean_without_gpu, label="without gpu")
+    ax1.set_title("Average computing time")
     plt.ylabel("Computation time")
     plt.xlabel("batch size")
-    plt.text(0, 1, "Maximum number of total samples: 1e6", transform=ax.transAxes)
     plt.legend()
+
+    ax2.plot(batch_size_values, sum_with_gpu, label="with gpu")
+    ax2.plot(batch_size_values, sum_without_gpu, label="without gpu")
+    ax2.set_title("Sum computing time")
+    plt.ylabel("Computation time")
+    plt.xlabel("batch size")
+    plt.legend()
+
+    plt.text(0, 1, "Maximum number of total samples: {}".format(maximum_number_of_total_samples), transform=ax1.transAxes)
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
 if __name__ == '__main__':
@@ -109,4 +123,4 @@ if __name__ == '__main__':
     computation_time(results_path, experience_path_without_gpu, maximum_number_of_total_samples, batch_size_values,
                      maximum_number_of_total_samples)
 
-    plot_comparison_computing_times(results_path, experience_path_with_gpu, experience_path_without_gpu, batch_size_values)
+    plot_comparison_computing_times(results_path, experience_path_with_gpu, experience_path_without_gpu, batch_size_values, maximum_number_of_total_samples)
