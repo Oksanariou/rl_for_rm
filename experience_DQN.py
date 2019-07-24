@@ -176,7 +176,7 @@ def parameter_dict_builder():
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.9998
+    parameters_dict["epsilon_decay"] = 0.9997
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
     experience_dir_name = "dueling with epsilon decaying slowly"
 
-    nb_episodes = 20000
+    nb_episodes = 40000
     nb_runs = 30
 
     init_with_true_Q_table = False
