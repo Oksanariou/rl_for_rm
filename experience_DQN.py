@@ -65,7 +65,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
                         optimal_model_path, init_with_true_Q_table):
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
                          optimal_model_path, init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path)
+    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
@@ -173,7 +173,7 @@ def parameter_dict_builder():
     parameters_dict["hidden_layer_size"] = 64
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = logcosh
-    parameters_dict["learning_rate"] = 1e-4
+    parameters_dict["learning_rate"] = 0.1
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
     parameters_dict["epsilon_decay"] = 0.9997
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "dueling with epsilon decaying slowly"
+    experience_dir_name = "learning_rate/0.1"
 
     nb_episodes = 40000
     nb_runs = 30
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
     # save_optimal_model(parameters_dict, optimal_model_path)
 
-    # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
                    optimal_model_path, init_with_true_Q_table)
