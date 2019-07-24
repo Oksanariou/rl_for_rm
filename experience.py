@@ -236,7 +236,7 @@ if __name__ == '__main__':
     plt.ylabel("Computation time")
     plt.xlabel("batch size")
     plt.legend()
-    plt.text(2, 2, ("Maximum number of total samples: {}".format(1e6)))
+    plt.text(12000, 0.0118, ("Maximum number of total samples: {}".format(1e6)))
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
 
