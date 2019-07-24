@@ -160,11 +160,19 @@ def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, mod
     return revenue
 
 
-def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, comparison=[]):
-    fig = plt.figure()
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict, comparison=[]):
+    fig, ax = plt.subplots()
 
     plt.plot(x_axis, mean_revenues, color="red", label='DQL mean revenue')
     plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+
+    offset = 0
+    for key in parameters_dict:
+        if key == "env_builder" or key == "loss":
+            continue
+        plt.text(1, 1 + offset, key + " "+str(parameters_dict[key]),
+             transform=ax.transAxes)
+        offset -= 0.04
 
     if len(comparison) > 0:
         plt.plot(x_axis, comparison)
@@ -180,6 +188,5 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
     plt.legend()
     plt.ylabel("Revenues")
     plt.xlabel("Number of replays")
-    plt.text()
     # plt.show()
     return fig
