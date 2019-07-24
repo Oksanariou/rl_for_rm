@@ -164,7 +164,7 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
     fig, ax = plt.subplots()
 
     plt.plot(x_axis, mean_revenues, color="red", label='DQL mean revenue')
-    plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+    # plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
 
     offset = 0
     for key in parameters_dict:

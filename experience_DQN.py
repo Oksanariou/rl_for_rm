@@ -220,7 +220,7 @@ if __name__ == '__main__':
     experience_dir_name = "dueling with epsilon decaying slowly"
 
     nb_episodes = 20000
-    nb_runs = 2
+    nb_runs = 30
 
     init_with_true_Q_table = False
 
