@@ -106,9 +106,11 @@ def plot_comparison_computing_times(results_path, experience_path_with_gpu, expe
 
 if __name__ == '__main__':
     batch_size_values_string = sys.argv[1]
+    print(batch_size_values_string)
     batch_size_values = ast.literal_eval(batch_size_values_string)
 
     maximum_number_of_total_samples_string = sys.argv[2]
+    print(maximum_number_of_total_samples_string)
     maximum_number_of_total_samples = ast.literal_eval(maximum_number_of_total_samples_string)
 
     results_path = Path("../Our_DQN")

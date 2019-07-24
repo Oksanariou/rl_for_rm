@@ -63,8 +63,6 @@ class DQNAgent_time(agent.DQNAgent):
     def train_time(self, number_of_runs):
         training_times = []
         for i in range(number_of_runs):
-            print("Current number of total samples of the agent: {}".format(self.number_of_total_samples))
-
             if self.number_of_total_samples >= self.maximum_number_of_total_samples:
                 print("Number of samples superior to max number of samples")
                 break
