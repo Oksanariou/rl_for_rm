@@ -215,7 +215,7 @@ if __name__ == '__main__':
     # parameter_values_string = sys.argv[2]
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    results_path = Path("../Our_DQN")
+    results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
     experience_dir_name = "dueling with epsilon decaying slowly"
 
