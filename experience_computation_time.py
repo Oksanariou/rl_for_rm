@@ -105,11 +105,14 @@ def plot_comparison_computing_times(results_path, experience_path_with_gpu, expe
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
 if __name__ == '__main__':
-    batch_size_values_string = sys.argv[1]
-    batch_size_values = ast.literal_eval(batch_size_values_string)
+    # batch_size_values_string = sys.argv[1]
+    # batch_size_values = ast.literal_eval(batch_size_values_string)
+    #
+    # maximum_number_of_total_samples_string = sys.argv[2]
+    # maximum_number_of_total_samples = ast.literal_eval(maximum_number_of_total_samples_string)
 
-    maximum_number_of_total_samples_string = sys.argv[2]
-    maximum_number_of_total_samples = ast.literal_eval(maximum_number_of_total_samples_string)
+    batch_size_values = [100, 500] + [k for k in range(1000, 20000, 1000)]
+    maximum_number_of_total_samples = 2e6
 
     results_path = Path("../Our_DQN")
     results_path.mkdir(parents=True, exist_ok=True)
