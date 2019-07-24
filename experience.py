@@ -230,12 +230,12 @@ if __name__ == '__main__':
     # computation_time(results_path, experience_path, nb_runs, parameter_values)
     without_gpu = np.load(results_path / experience_path / ("computation_time.npy"))
 
-    plt.figure()
+    fig, ax = plt.subplots()
     plt.plot(parameter_values, with_gpu, label="with gpu")
     plt.plot(parameter_values, without_gpu, label="without gpu")
     plt.ylabel("Computation time")
     plt.xlabel("batch size")
-    plt.text(0, 0.0122, "Maximum number of total samples: 1e6")
+    plt.text(0, 1, "Maximum number of total samples: 1e6", transform=ax.transAxes)
     plt.legend()
     plt.savefig('../' + results_path.name + '/comparison_computation_time.png')
 
