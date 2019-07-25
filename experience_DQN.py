@@ -75,52 +75,52 @@ def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_t
         agent.set_model(load_model(optimal_model_path))
         agent.set_target()
 
-    # before_train = lambda episode: episode == 0
-    # every_episode = lambda episode: True
-    # while_training = lambda episode: episode % (nb_episodes / 20) == 0
-    # after_train = lambda episode: episode == nb_episodes - 1
-    # while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
-    #         nb_episodes / 20) == 0
+    before_train = lambda episode: episode == 0
+    every_episode = lambda episode: True
+    while_training = lambda episode: episode % (nb_episodes / 20) == 0
+    after_train = lambda episode: episode == nb_episodes - 1
+    while_training_after_replay_has_started = lambda episode: len(agent.memory) > agent.batch_size and episode % (
+            nb_episodes / 20) == 0
+
+    true_compute = TrueCompute(before_train, agent)
+    true_v_display = VDisplay(before_train, agent, true_compute)
+    true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
+
+    agent_monitor = AgentMonitor(while_training, agent)
+
+    q_compute = QCompute(while_training, agent)
+    v_display = VDisplay(after_train, agent, q_compute)
+    policy_display = PolicyDisplay(after_train, agent, q_compute)
+
+    q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
+    q_error_display = QErrorDisplay(after_train, agent, q_error)
+
+    revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
+    revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
+
+    memory_monitor = MemoryMonitor(while_training, agent)
+    memory_display = MemoryDisplay(after_train, agent, memory_monitor)
+
+    batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
+    batch_display = BatchDisplay(after_train, agent, batch_monitor)
+    total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
     #
-    # true_compute = TrueCompute(before_train, agent)
-    # true_v_display = VDisplay(before_train, agent, true_compute)
-    # true_revenue = RevenueMonitor(before_train, agent, true_compute, 10000, name="true_revenue")
-    #
-    # agent_monitor = AgentMonitor(while_training, agent)
-    #
-    # q_compute = QCompute(while_training, agent)
-    # # v_display = VDisplay(after_train, agent, q_compute)
-    # # policy_display = PolicyDisplay(after_train, agent, q_compute)
-    #
-    # # q_error = QErrorMonitor(while_training, agent, true_compute, q_compute)
-    # # q_error_display = QErrorDisplay(after_train, agent, q_error)
-    #
-    # revenue_compute = RevenueMonitor(while_training, agent, q_compute, 10000)
-    # # revenue_display = RevenueDisplay(after_train, agent, revenue_compute, true_revenue)
-    #
-    # # memory_monitor = MemoryMonitor(while_training, agent)
-    # # memory_display = MemoryDisplay(after_train, agent, memory_monitor)
-    # #
-    # # batch_monitor = BatchMonitor(while_training_after_replay_has_started, agent)
-    # # batch_display = BatchDisplay(after_train, agent, batch_monitor)
-    # # total_batch_display = TotalBatchDisplay(after_train, agent, batch_monitor)
-    # #
-    # # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
-    # # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
-    #
-    # callbacks = [
-    #     true_compute, true_v_display, true_revenue,
-    #              agent_monitor,
-    #              q_compute,
-    #              # v_display, policy_display,
-    #              # q_error, q_error_display,
-    #              revenue_compute,
-    #              # revenue_display,
-    #              # memory_monitor, memory_display,
-    #              # batch_monitor, batch_display, total_batch_display,
-    #              # sumtree_monitor, sumtree_display
-    #              ]
-    callbacks = []
+    # sumtree_monitor = SumtreeMonitor(while_training_after_replay_has_started, agent)
+    # sumtree_display = SumtreeDisplay(after_train, agent, sumtree_monitor)
+
+    callbacks = [
+        true_compute, true_v_display, true_revenue,
+                 agent_monitor,
+                 q_compute,
+                 v_display, policy_display,
+                 q_error, q_error_display,
+                 revenue_compute,
+                 revenue_display,
+                 memory_monitor, memory_display,
+                 batch_monitor, batch_display, total_batch_display,
+                 # sumtree_monitor, sumtree_display
+                 ]
+
     start_time = time.time()
     agent.train(nb_episodes, callbacks)
     end_time = time.time() - start_time
@@ -174,7 +174,7 @@ def env_builder():
     data_collection_points = 4
     micro_times = 3
     capacity = 4
-    actions = tuple(k for k in range(50, 231, 50))
+    actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
 
@@ -186,18 +186,18 @@ def parameter_dict_builder():
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
-    parameters_dict["batch_size"] = 100
-    parameters_dict["memory_size"] = 10000
-    parameters_dict["mini_batch_size"] = 100
+    parameters_dict["batch_size"] = 30
+    parameters_dict["memory_size"] = 5000
+    parameters_dict["mini_batch_size"] = 30
     parameters_dict["prioritized_experience_replay"] = False
-    parameters_dict["target_model_update"] = 50
+    parameters_dict["target_model_update"] = 100
     parameters_dict["hidden_layer_size"] = 50
-    parameters_dict["dueling"] = True
-    parameters_dict["loss"] = logcosh
-    parameters_dict["learning_rate"] = 0.01
+    parameters_dict["dueling"] = False
+    parameters_dict["loss"] = mean_squared_error
+    parameters_dict["learning_rate"] = 0.001
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.997
+    parameters_dict["epsilon_decay"] = 0.9995
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -228,9 +228,11 @@ if __name__ == '__main__':
 
 
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
-    experience_dir_name = "small_env"
+    experience_dir_name = "small_env_smaller_lr"
     # save_optimal_model(parameters_dict, optimal_model_path)
     parameters_dict = parameter_dict_builder()
+
+    # launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table)
 
     launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
