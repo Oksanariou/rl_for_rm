@@ -228,7 +228,7 @@ if __name__ == '__main__':
 
 
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
-    experience_dir_name = "small_env_smaller_lr"
+    experience_dir_name = "medium env"
     # save_optimal_model(parameters_dict, optimal_model_path)
     parameters_dict = parameter_dict_builder()
 
