@@ -234,7 +234,7 @@ if __name__ == '__main__':
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
-    experience_dir_name = "learning_rate/0.001"
+    experience_dir_name = "learning_rate/0.01"
     plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
 
 
