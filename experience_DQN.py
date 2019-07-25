@@ -194,7 +194,7 @@ def parameter_dict_builder():
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 0.0005
+    parameters_dict["learning_rate"] = 0.001
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
     parameters_dict["epsilon_decay"] = 0.9998
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
 
 
-    nb_episodes = 50000
+    nb_episodes = 10000
     nb_runs = 30
 
     init_with_true_Q_table = False
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     # launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table)
 
     launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+    # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
 
