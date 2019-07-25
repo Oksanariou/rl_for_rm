@@ -274,30 +274,6 @@ def parameters_dict_builder():
 
     return parameters_dict
 
-def save_computation_time(file_name, general_dir_name, parameters_dict, parameter, parameter_values, nb_runs, callback_frequency, nb_timesteps):
-    computation_times = []
-
-    for value in parameter_values:
-        run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, nb_runs, value,
-                        callback_frequency)
-        start_time = time.time()
-        run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, nb_runs, value,
-                    callback_frequency)
-        end_time = time.time() - start_time
-        computation_times.append(end_time)
-
-    np.save(general_dir_name / (file_name + ".npy"), computation_times)
-
-def compare_computation_time(file_names, general_dir_names, parameter, parameter_values):
-    plt.figure()
-    for k in range(len(file_names)):
-        times = np.load(general_dir_names[k] / (file_names[k] + ".npy"))
-        plt.plot(np.log(parameter_values), times, label = file_names[k])
-    plt.xlabel(parameter+" (log)")
-    plt.ylabel("Computation_time")
-    plt.legend()
-    plt.savefig('../' + general_dir_names[0].name + '/plot.png')
-
 
 if __name__ == '__main__':
 

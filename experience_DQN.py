@@ -148,6 +148,27 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
+def run_debug(parameters_dict, nb_episodes, k):
+    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
+    weights = agent.model.get_weights()
+    print("agent {}, weights: {}".format(k, weights))
+    if k==0:
+        for i in range(10):
+            time.sleep(20)
+            print("agent {}, weights: {}".format(k, weights))
+    else:
+        agent.train(nb_episodes, [])
+        weights = agent.model.get_weights()
+        print("agent {}, weights: {}".format(k, weights))
+
+
+
+def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
+    f = partial(run_debug, parameters_dict, nb_episodes)
+    with Pool(number_of_runs) as pool:
+        pool.map(f, range(number_of_runs))
+
+
 def env_builder():
     # Parameters of the environment
     data_collection_points = 100
@@ -183,26 +204,6 @@ def parameter_dict_builder():
     parameters_dict["value_scaler"] = None
     return parameters_dict
 
-def run_debug(parameters_dict, nb_episodes, k):
-    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
-    weights = agent.model.get_weights()
-    print("agent {}, weights: {}".format(k, weights))
-    if k==0:
-        for i in range(10):
-            time.sleep(20)
-            print("agent {}, weights: {}".format(k, weights))
-    else:
-        agent.train(nb_episodes, [])
-        weights = agent.model.get_weights()
-        print("agent {}, weights: {}".format(k, weights))
-
-
-
-def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
-    f = partial(run_debug, parameters_dict, nb_episodes)
-    with Pool(number_of_runs) as pool:
-        pool.map(f, range(number_of_runs))
-
 
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
@@ -233,35 +234,9 @@ if __name__ == '__main__':
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
-
-    experience_dir_name = "learning_rate/0.1"
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["learning_rate"] = 0.1
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-    #                     init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
-
-    experience_dir_name = "learning_rate/0.01"
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["learning_rate"] = 0.01
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-    #                     init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
-
     experience_dir_name = "learning_rate/0.001"
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["learning_rate"] = 0.001
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-                        init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+    plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
 
-    experience_dir_name = "mini_batch_size/1000"
-    parameters_dict = parameter_dict_builder()
-    parameters_dict["mini_batch_size"] = 1000
-    parameters_dict["batch_size"] = 1000
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name, optimal_model_path,
-                        init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 
