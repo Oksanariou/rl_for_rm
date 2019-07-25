@@ -171,9 +171,9 @@ def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 4
-    micro_times = 3
-    capacity = 4
+    data_collection_points = 10
+    micro_times = 5
+    capacity = 10
     actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
@@ -187,7 +187,7 @@ def parameter_dict_builder():
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 30
-    parameters_dict["memory_size"] = 5000
+    parameters_dict["memory_size"] = 10000
     parameters_dict["mini_batch_size"] = 30
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 100
