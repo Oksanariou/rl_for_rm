@@ -234,10 +234,14 @@ if __name__ == '__main__':
     # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
-    experience_dir_name = "learning_rate/0.1"
-    plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
+    experience_dir_name = "learning_rate/0.01"
+    # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
 
+    list_of_files = extract_same_files_from_several_runs(0, 30, results_path, experience_dir_name,
+                                         file_name="agent")
 
+    for k in range(len(list_of_files)):
+        print(list_of_files[k]["agent"].learning_rate)
 
 
 
