@@ -187,17 +187,17 @@ def parameter_dict_builder():
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 30
-    parameters_dict["memory_size"] = 10000
+    parameters_dict["memory_size"] = 5000
     parameters_dict["mini_batch_size"] = 30
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 100
     parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = False
     parameters_dict["loss"] = mean_squared_error
-    parameters_dict["learning_rate"] = 0.001
+    parameters_dict["learning_rate"] = 0.01
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.9995
+    parameters_dict["epsilon_decay"] = 0.9998
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
 
 
-    nb_episodes = 10000
+    nb_episodes = 20000
     nb_runs = 30
 
     init_with_true_Q_table = False
