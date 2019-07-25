@@ -171,10 +171,10 @@ def run_several_times_debug(parameters_dict, number_of_runs, nb_episodes):
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 100
-    micro_times = 5
-    capacity = 50
-    actions = tuple(k for k in range(50, 231, 10))
+    data_collection_points = 4
+    micro_times = 3
+    capacity = 4
+    actions = tuple(k for k in range(50, 231, 50))
     alpha = 0.8
     lamb = 0.7
 
@@ -187,17 +187,17 @@ def parameter_dict_builder():
     parameters_dict["gamma"] = 0.99
     parameters_dict["replay_method"] = "DDQL"
     parameters_dict["batch_size"] = 100
-    parameters_dict["memory_size"] = 30000
+    parameters_dict["memory_size"] = 10000
     parameters_dict["mini_batch_size"] = 100
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
-    parameters_dict["hidden_layer_size"] = 64
+    parameters_dict["hidden_layer_size"] = 50
     parameters_dict["dueling"] = True
     parameters_dict["loss"] = logcosh
-    parameters_dict["learning_rate"] = 0.1
+    parameters_dict["learning_rate"] = 0.01
     parameters_dict["epsilon"] = 1.
     parameters_dict["epsilon_min"] = 1e-2
-    parameters_dict["epsilon_decay"] = 0.9997
+    parameters_dict["epsilon_decay"] = 0.997
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
 
 
-    nb_episodes = 40000
+    nb_episodes = 10000
     nb_runs = 30
 
     init_with_true_Q_table = False
@@ -228,20 +228,22 @@ if __name__ == '__main__':
 
 
     optimal_model_path = "DQL/model_initialized_with_true_Q_table.h5"
+    experience_dir_name = "small_env"
     # save_optimal_model(parameters_dict, optimal_model_path)
+    parameters_dict = parameter_dict_builder()
 
-    # visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
-    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,optimal_model_path, init_with_true_Q_table)
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs,
     #                optimal_model_path, init_with_true_Q_table)
-    experience_dir_name = "learning_rate/0.01"
+
     # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
 
-    list_of_files = extract_same_files_from_several_runs(0, 30, results_path, experience_dir_name,
-                                         file_name="agent")
-
-    for k in range(len(list_of_files)):
-        print(list_of_files[k]["agent"].learning_rate)
+    # list_of_files = extract_same_files_from_several_runs(0, 30, results_path, experience_dir_name,
+    #                                      file_name="agent")
+    #
+    # for k in range(len(list_of_files)):
+    #     print(list_of_files[k]["agent"].learning_rate)
 
 
 
