@@ -34,7 +34,6 @@ def plot_revenue_of_each_run(nb_runs, results_dir_name, experience_dir_name):
         plt.plot(x_axis, list_of_revenues[k]["revenue_compute"].revenues)
         plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + str(k) + '.png')
 
-
 def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
@@ -201,6 +200,7 @@ def parameter_dict_builder():
     parameters_dict["value_scaler"] = None
     parameters_dict["maximum_number_of_total_samples"] = 10000000000
     return parameters_dict
+
 
 
 if __name__ == '__main__':

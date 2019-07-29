@@ -46,9 +46,7 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
 
     callbacks = [true_compute, true_revenue, q_compute, revenue_compute]
 
-    start_time = time.time()
     agent.train(nb_episodes, callbacks)
-    end_time = time.time() - start_time
 
     if k == 0:
         pickle_that(true_compute, experience_path / true_compute.name)
@@ -58,7 +56,6 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     pickle_that(q_compute, run_path / q_compute.name)
     pickle_that(revenue_compute, run_path / revenue_compute.name)
 
-    np.save(experience_path / ('Run_' + str(k)) / ("computation_time" + str(k) + ".npy"), end_time)
 
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
@@ -163,14 +160,26 @@ def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, mod
     return revenue
 
 
-def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, comparison=[]):
-    fig = plt.figure()
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict, comparison=[]):
+    fig, ax = plt.subplots()
 
-    plt.plot(x_axis, mean_revenues, color="gray", label='DQL mean revenue')
-    plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+    plt.plot(x_axis, mean_revenues, color="red", label='DQL mean revenue')
+    # plt.fill_between(x_axis, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+
+    offset = 0
+    for key in parameters_dict:
+        if key == "env_builder" or key == "loss":
+            continue
+        plt.text(1, 1 + offset, key + " "+str(parameters_dict[key]),
+             transform=ax.transAxes)
+        offset -= 0.04
 
     if len(comparison) > 0:
         plt.plot(x_axis, comparison)
+
+    for k in range(len(list_of_revenues)):
+        revenues = list_of_revenues[k]["revenue_compute"].revenues
+        plt.plot(x_axis, revenues, alpha=0.2)
 
     for y_name in references_dict:
         plt.plot(x_axis, [references_dict[y_name]] * len(x_axis), label=y_name)
