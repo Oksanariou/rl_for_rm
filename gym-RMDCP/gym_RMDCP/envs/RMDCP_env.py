@@ -172,13 +172,13 @@ class StateScaler(object):
     def unscale(self, state):
         dcp, capacity = state
 
-        return int((dcp + 1) / self.scale_time), int((capacity + 1) / self.scale_capacity)
+        return round((dcp + 1) / self.scale_time), round((capacity + 1) / self.scale_capacity)
 
 
 class ValueScaler(object):
     def __init__(self, A, C):
         super(ValueScaler, self).__init__()
-        self.scale_value = 2. / C * max(A)
+        self.scale_value = 2. / (C * max(A))
 
     def scale(self, value):
         return self.scale_value * value - 1

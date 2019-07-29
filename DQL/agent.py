@@ -63,8 +63,13 @@ class DQNAgent:
         self.loss_value = 0.
         self.last_visited = []
 
-        self.state_scaler = state_scaler
-        self.value_scaler = value_scaler
+        self.state_scaler = None
+        if state_scaler:
+            self.state_scaler = state_scaler(env.T, env.C)
+
+        self.value_scaler = None
+        if value_scaler:
+            self.value_scaler = value_scaler(env.A, env.C)
 
         self.hidden_layer_size = hidden_layer_size
         self.dueling = dueling
@@ -114,7 +119,7 @@ class DQNAgent:
         model.add(Dense(self.hidden_layer_size, activation='relu'))
         model.add(BatchNormalization())
         # model.add(Dropout(rate=0.2))
-        model.add(Dense(self.action_size, activation='relu', name='action'))
+        model.add(Dense(self.action_size, activation='linear', name='action'))
         # model.add(GaussianNoise(0.01))
         model.compile(loss=self.loss, optimizer=Adam(lr=self.learning_rate))
 
@@ -130,13 +135,13 @@ class DQNAgent:
         action_value_layer = BatchNormalization()(action_value_layer)
         action_value_layer = Dense(self.hidden_layer_size, activation='relu')(action_value_layer)
         action_value_layer = BatchNormalization()(action_value_layer)
-        action_value_layer = Dense(self.action_size, activation='relu')(action_value_layer)
+        action_value_layer = Dense(self.action_size, activation='linear')(action_value_layer)
 
         state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
         state_value_layer = Dense(self.hidden_layer_size, activation='relu')(state_value_layer)
         state_value_layer = BatchNormalization()(state_value_layer)
-        state_value_layer = Dense(1, activation='relu')(state_value_layer)
+        state_value_layer = Dense(1, activation='linear')(state_value_layer)
 
         merge_layer = Lambda(lambda x: x[0] + x[1] - K.mean(x[1], axis=1, keepdims=True),
                              output_shape=(self.action_size,))
@@ -298,8 +303,12 @@ class DQNAgent:
         X = self.normalize_states(X)
         Y = self.normalize_values(Y)
 
-        self.model.fit(X, Y, epochs=epochs, verbose=0, batch_size=self.batch_size)
+        history = self.model.fit(X, Y, epochs=epochs, verbose=0, batch_size=self.batch_size)
         self.set_target()
+
+        return history
+
+
 
     def init_with_V(self):
         shape = [space.n for space in self.env.observation_space]
