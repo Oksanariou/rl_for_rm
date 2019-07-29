@@ -3,7 +3,7 @@ import numpy as np
 import gym
 from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
-
+from gym_RMDCP.envs.RMDCP_env import ValueScaler
 from DQL.agent import DQNAgent, DQNAgent_builder
 from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay, AgentMonitor, QCompute, QErrorDisplay, \
     QErrorMonitor, PolicyDisplay, MemoryMonitor, MemoryDisplay, BatchMonitor, BatchDisplay, TotalBatchDisplay, \
@@ -198,7 +198,7 @@ def parameter_dict_builder():
     parameters_dict["use_weights"] = False
     parameters_dict["use_optimal_policy"] = False
     parameters_dict["state_scaler"] = None
-    parameters_dict["value_scaler"] = None
+    parameters_dict["value_scaler"] = ValueScaler
     parameters_dict["maximum_number_of_total_samples"] = 10000000000
     return parameters_dict
 

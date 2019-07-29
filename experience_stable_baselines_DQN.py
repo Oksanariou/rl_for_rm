@@ -294,14 +294,16 @@ if __name__ == '__main__':
     file_names = ["with_GPU"]
     general_dir_names = [Path("../Computation_time_with_gpu")]
     parameter = "batch_size"
-    parameter_values = [10, 50, 100, 1000, 3000, 5000, 7000, 10000]
+    value = 100
+
+    run_once(parameters_dict, nb_runs, results_path, parameter, value, 0)
 
     # save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
     #                       callback_frequency, nb_timesteps)
     # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
     # save_computation_time(file_names[0], general_dir_names[0], parameters_dict, parameter, parameter_values, nb_runs,
     #                       callback_frequency, nb_timesteps)
-    compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
+    # compare_computation_time(file_names, general_dir_names, parameter, parameter_values)
 
 
     # parameter = "exploration_final_eps"
