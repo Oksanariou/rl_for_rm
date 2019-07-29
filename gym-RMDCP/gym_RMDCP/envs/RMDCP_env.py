@@ -178,7 +178,7 @@ class StateScaler(object):
 class ValueScaler(object):
     def __init__(self, A, C):
         super(ValueScaler, self).__init__()
-        self.scale_value = 2. / (C * max(A))
+        self.scale_value = 2. / (C * max(A)) + 2
 
     def scale(self, value):
         return self.scale_value * value - 1

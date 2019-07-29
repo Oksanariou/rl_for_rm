@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "value scaler between -1 and 1"
+    experience_dir_name = "value scaler between 1 and 3"
 
     launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,
                         optimal_model_path, init_with_true_Q_table)
