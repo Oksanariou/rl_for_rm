@@ -227,7 +227,8 @@ if __name__ == '__main__':
     results_path.mkdir(parents=True, exist_ok=True)
     experience_dir_name = "linear activation function"
 
-    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
+    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,
+                        optimal_model_path, init_with_true_Q_table)
     # parameter = "mini_batch_size"
     # parameter_values = [10, 100]
     # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
