@@ -13,6 +13,7 @@ from DQL.run_and_save_several_experiences import run_n_times_and_save, \
     extract_same_files_from_several_runs, plot_revenues
 from keras.models import load_model
 from pathlib import Path
+import multiprocessing as mp
 from keras.layers import K
 import sys
 import ast
@@ -204,6 +205,7 @@ def parameter_dict_builder():
 
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
     # if len(sys.argv) != 3:
     #     print("Specify parameter and parameter values.")
     #     exit(0)
