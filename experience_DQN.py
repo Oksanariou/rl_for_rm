@@ -34,7 +34,7 @@ def plot_revenue_of_each_run(nb_runs, results_dir_name, experience_dir_name):
         plt.plot(x_axis, list_of_revenues[k]["revenue_compute"].revenues)
         plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + str(k) + '.png')
 
-def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path):
+def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
                                                             experience_dir_name=experience_dir_name)
@@ -50,7 +50,7 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
     references_dict["DP revenue"] = mean_revenue_DP
     # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
 
-    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict)
+    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict)
 
     plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + experience_dir_name + '.png')
 
@@ -59,7 +59,7 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
                         optimal_model_path, init_with_true_Q_table):
     run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, nb_runs, nb_episodes,
                          optimal_model_path, init_with_true_Q_table)
-    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path)
+    visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
 
 
 def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
@@ -224,6 +224,8 @@ if __name__ == '__main__':
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
     experience_dir_name = "linear activation function"
+
+    visualize_revenue_n_runs(nb_runs, results_path, experience_dir_name, optimal_model_path, parameters_dict)
     # parameter = "mini_batch_size"
     # parameter_values = [10, 100]
     # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
