@@ -167,10 +167,10 @@ def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_nam
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 100
+    data_collection_points = 10
     micro_times = 5
-    capacity = 50
-    actions = tuple(k for k in range(50, 231, 10))
+    capacity = 10
+    actions = tuple(k for k in range(50, 231, 20))
     alpha = 0.8
     lamb = 0.7
 
@@ -188,7 +188,7 @@ def parameter_dict_builder():
     parameters_dict["prioritized_experience_replay"] = False
     parameters_dict["target_model_update"] = 50
     parameters_dict["hidden_layer_size"] = 64
-    parameters_dict["dueling"] = True
+    parameters_dict["dueling"] = False
     parameters_dict["loss"] = logcosh
     parameters_dict["learning_rate"] = 1e-4
     parameters_dict["epsilon"] = 1.
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
-    experience_dir_name = "dueling with epsilon decaying slowly"
+    experience_dir_name = "linear activation function"
     # parameter = "mini_batch_size"
     # parameter_values = [10, 100]
     # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
