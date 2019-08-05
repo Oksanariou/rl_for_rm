@@ -25,7 +25,6 @@ def unpickle_that(path):
 
 
 def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table, k):
-
     run_path = experience_path / ('Run_' + str(k))
     run_path.mkdir(parents=True, exist_ok=True)
 
@@ -55,7 +54,6 @@ def run_once_and_save(experience_path, parameters_dict, nb_episodes, optimal_mod
     pickle_that(agent, run_path / 'agent')
     pickle_that(q_compute, run_path / q_compute.name)
     pickle_that(revenue_compute, run_path / revenue_compute.name)
-
 
 
 def run_n_times_and_save(results_dir_name, experience_dir_name, parameters_dict, number_of_runs, nb_episodes,
@@ -160,7 +158,8 @@ def get_DQL_with_true_Q_table_revenue(results_dir_name, experience_dir_name, mod
     return revenue
 
 
-def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict, comparison=[]):
+def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict,
+                  comparison=[]):
     fig, ax = plt.subplots()
 
     plt.plot(x_axis, mean_revenues, color="red", label='DQL mean revenue')
@@ -170,8 +169,8 @@ def plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_
     for key in parameters_dict:
         if key == "env_builder" or key == "loss":
             continue
-        plt.text(1, 1 + offset, key + " "+str(parameters_dict[key]),
-             transform=ax.transAxes)
+        plt.text(1, 1 + offset, key + " " + str(parameters_dict[key]),
+                 transform=ax.transAxes)
         offset -= 0.04
 
     if len(comparison) > 0:

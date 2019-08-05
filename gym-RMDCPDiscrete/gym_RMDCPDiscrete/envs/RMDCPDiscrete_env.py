@@ -136,6 +136,12 @@ class RMDCPDiscreteEnv(discrete.DiscreteEnv):
 
         return ValueScaler(self.A, self.C)
 
+    def compute_weights(self):
+        compute_weight = lambda x: 1 + max(1. * x[0] / self.T, 1. * x[1] / self.C)
+        weights = [(s, compute_weight((self.to_coordinate(s)[0], self.to_coordinate(s)[1]))) for s in
+                   range(self.T * self.C)]
+        return weights
+
 
 class StateScaler(object):
     def __init__(self, T, C):
@@ -164,3 +170,4 @@ class ValueScaler(object):
 
     def unscale(self, value):
         return (value + 1) / self.scale_value
+

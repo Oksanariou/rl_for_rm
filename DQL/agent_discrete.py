@@ -340,6 +340,7 @@ class DQNAgent_discrete:
             return random.randrange(self.action_size)
 
         state = to_categorical(state, self.input_size)
+        state = np.reshape(state, [1, self.input_size])
         q_values = self.model.predict(state)
         action = self.env.A.index(self.optimal_policy[state]) if self.use_optimal_policy else np.argmax(q_values[0])
 

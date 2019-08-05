@@ -4,7 +4,8 @@ import gym
 from keras.losses import mean_squared_error, logcosh
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from gym_RMDCP.envs.RMDCP_env import ValueScaler
-from DQL.agent import DQNAgent, DQNAgent_builder
+from DQL.agent import DQNAgent_builder
+from DQL.agent_discrete import DQNAgent_discrete_builder
 from DQL.callbacks import TrueCompute, VDisplay, RevenueMonitor, RevenueDisplay, AgentMonitor, QCompute, QErrorDisplay, \
     QErrorMonitor, PolicyDisplay, MemoryMonitor, MemoryDisplay, BatchMonitor, BatchDisplay, TotalBatchDisplay, \
     SumtreeMonitor, SumtreeDisplay
@@ -24,6 +25,7 @@ import timeit
 
 import matplotlib.pyplot as plt
 
+
 def plot_revenue_of_each_run(nb_runs, results_dir_name, experience_dir_name):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
                                                             results_dir_name=results_dir_name,
@@ -34,6 +36,7 @@ def plot_revenue_of_each_run(nb_runs, results_dir_name, experience_dir_name):
         fig = plt.figure()
         plt.plot(x_axis, list_of_revenues[k]["revenue_compute"].revenues)
         plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + str(k) + '.png')
+
 
 def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict):
     list_of_revenues = extract_same_files_from_several_runs(nb_first_run=0, nb_last_run=nb_runs,
@@ -51,7 +54,8 @@ def visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, opt
     references_dict["DP revenue"] = mean_revenue_DP
     # references_dict["DQL with true Q-table initialization"] = mean_revenue_DQN_with_true_Q_table
 
-    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues, parameters_dict)
+    fig = plot_revenues(x_axis, mean_revenues, min_revenues, max_revenues, references_dict, list_of_revenues,
+                        parameters_dict)
 
     plt.savefig('../' + results_dir_name.name + '/' + experience_dir_name + '/' + experience_dir_name + '.png')
 
@@ -63,8 +67,10 @@ def launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name,
     visualize_revenue_n_runs(nb_runs, results_dir_name, experience_dir_name, optimal_model_path, parameters_dict)
 
 
-def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table):
-    agent = DQNAgent_builder(parameters_dict["env_builder"](), parameters_dict)
+def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table, discrete):
+    agent = DQNAgent_discrete_builder(parameters_dict["env_builder"](discrete),
+                                      parameters_dict) if discrete else DQNAgent_builder(
+        parameters_dict["env_builder"](discrete), parameters_dict)
 
     if init_with_true_Q_table:
         agent.set_model(load_model(optimal_model_path))
@@ -105,16 +111,16 @@ def launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_t
 
     callbacks = [
         true_compute, true_v_display, true_revenue,
-                 agent_monitor,
-                 q_compute,
-                 # v_display, policy_display,
-                 # q_error, q_error_display,
-                 revenue_compute,
-                 # revenue_display,
-                 # memory_monitor, memory_display,
-                 # batch_monitor, batch_display, total_batch_display,
-                 # sumtree_monitor, sumtree_display
-                 ]
+        agent_monitor,
+        q_compute,
+        # v_display, policy_display,
+        # q_error, q_error_display,
+        revenue_compute,
+        # revenue_display,
+        # memory_monitor, memory_display,
+        # batch_monitor, batch_display, total_batch_display,
+        # sumtree_monitor, sumtree_display
+    ]
 
     agent.train(nb_episodes, callbacks)
 
@@ -133,7 +139,7 @@ def tune_parameter(general_dir_name, parameter, parameter_values, parameters_dic
     results_dir_name.mkdir(parents=True, exist_ok=True)
 
     for k in parameter_values:
-        print("Running with "+parameter+" = "+str(k))
+        print("Running with " + parameter + " = " + str(k))
         parameters_dict[parameter] = k
         experience_dir_name = parameter + " = " + str(parameters_dict[parameter])
         launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_dir_name, experience_dir_name,
@@ -146,6 +152,7 @@ def save_optimal_model(parameters_dict, model_name):
     print("Saving optimal model")
     agent.model.save(model_name)
 
+
 def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_name):
     computation_times = []
     for value in parameter_values:
@@ -155,7 +162,7 @@ def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_nam
             run_path = results_dir_name / experience_dir_name / ('Run_' + str(k))
             for file_path in run_path.iterdir():
                 file_name = file_path.stem
-                if file_name == ("computation_time"+str(k)):
+                if file_name == ("computation_time" + str(k)):
                     computation_times_value.append(np.load(file_path))
         computation_times.append(np.mean(computation_times_value))
 
@@ -166,7 +173,7 @@ def plot_computation_times(parameter, parameter_values, nb_runs, results_dir_nam
     plt.savefig('../' + results_dir_name.name + '/computation_time.png')
 
 
-def env_builder():
+def env_builder(discrete):
     # Parameters of the environment
     data_collection_points = 100
     micro_times = 5
@@ -175,8 +182,13 @@ def env_builder():
     alpha = 0.8
     lamb = 0.7
 
-    return gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
-                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+    env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
+                   capacity=capacity,
+                   micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb) if discrete else gym.make(
+        'gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
+        micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+    return env
+
 
 def parameter_dict_builder():
     parameters_dict = {}
@@ -203,7 +215,6 @@ def parameter_dict_builder():
     return parameters_dict
 
 
-
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
     # if len(sys.argv) != 3:
@@ -221,14 +232,17 @@ if __name__ == '__main__':
 
     # Parameters of the experience
     nb_episodes = 40000
-    nb_runs = 30
+    nb_runs = 1
 
     results_path = Path("../Our DQN")
     results_path.mkdir(parents=True, exist_ok=True)
     experience_dir_name = "value scaler between 1 and 3"
 
-    launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,
-                        optimal_model_path, init_with_true_Q_table)
+    # launch_several_runs(parameters_dict, nb_episodes, nb_runs, results_path, experience_dir_name,
+    #                     optimal_model_path, init_with_true_Q_table)
+
+    discrete = True
+    launch_one_run(parameters_dict, nb_episodes, optimal_model_path, init_with_true_Q_table, discrete)
     # parameter = "mini_batch_size"
     # parameter_values = [10, 100]
     # plot_revenue_of_each_run(nb_runs, results_path, experience_dir_name)
@@ -278,7 +292,6 @@ if __name__ == '__main__':
     # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path, init_with_true_Q_table)
 
-
     # launch_one_run(parameters_dict, nb_episodes, dueling_model_name, init_with_true_Q_table)
 
     # Tuning of the parameters
@@ -289,7 +302,6 @@ if __name__ == '__main__':
     # parameter_values = [1e-5, 1e-4, 1e-3, 1e-2]
     # tune_parameter(results_path, parameter, parameter_values, parameters_dict, nb_episodes, nb_runs, optimal_model_path,
     #                init_with_true_Q_table)
-
 
     # parameter = "mini_batch_size"
     # parameter_values = [1000, 500, 100, 10]

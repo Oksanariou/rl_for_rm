@@ -248,14 +248,14 @@ def parameters_dict_builder():
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["learning_rate"] = 0.0001
-    parameters_dict["buffer_size"] = 10000
+    parameters_dict["buffer_size"] = 30000
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
     parameters_dict["batch_size"] = 100
     parameters_dict["checkpoint_freq"] = 10000
     parameters_dict["checkpoint_path"] = None
-    parameters_dict["learning_starts"] = 10000
+    parameters_dict["learning_starts"] = 100
     parameters_dict["target_network_update_freq"] = 50
     parameters_dict["prioritized_replay"] = False
     parameters_dict["prioritized_replay_alpha"] = 0.6
@@ -286,7 +286,7 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    nb_timesteps = 15000
+    nb_timesteps = 40000
     nb_runs = 16
     callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
