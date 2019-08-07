@@ -3,25 +3,34 @@ import gym
 from Collaboration.DQN_single_agent import run_DQN_single_agent
 from Collaboration.DQN_multi_agent import run_DQN_multi_agent
 from Collaboration.DQN_multi_agent_collaboration import run_DQN_multi_agent_collaboration
+from dynamic_programming_env import dynamic_programming_collaboration
+from visualization_and_metrics import average_n_episodes_collaboration
 
 
 def collaboration_env_builder():
-    micro_times = 5
-    capacity1 = 4
-    capacity2 = 4
-    actions = tuple((k, m) for k in range(50, 231, 50) for m in range(50, 231, 50))
-    beta = 0.001
-    k_airline1 = 1.5
-    k_airline2 = 1.5
+    micro_times = 30
+    capacity1 = 5
+    capacity2 = 5
+    actions = tuple((k, m) for k in range(50, 231, 20) for m in range(50, 231, 20))
+    beta = 0.015
+    k_airline1 = 1
+    k_airline2 = 1
+    lamb = 0.3
 
     return gym.make('gym_Competition:Competition-v0', micro_times=micro_times,
                     capacity_airline_1=capacity1,
                     capacity_airline_2=capacity2,
-                    actions=actions, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2)
+                    actions=actions, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2, lamb=lamb)
 
 def discrete_RM_env_builder():
-    return gym.make('gym_RMDiscrete:RMDiscrete-v0',capacity=4,
-                 micro_times=5, actions=tuple(k for k in range(50, 231, 50)))
+    capacity = 10
+    micro_times = 10
+    actions = tuple(k for k in range(50, 181, 20))
+    alpha = 0.8
+    lamb = 0.7
+
+    return gym.make('gym_RMDiscrete:RMDiscrete-v0',capacity=capacity,
+                 micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
 def env_builder():
     # Parameters of the environment
@@ -98,5 +107,10 @@ if __name__ == '__main__':
     run_DQN_multi_agent(parameters_dict1, parameters_dict2, callback_frequency, total_timesteps)
 
     # Run DQN with two agents collaborating
-
     run_DQN_multi_agent_collaboration(parameters_dict1, parameters_dict2, total_timesteps, collaboration_env)
+
+    # Dynamic Programming
+    V, P = dynamic_programming_collaboration(collaboration_env)
+    P = P.reshape(collaboration_env.T * collaboration_env.C1 * collaboration_env.C2)
+    print("Average reward over 10000 episodes : " + str(average_n_episodes_collaboration(collaboration_env, P, 10000)))
+

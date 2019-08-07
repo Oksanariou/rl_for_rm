@@ -41,6 +41,8 @@ def run_episode(env, policy, epsilon=0.0):
     state = env.reset()
     total_reward = 0
     while True:
+        t, x = env.to_coordinate(state)
+        print(t,x)
         state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state
         if np.random.rand() <= epsilon:
             action_idx = random.randrange(env.action_space.n)
@@ -54,6 +56,18 @@ def run_episode(env, policy, epsilon=0.0):
     return total_reward
 
 
+def run_episode_collaboration(env, policy):
+    state_idx = env.reset()
+    total_reward = 0
+    while True:
+        action = policy[state_idx]
+        state_idx, reward, done, _ = env.step(action)
+        total_reward += reward[0] + reward[1]
+        if done[0] and done[1]:
+            break
+    return total_reward
+
+
 def average_n_episodes_FL(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
     scores = [run_episode_FL(env, policy) for _ in range(n_eval)]
@@ -63,6 +77,10 @@ def average_n_episodes_FL(env, policy, n_eval):
 def average_n_episodes(env, policy, n_eval, epsilon=0.0):
     """ Runs n episodes and returns the average of the n total rewards"""
     scores = [run_episode(env, policy, epsilon) for _ in range(n_eval)]
+    return np.mean(scores)
+
+def average_n_episodes_collaboration(env, policy, n_eval):
+    scores = [run_episode_collaboration(env, policy) for _ in range(n_eval)]
     return np.mean(scores)
 
 
@@ -132,6 +150,19 @@ def extract_policy_RM_discrete(env, U, gamma, P={}):
                 list_sum[idx_a] += p * (r + gamma * U[s_prime])
         idx_best_a = np.argmax(list_sum)
         policy[state_idx] = env.A[idx_best_a]
+    return policy
+
+def extract_policy_RM_discrete_collaboration(env, U, gamma, P={}):
+    if P=={}:
+        P=env.P
+    policy = np.zeros(env.nS)
+    for state_idx in range(env.nS):
+        list_sum = np.zeros(env.nA)
+        for idx_a in range(env.nA):
+            for p, s_prime, r, _ in env.P[state_idx][idx_a]:
+                list_sum[idx_a] += p * (r[0] + r[1] + gamma * U[s_prime])
+        idx_best_a = np.argmax(list_sum)
+        policy[state_idx] = idx_best_a
     return policy
 
 
