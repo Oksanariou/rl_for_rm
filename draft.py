@@ -21,25 +21,57 @@ from keras.models import load_model
 
 if __name__ == '__main__':
     data_collection_points = 100
-    micro_times = 5
     capacity = 50
-    actions = tuple(k for k in range(50, 231, 10))
-    alpha = 0.8
-    lamb = 0.7
+    actions = tuple(k for k in range(50, 231, 20))
+    alpha = 0.65
+    lamb = 0.65
 
-    env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
-                    capacity=capacity,
-                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+    # env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
+    #                 capacity=capacity,
+    #                 micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-    # env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+    env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
     # print(env_DCP.P)
     # env_DCP.visualize_proba_actions()
     #
-    # V, P_ref = dynamic_programming(env_microtimes.T, env_microtimes.C, env_microtimes.alpha, env_microtimes.lamb, env_microtimes.A)
-    # visualisation_value_RM(V, env_microtimes.T, env_microtimes.C)
-    # visualize_policy_RM(P_ref, env_microtimes.T, env_microtimes.C)
-    # P_ref = P_ref.reshape(env_microtimes.T * env_microtimes.C)
-    # print("Average reward over 1000 episodes : " + str(average_n_episodes(env_microtimes, P_ref, 1000)))
+    V, P_ref = dynamic_programming_env(env)
+    visualisation_value_RM(V, env.T, env.C)
+    visualize_policy_RM(P_ref, env.T, env.C)
+    P_ref = P_ref.reshape(env.T * env.C)
+    mean_revenue, mean_bookings = average_n_episodes(env, P_ref, 1000)
+    print("Average reward over 1000 episodes : " + str(mean_revenue))
+
+    plt.figure()
+    width = 5
+    plt.bar(env.A, mean_bookings, width=width)
+    plt.xlabel("Prices")
+    plt.ylabel("Average number of bookings")
+    plt.title("Demand ratio: {:.2}, Average load factor: {:.2}".format((lamb*data_collection_points)/capacity, np.sum(mean_bookings)/capacity))
+    plt.show()
+
+    plt.figure()
+    width = 1/4
+    ind = np.array([0])
+    plt.bar(["RMS"], mean_revenue, width=width, label="{}".format(round(mean_revenue)))
+    plt.bar(["QL"], np.mean(revenues_QL[:,0][-1]), width=width, label="{}".format(round(revenues_QL[:,0][-1])))
+    plt.bar(["DQL"], np.mean(revenues[:,0][-1]), width=width, label="{}".format(round(revenues[:,0][-1])))
+    plt.xlabel("Strategies")
+    plt.ylabel("Average revenue \n (computed on 10000 flights)")
+    plt.title("Revenues produced by the optimal policies \n of the different strategies")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.7, 1))
+    plt.show()
+
+    plt.figure()
+    width = 5
+    plt.bar(np.array(env.A) - width, mean_bookings, width=width, label="RMS - Load factor of {:.2}".format(np.sum(mean_bookings)/capacity))
+    ind = np.array([1,2,3])
+    plt.bar(np.array(env.A), revenues_QL[:,1][-1], width=width, label="QL - Load factor of {:.2}".format(np.sum(revenues_QL[:,1][-1])/capacity))
+    plt.bar(np.array(env.A) + width, revenues[:,1][-1], width=width, label="DQL - Load factor of {:.2}".format(np.sum(revenues[:,1][-1])/capacity))
+    plt.xlabel("Prices")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.7, 1))
+    plt.ylabel("Average number of bookings \n (computed on 10000 flights)")
+    plt.title("Number of bookings produced by the policies of the different strategies \n Demand ratio of {}".format(lamb*data_collection_points/capacity))
+    plt.show()
 
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
     # visualize_policy_RM(policy_DCP, env_DCP.T, env_DCP.C)
@@ -83,13 +115,13 @@ if __name__ == '__main__':
     # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
 
     alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
-    nb_episodes = 600000
+    nb_episodes = 700000
     epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.99999
     temp = 100
 
     visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
     # visualizing_epsilon_decay(nb_episodes, alpha, alpha_min, alpha_decay)
-    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
+    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues_QL = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
                                                                          nb_episodes, epsilon,
                                                                          epsilon_min, epsilon_decay, P_ref, temp)
 
@@ -168,3 +200,4 @@ if __name__ == '__main__':
     plt.xlabel("Number of episodes")
     plt.title("Average revenue")
     plt.show()
+

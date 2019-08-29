@@ -13,22 +13,26 @@ default_beta = 0.001
 default_k_airline1 = 1.5
 default_k_airline2 = 1.5
 default_lambda = 0.8
+default_nested_lambda = 1.
 
 
-class CompetitionEnv(discrete.DiscreteEnv):
+class CollaborationGlobal3DEnv(discrete.DiscreteEnv):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, micro_times=default_micro_times, capacity_airline_1=default_capacity_airline_1,
-                 capacity_airline_2=default_capacity_airline_2, actions=default_actions,
-                 beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2, lamb=default_lambda):
+    def __init__(self, micro_times=default_micro_times, capacity1=default_capacity_airline_1,
+                 capacity2=default_capacity_airline_2, actions=default_actions,
+                 beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2, lamb=default_lambda,
+                 nested_lamb=default_nested_lambda):
 
         self.T = micro_times
-        self.C1 = capacity_airline_1
-        self.C2 = capacity_airline_2
-        self.nS = micro_times * capacity_airline_1 * capacity_airline_2  # number of states
+        self.C1 = capacity1
+        self.C2 = capacity2
+        self.nS = self.T * self.C1 * self.C2  # number of states
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
+        self.prices_flight1 = list(np.array(self.A)[:, 0][::int(np.sqrt(self.nA))])
+        self.prices_flight2 = list(np.array(self.A)[:, 1][:int(np.sqrt(self.nA))])
 
         self.beta = beta
         self.k_airline1 = k_airline1
@@ -44,15 +48,54 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
         self.s = 0
 
+        self.nested_lamb = nested_lamb
+        self.nest1 = {"lambda": 1, "representative_utilities": [0]}
+
+        self.probas_from_two_prices = self.build_probas_from_two_prices()
+        self.probas_from_one_price_flight1 = self.build_probas_from_one_price(1)
+        self.probas_from_one_price_flight2 = self.build_probas_from_one_price(2)
+
         self.P = self.init_transitions()
 
         self.isd = np.zeros(self.nS, float)
         self.isd[0] = 1.
 
-        super(CompetitionEnv, self).__init__(self.nS, self.nA, self.P, self.isd)
+        super(CollaborationGlobal3DEnv, self).__init__(self.nS, self.nA, self.P, self.isd)
+
+    def build_probas_from_two_prices(self):
+        probas_from_two_prices = []
+        for action_couple in self.A:
+            Utilities = [0, self.k_airline1 - self.beta * action_couple[0],
+                         self.k_airline2 - self.beta * action_couple[1]]
+
+            nest_2 = {}
+            nest_2["lambda"] = self.nested_lamb
+            nest_2["representative_utilities"] = Utilities[1:]
+            nests = [self.nest1, nest_2]
+            probas = self.compute_probas_nested_logit(nests)
+            probas_from_two_prices.append(self.compute_proba_buy(probas))
+
+        return probas_from_two_prices
+
+    def build_probas_from_one_price(self, flight):
+        probas_from_one_price = []
+        k = self.k_airline2
+        prices = self.prices_flight2
+        if flight == 1:
+            k = self.k_airline1
+            prices = self.prices_flight1
+        for price in prices:
+            Utilities = [0, k - self.beta * price]
+
+            nest_2 = {}
+            nest_2["lambda"] = self.nested_lamb
+            nest_2["representative_utilities"] = Utilities[1:]
+            nests = [self.nest1, nest_2]
+            probas = self.compute_probas_nested_logit(nests)
+            probas_from_one_price.append(self.compute_proba_buy(probas))
+        return probas_from_one_price
 
     def init_transitions(self):
-
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
         P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
         for t in range(self.T):
@@ -68,18 +111,18 @@ class CompetitionEnv(discrete.DiscreteEnv):
         t, x1, x2 = self.to_coordinate(state_idx)
         action = self.A[action_idx]
         a1, a2 = action[0], action[1]
+
         done1, done2 = False, False
 
         if t == self.T - 1 or (x1 == self.C1 - 1 and x2 == self.C2 - 1):
-            list_transitions.append((1, state_idx, (0,0), (True, True)))
+            list_transitions.append((1, state_idx, (0, 0), (True, True)))
 
-        elif x1 == self.C1 - 1: #Airline1 has sold all its tickets but Airline2 has not
+        elif x1 == self.C1 - 1:  # Airline1 has sold all its tickets but Airline2 has not
             done1, reward1, new_x1 = True, 0, x1
             if t + 1 == self.T - 1:
                 done2 = True
-            Utilities = [0, self.k_airline2 - self.beta * a2]
-            probas_logit = self.compute_probas_logit(Utilities)
-            probas_buy = self.compute_proba_buy(probas_logit)
+
+            probas_buy = self.probas_from_one_price_flight2[self.prices_flight2.index(a2)]
 
             # Case no buy
             new_t, new_x2 = t + 1, x2
@@ -97,13 +140,12 @@ class CompetitionEnv(discrete.DiscreteEnv):
                 done2 = True
             list_transitions.append((proba_next_state, new_state, (reward1, reward2), (done1, done2)))
 
-        elif x2 == self.C2 - 1: #Airline2 has sold all its tickets but Airline1 has not
+        elif x2 == self.C2 - 1:  # Airline2 has sold all its tickets but Airline1 has not
             done2, reward2, new_x2 = True, 0, x2
             if t + 1 == self.T - 1:
                 done1 = True
-            Utilities = [0, self.k_airline1 - self.beta * a1]
-            probas_logit = self.compute_probas_logit(Utilities)
-            probas_buy = self.compute_proba_buy(probas_logit)
+
+            probas_buy = self.probas_from_one_price_flight1[self.prices_flight1.index(a1)]
 
             # Case no buy
             new_t, new_x1 = t + 1, x1
@@ -124,9 +166,8 @@ class CompetitionEnv(discrete.DiscreteEnv):
         else:
             if t + 1 == self.T - 1:
                 done1, done2 = True, True
-            Utilities = [0, self.k_airline1 - self.beta * a1, self.k_airline2 - self.beta * a2]
-            probas_logit = self.compute_probas_logit(Utilities)
-            probas_buy = self.compute_proba_buy(probas_logit)
+
+            probas_buy = self.probas_from_two_prices[action_idx]
 
             # Case no buy
             new_t, new_x1, new_x2 = t + 1, x1, x2
@@ -153,7 +194,6 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
         return list_transitions
 
-
     def compute_probas_logit(self, representative_utilities):
         """
             Input: List of the representative utilities of the different alternatives
@@ -164,6 +204,29 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
         return numerators / normalization
 
+    def compute_probas_nested_logit(self, nests):
+        """
+            Input: List of nests. Each nest is a dictionary with two elements: a parameter lambda and a list of representative utilities.
+            Output: List of the size of the number of nests made of lists containing the probabilities of the alternatives of the corresponding nest
+        """
+        probas_all = []
+        sum_nests = []
+        nb_nests = len(nests)
+        for k in range(nb_nests):
+            representative_utilities = nests[k]["representative_utilities"]
+            lamb = nests[k]["lambda"]
+            sum_nests.append(sum(np.exp([i / lamb for i in representative_utilities])))
+        for k in range(nb_nests):
+            representative_utilities = nests[k]["representative_utilities"]
+            lamb = nests[k]["lambda"]
+            for representative_utility in representative_utilities:
+                numerator = np.exp(representative_utility / lamb) * (sum_nests[k] ** (lamb - 1))
+                normalization = np.sum(sum_nests[k] ** nests[k]["lambda"] for k in range(nb_nests))
+                probas_all.append(numerator / normalization)
+            # probas_all.append(probas_nest)
+
+        return probas_all
+
     def compute_proba_buy(self, probas_logit):
         probas = [0]
         for k in range(1, len(probas_logit)):
@@ -173,15 +236,14 @@ class CompetitionEnv(discrete.DiscreteEnv):
 
         return probas
 
-
     def to_coordinate(self, state_idx):
         t = int(int(state_idx) / (self.C1 * self.C2))
-        x2 = int(int(state_idx - self.C1 * self.C2 * t) / self.C1)
-        x1 = int(state_idx - self.C1 * x2 - self.C1 * self.C2 * t)
+        x1 = int(int(state_idx - self.C1 * self.C2 * t) / self.C1)
+        x2 = int(state_idx - self.C1 * x1 - self.C1 * self.C2 * t)
         return t, x1, x2
 
     def to_idx(self, t, x1, x2):
-        return x1 + x2 * self.C1 + self.C1 * self.C2 * t
+        return x2 + x1 * self.C1 + self.C1 * self.C2 * t
 
     def set_random_state(self):
         self.s = self.observation_space.sample()
@@ -191,4 +253,3 @@ class CompetitionEnv(discrete.DiscreteEnv):
             t, x1, x2 = self.to_coordinate(self.s)
 
         return self.s
-

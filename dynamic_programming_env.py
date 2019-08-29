@@ -4,7 +4,7 @@ import numpy as np
 def compute_d_list(env, t, x, V):
     d_list = []
     for a in env.A:
-        p, reward = env.proba_buy(a)
+        p = env.P[env.to_idx(t,x)][env.A.index(a)][0][0]
         d_list.append(p * (V[t + 1, x + 1] + a) + (1 - p) * V[t + 1, x])
     return d_list
 
@@ -61,15 +61,12 @@ def compute_d_list_collaboration(env, t, x1, x2, V):
     return d_list
 
 
-def compute_value_collaboration(env, t, x1, x2, V):
-    d_list = compute_d_list_collaboration(env, t, x1, x2, V)
+def compute_value_collaboration(d_list):
     return np.max(d_list)
 
 
-def compute_policy_collaboration(env, t, x1, x2, V):
-    d_list = compute_d_list_collaboration(env, t, x1, x2, V)
-    action_idx = np.argmax(d_list)
-    return action_idx
+def compute_policy_collaboration(d_list):
+    return np.argmax(d_list)
 
 
 def dynamic_programming_collaboration(env):
@@ -81,7 +78,8 @@ def dynamic_programming_collaboration(env):
             for x2 in range(env.C2):
                 if x1 == env.C1 - 1 and x2 == env.C2 - 1:
                     break
-                V[t, x1, x2] = compute_value_collaboration(env, t, x1, x2, V)
-                P[t, x1, x2] = compute_policy_collaboration(env, t, x1, x2, V)
+                d_list = compute_d_list_collaboration(env, t, x1, x2, V)
+                V[t][x1][x2] = compute_value_collaboration(d_list)
+                P[t][x1][x2] = compute_policy_collaboration(d_list)
 
     return V, P

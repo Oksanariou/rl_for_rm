@@ -96,7 +96,7 @@ def run_once(parameters_dict, nb_timesteps, general_dir_name, parameter, value, 
     model = agent_builder(env_vec, parameters_dict)
     model.learn(total_timesteps=nb_timesteps, callback=callback)
 
-    np.save(general_dir_name / parameter / str(value) / ("Run" + str(k) + ".npy"), rewards)
+    # np.save(general_dir_name / parameter / str(value) / ("Run" + str(k) + ".npy"), rewards)
 
 
 def run_n_times(parameters_dict, nb_timesteps, general_dir_name, parameter, number_of_runs, value, callback_frequency):
@@ -226,15 +226,20 @@ def compare_plots(general_dir_name, parameter, values, nb_timesteps, callback_fr
 def env_builder():
     # Parameters of the environment
     data_collection_points = 100
-    micro_times = 5
-    capacity = 50
-    actions = tuple(k for k in range(50, 231, 10))
-    alpha = 0.8
-    lamb = 0.7
+    capacity = 22
+    actions = tuple(k for k in range(10, 231, 20))
+    beta = 0.02
+    lamb = 0.4
+    k = 1.5
+    nested_lamb = 0.3
 
-    return gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
-                    capacity=capacity,
-                    micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+    # env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
+    #                 capacity=capacity,
+    #                 micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+
+    return gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', micro_times=data_collection_points, capacity=capacity,
+                   actions=actions, beta=beta, k=k,
+                   lamb=lamb, competition_aware=False, nested_lamb=nested_lamb)
 
 
 def compute_weights(env):
@@ -248,7 +253,7 @@ def parameters_dict_builder():
     parameters_dict["env_builder"] = env_builder
     parameters_dict["gamma"] = 0.99
     parameters_dict["learning_rate"] = 0.0001
-    parameters_dict["buffer_size"] = 30000
+    parameters_dict["buffer_size"] = 10000
     parameters_dict["exploration_fraction"] = 0.4
     parameters_dict["exploration_final_eps"] = 0.01
     parameters_dict["train_freq"] = 1
@@ -266,7 +271,7 @@ def parameters_dict_builder():
     parameters_dict["verbose"] = 0
     parameters_dict["tensorboard_log"] = "./../log_tensorboard/"
     # parameters_dict["tensorboard_log"] = None
-    parameters_dict["policy_kwargs"] = {"dueling": False, "layers": [100, 100]}
+    parameters_dict["policy_kwargs"] = {"dueling": False}
     parameters_dict["weights"] = False
 
     env = parameters_dict["env_builder"]()
@@ -286,17 +291,21 @@ if __name__ == '__main__':
     # print(parameter_values_string)
     # parameter_values = ast.literal_eval(parameter_values_string)
 
-    nb_timesteps = 40000
-    nb_runs = 16
-    callback_frequency = 1000
+    # nb_timesteps = 40000
+    # nb_runs = 16
+    # callback_frequency = 1000
     parameters_dict = parameters_dict_builder()
+    #
+    # file_names = ["with_GPU"]
+    # general_dir_names = [Path("../Computation_time_with_gpu")]
+    # parameter = "batch_size"
+    # value = 100
 
-    file_names = ["with_GPU"]
-    general_dir_names = [Path("../Computation_time_with_gpu")]
-    parameter = "batch_size"
-    value = 100
 
-    run_once(parameters_dict, nb_runs, results_path, parameter, value, 0)
+
+    run_once(parameters_dict_builder(), 40000, "", "", "", 1000, "")
+
+    # run_once(parameters_dict, nb_runs, results_path, parameter, value, 0)
 
     # save_computation_time(file_names[1], general_dir_names[1], parameters_dict, parameter, parameter_values, nb_runs,
     #                       callback_frequency, nb_timesteps)

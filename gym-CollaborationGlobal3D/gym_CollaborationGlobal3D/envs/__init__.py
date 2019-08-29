@@ -1,0 +1,1 @@
+from gym_CollaborationGlobal3D.envs.CollaborationGlobal3D_env import CollaborationGlobal3DEnv

@@ -32,18 +32,18 @@ def compute_probas_nested_logit(nests):
         for representative_utility in representative_utilities:
             numerator = np.exp(representative_utility / lamb) * (sum_nests[k] ** (lamb - 1))
             normalization = np.sum(sum_nests[k] ** nests[k]["lambda"] for k in range(nb_nests))
-            probas_nest.append(numerator / normalization)
-        probas_all.append(probas_nest)
+            probas_all.append(numerator / normalization)
+        # probas_all.append(probas_nest)
 
     return probas_all
 
 
 if __name__ == '__main__':
-    beta = 0.1
+    beta = 0.02
     k1 = 1.5
     k2 = 1.5
 
-    X = [100, 200]
+    X = [50, 70]
     X_logit = [0, k1 - beta * X[0], k2 - beta * X[1]]
     # X_logit = [0, k2 - beta * X[1]]
     print(compute_probas_logit(X_logit))
@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     X_nestlogic = [k1 - beta * X[0], k2 - beta * X[1]]
     nest_2 = {}
-    nest_2["lambda"] = 0.6
+    nest_2["lambda"] = 0.3
     nest_2["representative_utilities"] = X_nestlogic
 
     nests = [nest_1, nest_2]

@@ -5,6 +5,7 @@ import gym
 from tqdm import tqdm
 from scipy import stats
 
+
 def visualize_policy_FL(policy):
     visu = ''
     for k in range(len(policy)):
@@ -40,20 +41,24 @@ def run_episode(env, policy, epsilon=0.0):
     """ Runs an episode and returns the total reward """
     state = env.reset()
     total_reward = 0
+    bookings = np.zeros(env.nA)
     while True:
-        t, x = env.to_coordinate(state)
-        print(t,x)
+        # t, x = env.to_coordinate(state)
         state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state
         if np.random.rand() <= epsilon:
             action_idx = random.randrange(env.action_space.n)
             action = env.A[action_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
+
         else:
-            action = policy[state_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else env.A.index(policy[state_idx])
+            action_idx = env.A.index(policy[state_idx])
+            action = policy[state_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
         state, reward, done, _ = env.step(action)
+        if reward != 0:
+            bookings[action_idx] += 1
         total_reward += reward
         if done:
             break
-    return total_reward
+    return total_reward, bookings
 
 
 def run_episode_collaboration(env, policy):
@@ -67,6 +72,112 @@ def run_episode_collaboration(env, policy):
             break
     return total_reward
 
+def run_episode_collaboration_global_policy(global_env, global_policy, individual2D_env):
+    state_idx = global_env.reset()
+    total_reward = 0
+    reward_1, reward_2 = 0, 0
+    bookings_flight1 = np.zeros(individual2D_env.nA)
+    bookings_flight2 = np.zeros(individual2D_env.nA)
+    while True:
+        action = global_policy[state_idx]
+        state_idx, reward, done, _ = global_env.step(action)
+        action1, action2 = global_env.A[int(action)][0], global_env.A[int(action)][1]
+
+        if reward[0] != 0:
+            bookings_flight1[individual2D_env.A.index(int(action1))] += 1
+        if reward[1] != 0:
+            bookings_flight2[individual2D_env.A.index(int(action2))] += 1
+
+        total_reward += reward[0] + reward[1]
+        reward_1 += reward[0]
+        reward_2 += reward[1]
+        if done[0] and done[1]:
+            break
+    return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
+def run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_2D, policy_3D, individual2D_env):
+    state_idx = global_env.reset()
+    total_reward = 0
+    reward_1, reward_2 = 0, 0
+    bookings_flight1 = np.zeros(individual2D_env.nA)
+    bookings_flight2 = np.zeros(individual2D_env.nA)
+    while True:
+        t, x1, x2 = global_env.to_coordinate(state_idx)
+        state_idx1 = individual2D_env.to_idx(t, x1)
+        action1 = policy_2D[state_idx1]
+        action2 = policy_3D[state_idx]
+        action_tuple = (int(action1), int(action2))
+        action = global_env.A.index(action_tuple)
+
+        state_idx, reward, done, _ = global_env.step(action)
+
+        if reward[0] != 0:
+            bookings_flight1[individual2D_env.A.index(int(action1))] += 1
+        if reward[1] != 0:
+            bookings_flight2[individual2D_env.A.index(int(action2))] += 1
+
+        total_reward += reward[0] + reward[1]
+        reward_1 += reward[0]
+        reward_2 += reward[1]
+        if done[0] and done[1]:
+            break
+    return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
+def run_episode_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env):
+    state_idx = global_env.reset()
+    total_reward = 0
+    reward_1, reward_2 = 0, 0
+    bookings_flight1 = np.zeros(individual3D_env.nA)
+    bookings_flight2 = np.zeros(individual3D_env.nA)
+    while True:
+        action1 = policy1[state_idx]
+        action2 = policy2[state_idx]
+        action_tuple = (individual3D_env.A[int(action1)], individual3D_env.A[int(action2)])
+        action = global_env.A.index(action_tuple)
+
+        state_idx, reward, done, _ = global_env.step(action)
+
+        if reward[0] != 0:
+            bookings_flight1[action1] += 1
+        if reward[1] != 0:
+            bookings_flight2[action2] += 1
+
+        total_reward += reward[0] + reward[1]
+        reward_1 += reward[0]
+        reward_2 += reward[1]
+        if done[0] and done[1]:
+            break
+    return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
+def run_episode_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2):
+    state_idx = global_env.reset()
+    total_reward = 0
+    reward_1, reward_2 = 0, 0
+    bookings_flight1 = np.zeros(individual2D_env.nA)
+    bookings_flight2 = np.zeros(individual2D_env.nA)
+    while True:
+        t, x1, x2 = global_env.to_coordinate(state_idx)
+        state_idx1 = individual2D_env.to_idx(t, x1)
+        state_idx2 = individual2D_env.to_idx(t, x2)
+        action1 = policy1[state_idx1]
+        action2 = policy2[state_idx2]
+        action_tuple = (individual2D_env.A[int(action1)], individual2D_env.A[int(action2)])
+        action = global_env.A.index(action_tuple)
+
+        state_idx, reward, done, _ = global_env.step(action)
+
+        if reward[0] != 0:
+            bookings_flight1[action1] += 1
+        if reward[1] != 0:
+            bookings_flight2[action2] += 1
+
+        total_reward += reward[0] + reward[1]
+        reward_1 += reward[0]
+        reward_2 += reward[1]
+        if done[0] and done[1]:
+            break
+    return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
 
 def average_n_episodes_FL(env, policy, n_eval):
     """ Runs n episodes and returns the average of the n total rewards"""
@@ -77,11 +188,55 @@ def average_n_episodes_FL(env, policy, n_eval):
 def average_n_episodes(env, policy, n_eval, epsilon=0.0):
     """ Runs n episodes and returns the average of the n total rewards"""
     scores = [run_episode(env, policy, epsilon) for _ in range(n_eval)]
-    return np.mean(scores)
+    scores = np.array(scores)
+    revenue = np.mean(scores[:,0])
+    bookings = np.mean(scores[:,1], axis=0)
+    return revenue, bookings
 
-def average_n_episodes_collaboration(env, policy, n_eval):
-    scores = [run_episode_collaboration(env, policy) for _ in range(n_eval)]
-    return np.mean(scores)
+def average_n_episodes_collaboration_global_policy(global_env, global_policy, individual2D_env, n_eval):
+    revenues_1, revenues_2 = [], []
+    bookings_1, bookings_2 = [], []
+    for k in range(n_eval):
+        revenues, bookings = run_episode_collaboration_global_policy(global_env, global_policy, individual2D_env)
+        revenues_1.append(revenues[0])
+        revenues_2.append(revenues[1])
+        bookings_1.append(bookings[0])
+        bookings_2.append(bookings[1])
+    return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
+def average_n_episodes_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D, individual_2D_env, policy_2D, n_eval):
+    revenues_1, revenues_2 = [], []
+    bookings_1, bookings_2 = [], []
+    for k in range(n_eval):
+        revenues, bookings = run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D, individual_2D_env, policy_2D)
+        revenues_1.append(revenues[0])
+        revenues_2.append(revenues[1])
+        bookings_1.append(bookings[0])
+        bookings_2.append(bookings[1])
+    return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
+def average_n_episodes_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env, n_eval):
+    revenues_1, revenues_2 = [], []
+    bookings_1, bookings_2 = [], []
+    for k in range(n_eval):
+        revenues, bookings = run_episode_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env)
+        revenues_1.append(revenues[0])
+        revenues_2.append(revenues[1])
+        bookings_1.append(bookings[0])
+        bookings_2.append(bookings[1])
+    return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
+def average_n_episodes_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2, n_eval):
+    revenues_1, revenues_2 = [], []
+    bookings_1, bookings_2 = [], []
+    for k in range(n_eval):
+        revenues, bookings = run_episode_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2)
+        revenues_1.append(revenues[0])
+        revenues_2.append(revenues[1])
+        bookings_1.append(bookings[0])
+        bookings_2.append(bookings[1])
+    return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
 
 
 def q_to_policy_FL(Q):
@@ -139,9 +294,10 @@ def extract_policy_RM(env, U, gamma):
         policy[state_idx] = env.A[idx_best_a]
     return policy
 
+
 def extract_policy_RM_discrete(env, U, gamma, P={}):
-    if P=={}:
-        P=env.P
+    if P == {}:
+        P = env.P
     policy = np.zeros(env.nS)
     for state_idx in range(env.nS):
         list_sum = np.zeros(env.nA)
@@ -152,9 +308,10 @@ def extract_policy_RM_discrete(env, U, gamma, P={}):
         policy[state_idx] = env.A[idx_best_a]
     return policy
 
+
 def extract_policy_RM_discrete_collaboration(env, U, gamma, P={}):
-    if P=={}:
-        P=env.P
+    if P == {}:
+        P = env.P
     policy = np.zeros(env.nS)
     for state_idx in range(env.nS):
         list_sum = np.zeros(env.nA)
@@ -183,9 +340,9 @@ def q_to_policy_RM(env, Q):
         idx_action = np.argmax(l)
         policy.append(env.A[idx_action])
     policy = np.array(policy).reshape(env.T, env.C)
-    policy[:,-1] = 0.
+    policy[:, -1] = 0.
     policy[-1] = 0.
-    return np.array(policy.reshape(env.T*env.C))
+    return np.array(policy.reshape(env.T * env.C))
 
 
 def difference_between_policies(p1, p2):
@@ -238,7 +395,7 @@ def from_microtimes_to_DCP(policy_microtimes, env_microtimes, env_DCP, way):
     for t in range(env_DCP.T):
         for x in range(env_DCP.C):
             if way == "median":
-                policy_DCP[t, x] = np.median(policy_microtimes[t*env_DCP.M:t*env_DCP.M+env_DCP.M,x:x+1])
+                policy_DCP[t, x] = np.median(policy_microtimes[t * env_DCP.M:t * env_DCP.M + env_DCP.M, x:x + 1])
             elif way == "mean":
                 policy_DCP[t, x] = np.mean(policy_microtimes[t * env_DCP.M:t * env_DCP.M + env_DCP.M, x:x + 1])
             else:
@@ -246,11 +403,12 @@ def from_microtimes_to_DCP(policy_microtimes, env_microtimes, env_DCP, way):
     return policy_DCP
 
 
-def average_and_std_deviation_n_episodes(env, policy, nb_runs, epsilon = 0.):
+def average_and_std_deviation_n_episodes(env, policy, nb_runs, epsilon=0.):
     scores = [run_episode(env, policy, epsilon) for _ in range(nb_runs)]
     return np.mean(scores), np.sqrt(np.var(scores))
 
-def plot_average_and_std_deviatione(list_of_nb_episodes, env, policy, epsilon = 0.):
+
+def plot_average_and_std_deviatione(list_of_nb_episodes, env, policy, epsilon=0.):
     means, std_deviations = [], []
 
     for n in tqdm(list_of_nb_episodes):
@@ -271,6 +429,3 @@ def plot_average_and_std_deviatione(list_of_nb_episodes, env, policy, epsilon = 
     plt.xlabel("Nb of runs used to compute the standard deviation")
     plt.ylabel("Standard deviation")
     plt.show()
-
-
-

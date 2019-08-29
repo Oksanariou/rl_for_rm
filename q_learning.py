@@ -27,7 +27,8 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
     nb_episodes_list = []
 
     for episode in range(nb_episodes):
-        state = env.set_random_state()
+        # state = env.set_random_state()
+        state = env.reset()
 
         state_idx = env.to_idx(*state)
         done = False

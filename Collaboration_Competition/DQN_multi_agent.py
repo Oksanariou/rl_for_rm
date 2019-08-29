@@ -1,7 +1,7 @@
 import numpy as np
 
 from visualization_and_metrics import average_n_episodes
-from Collaboration.DQN_single_agent import train, update_target
+from Collaboration_Competition.DQN_single_agent import train, update_target
 
 from stable_baselines.common.schedules import LinearSchedule
 from stable_baselines.deepq.replay_buffer import ReplayBuffer

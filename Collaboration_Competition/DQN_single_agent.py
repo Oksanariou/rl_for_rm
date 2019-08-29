@@ -7,6 +7,13 @@ from stable_baselines.deepq.replay_buffer import ReplayBuffer
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.deepq.dqn import agent_builder
 
+def initialize(agent, total_timesteps):
+    agent.num_timesteps = 0
+    agent._setup_learn(seed=None)
+    agent.replay_buffer = ReplayBuffer(agent.buffer_size)
+    agent.exploration = LinearSchedule(schedule_timesteps=int(agent.exploration_fraction * total_timesteps),
+                                        initial_p=1.0,
+                                        final_p=agent.exploration_final_eps)
 
 def train(agent):
     can_sample = agent.replay_buffer.can_sample(agent.batch_size)
