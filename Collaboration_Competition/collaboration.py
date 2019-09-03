@@ -349,4 +349,4 @@ if __name__ == '__main__':
     plt.xlabel("Number of episodes")
     plt.ylabel("Average revenue on {} flights".format(10000))
 
-    plt.show()
+    plt.savefig('experience_QL.png')
