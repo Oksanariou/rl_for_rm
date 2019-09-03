@@ -5,6 +5,7 @@ from visualization_and_metrics import average_n_episodes, average_n_episodes_col
 from value_iteration import value_iteration_discrete_collaboration, value_iteration_discrete
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from dynamic_programming_env import dynamic_programming_collaboration, dynamic_programming_env
 
 
@@ -85,7 +86,6 @@ def compute_revenues_and_bookings_from_competition(nb_iterations, initial_revenu
     lamb, nested_lamb = individual_2D_env.lamb, individual_2D_env.nested_lamb
 
     for i in range(nb_iterations):
-        print(i)
         competitor_state_distribution = build_competitor_state_distribution(individual_2D_env, P_flight1)
 
         individual_2D_env = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity,
@@ -96,9 +96,15 @@ def compute_revenues_and_bookings_from_competition(nb_iterations, initial_revenu
         V_flight2, P_flight2 = dynamic_programming_env(individual_2D_env)
         P_flight2[-1][:] = actions[0]
         P_flight2[:, -1] = actions[0]
-        P_flight2 = P_flight2.reshape(micro_times * capacity1)
+        P_flight2 = P_flight2.reshape(micro_times * capacity)
+        P_flight2_int = np.zeros((len(P_flight2)), int)
+        P_flight1_int = np.zeros((len(P_flight1)), int)
+        for m in range(len(P_flight1)):
+            P_flight1_int[m] = int(individual_2D_env.A.index(P_flight1[m]))
+            P_flight2_int[m] = int(individual_2D_env.A.index(P_flight2[m]))
         revenues, bookings = average_n_episodes_collaboration_individual_2D_policies(global_env, individual_2D_env,
-                                                                                     P_flight1, P_flight2, 10000)
+                                                                                     P_flight1_int, P_flight2_int,
+                                                                                     10000)
         revenues_follow.append(revenues[0]), revenues_adapt.append(revenues[1]), total_revenues.append(
             revenues[0] + revenues[1])
         bookings_follow.append(bookings[0]), bookings_adapt.append(bookings[1])
@@ -166,19 +172,24 @@ def plot_competition_bookings_histograms(nb_iterations, individual_2D_env, booki
         plt.show()
 
 
-def plot_global_bookings_histograms(individual_2D_env, bookings_collab):
+def plot_global_bookings_histograms(individual_2D_env, bookings_collab, title=None):
     plt.figure()
     width = 5
     capacity1, capacity2 = individual_2D_env.C, individual_2D_env.C
     lamb = individual_2D_env.lamb
     micro_times = individual_2D_env.T
-    plt.bar(individual_2D_env.A, bookings_collab[1], width, label="Flight 2")
-    plt.bar(individual_2D_env.A, bookings_collab[0], width, label="Flight 1", bottom=bookings_collab[1])
+    plt.bar(individual_2D_env.A, bookings_collab[1], width, color="blue", label="Flight 2")
+    plt.bar(individual_2D_env.A, bookings_collab[0], width, color="orange", label="Flight 1", bottom=bookings_collab[1])
     plt.xlabel("Prices")
     plt.ylabel("Average number of bookings")
-    plt.title("Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
-        (lamb * micro_times) / (capacity1 + capacity2),
-        (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
+    if title is not None:
+        plt.title(title + " - Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
+            (lamb * micro_times) / (capacity1 + capacity2),
+            (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
+    else:
+        plt.title("Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
+            (lamb * micro_times) / (capacity1 + capacity2),
+            (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
     plt.legend()
     plt.show()
 
@@ -186,14 +197,15 @@ def plot_global_bookings_histograms(individual_2D_env, bookings_collab):
 def plot_comparison_Q_learning_VS_stabilized_competition(episodes, revenues_global, revenues_competition,
                                                          revenues_Q_learning):
     plt.figure()
-
-    for k in range(len(revenues_Q_learning)):
+    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=["g", "r", "m", "y", "c", "black"])
+    plt.plot(episodes, [np.sum(revenues_global)] * len(episodes), '--', label="P_Global")
+    plt.plot(episodes, [revenues_competition[0][-1] + revenues_competition[1][-1]] * len(episodes), '--',
+             label="Competition")
+    for k in range(len(revenues_Q_learning[:2])):
         plt.plot(episodes, np.array(revenues_Q_learning[k][0]) + np.array(revenues_Q_learning[k][1]),
-                 label="Case {}".format(k+1))
-    plt.plot(episodes, [np.sum(revenues_global)] * len(episodes), 'g--', label="P_Global")
-    plt.plot(episodes, [revenues_competition[0][-1] + revenues_competition[1][-1]] * len(episodes), 'r--',
-             label="Competition equilibrium")
-    plt.legend(loc='upper center', bbox_to_anchor=(0.7, 0.45))
+                 label="Case {}".format(k + 1))
+
+    plt.legend(loc='best')
     plt.xlabel("Number of episodes")
     plt.ylabel("Average revenue on {} flights".format(10000))
 
@@ -256,10 +268,13 @@ if __name__ == '__main__':
     plot_global_bookings_histograms(individual_2D_env1, bookings_global)
 
     # Revenues and bookings made by the two individual policies coming from the two individual flights not aware of competition
-    P_flight2 = P_flight1
+    P_flight2 = np.zeros((len(P_flight1)), int)
+    for k in range(len(P_flight1)):
+        P_flight2[k] = int(individual_2D_env1.A.index(P_flight1[k]))
+
     initial_revenues, initial_bookings = average_n_episodes_collaboration_individual_2D_policies(global_env,
                                                                                                  individual_2D_env1,
-                                                                                                 P_flight1, P_flight2,
+                                                                                                 P_flight2, P_flight2,
                                                                                                  10000)
 
     # Revenues and bookings made by the two individual policies coming from the two flights AWARE of competition and adapting to the other flight's policy
@@ -275,25 +290,10 @@ if __name__ == '__main__':
     # Visualizing the bookings made at each iteration by the two flights in competition
     plot_competition_bookings_histograms(nb_iterations, individual_2D_env1, bookings)
 
-    # Comparing the results coming from competition with the results coming from Q-learning collaboration
-    revenues_1_Q_learning3D = [100.603, 585.011, 576.862, 605.769, 607.848, 645.093, 652.643, 691.466, 694.721, 702.544]
-    revenues_2_Q_learning3D = [105.912, 577.159, 589.093, 595.665, 614.845, 636.574, 660.814, 668.571, 681.258, 688.76]
-    revenues_Q_learning3D = [revenues_1_Q_learning3D, revenues_2_Q_learning3D]
-
-    revenues_1_Q_learning2D = [113.05, 491.564, 538.155, 574.495, 586.743, 642.202, 633.428, 686.817, 674.814, 683.839]
-    revenues_2_Q_learning2D = [102.57, 562.187, 523.389, 567.444, 578.94, 563.328, 647.977, 663.79, 687.847, 687.157]
-    revenues_Q_learning2D = [revenues_1_Q_learning2D, revenues_2_Q_learning2D]
-
-    revenues_1_Q_learning2D_individual_reward = [100.046, 642.38, 638.38, 649.849, 635.626, 612.995, 605.257, 593.112,
-                                                 596.762, 602.892]
-    revenues_2_Q_learning2D_individual_reward = [101.909, 621.648, 664.881, 614.925, 627.949, 610.825, 601.516, 597.483,
-                                                 599.135, 604.726]
-    revenues_Q_learning2D_individual_reward = [revenues_1_Q_learning2D_individual_reward, revenues_2_Q_learning2D_individual_reward]
-
-    revenues_Q_learning = [revenues_Q_learning3D, revenues_Q_learning2D, revenues_Q_learning2D_individual_reward]
-
-    episodes = [k for k in range(0, 1_000_000, 100_000)]
-    plot_comparison_Q_learning_VS_stabilized_competition(episodes, revenues_global, revenues,
-                                                         revenues_Q_learning)
+    # revenues_Q_learning = [revenues_Q_learning3D, revenues_Q_learning2D, revenues_Q_learning2D_individual_reward,
+    #                        revenues_Q_learning3D_individual_reward]
+    #
+    # plot_comparison_Q_learning_VS_stabilized_competition(episodes, revenues_global, revenues,
+    #                                                      revenues_Q_learning)
 
 

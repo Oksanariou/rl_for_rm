@@ -5,8 +5,10 @@ from dynamic_programming_env import dynamic_programming_env
 from q_learning import q_learning, q_to_v
 from visualization_and_metrics import visualisation_value_RM, v_to_q, visualize_policy_RM, average_n_episodes, \
     visualizing_epsilon_decay, extract_policy_RM, plot_evolution_difference_between_policies, q_to_policy_RM, \
-    reshape_matrix_of_visits, from_microtimes_to_DCP, average_and_std_deviation_n_episodes, plot_average_and_std_deviatione
+    reshape_matrix_of_visits, from_microtimes_to_DCP, average_and_std_deviation_n_episodes, \
+    plot_average_and_std_deviatione
 import matplotlib.pyplot as plt
+import matplotlib as mlp
 from mpl_toolkits.mplot3d import Axes3D
 # from actor_critic_keras import trainer, extract_values_policy
 from deep_q_learning_tf_RM import dql
@@ -20,17 +22,23 @@ from keras.losses import mean_squared_error, logcosh
 from keras.models import load_model
 
 if __name__ == '__main__':
-    data_collection_points = 100
-    capacity = 50
-    actions = tuple(k for k in range(50, 231, 20))
-    alpha = 0.65
-    lamb = 0.65
+    micro_times = 10
+    capacity = 5
+    actions = tuple(k for k in range(10, 231, 20))
+    k = 7.5
+    beta = 0.1
+    nested_lamb = 0.1
+    lamb = 0.2
 
     # env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
     #                 capacity=capacity,
     #                 micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
-    env = gym.make('gym_RM:RM-v0', micro_times=data_collection_points, capacity=capacity, actions=actions, alpha=alpha, lamb=lamb)
+    env = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity,
+                                  micro_times=micro_times, actions=actions, lamb=lamb, beta=beta,
+                                  k=k,
+                                  nested_lamb=nested_lamb,
+                                  competition_aware=False)
     # print(env_DCP.P)
     # env_DCP.visualize_proba_actions()
     #
@@ -38,7 +46,7 @@ if __name__ == '__main__':
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
     P_ref = P_ref.reshape(env.T * env.C)
-    mean_revenue, mean_bookings = average_n_episodes(env, P_ref, 1000)
+    mean_revenue, mean_bookings = average_n_episodes(env, P_ref, 10000)
     print("Average reward over 1000 episodes : " + str(mean_revenue))
 
     plt.figure()
@@ -46,15 +54,16 @@ if __name__ == '__main__':
     plt.bar(env.A, mean_bookings, width=width)
     plt.xlabel("Prices")
     plt.ylabel("Average number of bookings")
-    plt.title("Demand ratio: {:.2}, Average load factor: {:.2}".format((lamb*data_collection_points)/capacity, np.sum(mean_bookings)/capacity))
+    plt.title("Demand ratio: {:.2}, Average load factor: {:.2}".format((lamb * data_collection_points) / capacity,
+                                                                       np.sum(mean_bookings) / capacity))
     plt.show()
 
     plt.figure()
-    width = 1/4
+    width = 1 / 4
     ind = np.array([0])
     plt.bar(["RMS"], mean_revenue, width=width, label="{}".format(round(mean_revenue)))
-    plt.bar(["QL"], np.mean(revenues_QL[:,0][-1]), width=width, label="{}".format(round(revenues_QL[:,0][-1])))
-    plt.bar(["DQL"], np.mean(revenues[:,0][-1]), width=width, label="{}".format(round(revenues[:,0][-1])))
+    plt.bar(["QL"], np.mean(revenues_QL[:, 0][-1]), width=width, label="{}".format(round(revenues_QL[:, 0][-1])))
+    plt.bar(["DQL"], np.mean(revenues[:, 0][-1]), width=width, label="{}".format(round(revenues[:, 0][-1])))
     plt.xlabel("Strategies")
     plt.ylabel("Average revenue \n (computed on 10000 flights)")
     plt.title("Revenues produced by the optimal policies \n of the different strategies")
@@ -63,14 +72,18 @@ if __name__ == '__main__':
 
     plt.figure()
     width = 5
-    plt.bar(np.array(env.A) - width, mean_bookings, width=width, label="RMS - Load factor of {:.2}".format(np.sum(mean_bookings)/capacity))
-    ind = np.array([1,2,3])
-    plt.bar(np.array(env.A), revenues_QL[:,1][-1], width=width, label="QL - Load factor of {:.2}".format(np.sum(revenues_QL[:,1][-1])/capacity))
-    plt.bar(np.array(env.A) + width, revenues[:,1][-1], width=width, label="DQL - Load factor of {:.2}".format(np.sum(revenues[:,1][-1])/capacity))
+    plt.bar(np.array(env.A) - width, mean_bookings, width=width,
+            label="RMS - Load factor of {:.2}".format(np.sum(mean_bookings) / capacity))
+    ind = np.array([1, 2, 3])
+    plt.bar(np.array(env.A), revenues_QL[:, 1][-1], width=width,
+            label="QL - Load factor of {:.2}".format(np.sum(revenues_QL[:, 1][-1]) / capacity))
+    plt.bar(np.array(env.A) + width, revenues[:, 1][-1], width=width,
+            label="DQL - Load factor of {:.2}".format(np.sum(revenues[:, 1][-1]) / capacity))
     plt.xlabel("Prices")
     plt.legend(loc='upper center', bbox_to_anchor=(0.7, 1))
     plt.ylabel("Average number of bookings \n (computed on 10000 flights)")
-    plt.title("Number of bookings produced by the policies of the different strategies \n Demand ratio of {}".format(lamb*data_collection_points/capacity))
+    plt.title("Number of bookings produced by the policies of the different strategies \n Demand ratio of {}".format(
+        lamb * data_collection_points / capacity))
     plt.show()
 
     # policy_DCP = from_microtimes_to_DCP(P_ref, env_microtimes, env_DCP)
@@ -86,7 +99,7 @@ if __name__ == '__main__':
     print("--- %s seconds ---" % (time.time() - start_time))
 
     nb_runs = 10_000
-    mean, var = average_and_std_deviation_n_episodes(env, P_DP, nb_runs, epsilon = 0.0)
+    mean, var = average_and_std_deviation_n_episodes(env, P_DP, nb_runs, epsilon=0.0)
     print("Average and variance computed on {} runs : {} and {}".format(nb_runs, mean, var))
 
     list_of_nb_episodes = [k for k in range(10, 50_000, 500)]
@@ -115,15 +128,21 @@ if __name__ == '__main__':
     # print("Average reward over 1000 episodes : " + str(average_n_episodes(env, policy, 1000)))
 
     alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
-    nb_episodes = 700000
+    # alpha, alpha_min, alpha_decay, gamma = 0.2, 0, 1, 0.99
+    nb_episodes = 500000
     epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.99999
     temp = 100
 
     visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
     # visualizing_epsilon_decay(nb_episodes, alpha, alpha_min, alpha_decay)
-    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues_QL = q_learning(env, alpha, alpha_min, alpha_decay, gamma,
-                                                                         nb_episodes, epsilon,
-                                                                         epsilon_min, epsilon_decay, P_ref, temp)
+    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues_QL = q_learning(env, alpha,
+                                                                                                    alpha_min,
+                                                                                                    alpha_decay, gamma,
+                                                                                                    nb_episodes,
+                                                                                                    epsilon,
+                                                                                                    epsilon_min,
+                                                                                                    epsilon_decay,
+                                                                                                    P_ref, temp)
 
     v = q_to_v(env, q_table)
     visualisation_value_RM(v, env.T, env.C)
@@ -201,3 +220,55 @@ if __name__ == '__main__':
     plt.title("Average revenue")
     plt.show()
 
+    mlp.rcParams['hatch.color']  = "white"
+    rev_global, rev_case1, rev_case2, rev_case3, rev_case4, rev_case1_hyst, rev_case2_hyst = 1649, 1410.4, 1374.9, 1208.6, 1343.5, 1453.4, 1449.7
+    rev_single_agent_QL = 1361.4
+    rev_competition = 1580
+    plt.figure()
+    width = 1 / 2
+    ind = np.array([0])
+
+    bar = plt.bar(["Global \n Dyn. \n Prog."], rev_global, color="g", width=width, label="{}".format(round(rev_global)))
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_global), ha='center', va='bottom')
+
+    bar = plt.bar(["Case a \n Competition"], rev_competition, color="red", width=width)
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_competition), ha='center', va='bottom')
+
+    # bar = plt.bar(["Global \n Single-Agent \n Q-Learning"], rev_single_agent_QL, color="firebrick",width=width, label="{}".format(rev_single_agent_QL))
+    # height = bar[0].get_height()
+    # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_single_agent_QL), ha='center', va='bottom')
+
+    # bar = plt.bar(["Case 1"], rev_case1, color="m", width=width, label="{}".format(rev_case1))
+    # height = bar[0].get_height()
+    # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case1), ha='center', va='bottom')
+
+    bar = plt.bar(["Case 1 \n Hysteretic"],  rev_case1_hyst,color="m", hatch="...", width=width, label="{}".format(rev_case1_hyst))
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case1_hyst), ha='center', va='bottom')
+
+    # bar = plt.bar(["Case 2"], rev_case2, color="y", width=width, label="{}".format(rev_case2))
+    # height = bar[0].get_height()
+    # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case2), ha='center', va='bottom')
+
+    bar = plt.bar(["Case 2 \n Hysteretic"], rev_case2_hyst,color="y", hatch="...", width=width, label="{}".format(rev_case2_hyst))
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case2_hyst), ha='center', va='bottom')
+
+    # bar = plt.bar(["Case 3"], rev_case3, color="c", width=width, label="{}".format(rev_case3))
+    # height = bar[0].get_height()
+    # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case3), ha='center', va='bottom')
+    #
+    # bar = plt.bar(["Case 4"], rev_case4, color="black", width=width, label="{}".format(rev_case4))
+    # height = bar[0].get_height()
+    # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case4), ha='center', va='bottom')
+
+    bar = plt.bar(["Centralized \n QL"], rev_single_agent_QL, color="orange", width=width, label="{}".format(rev_single_agent_QL))
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_single_agent_QL), ha='center', va='bottom')
+
+    plt.xlabel("Scenarios")
+    plt.ylabel("Average revenue \n (computed on 10000 flights)")
+    plt.title("Revenues produced by the optimal policies \n of the different Q-Learning scenarios")
+    plt.show()

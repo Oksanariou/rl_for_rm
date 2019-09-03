@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import gym
 from scipy.special import softmax
 import matplotlib.pyplot as plt
 
@@ -30,7 +31,8 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
         # state = env.set_random_state()
         state = env.reset()
 
-        state_idx = env.to_idx(*state)
+        state_idx = state if type(env.observation_space) == gym.spaces.discrete.Discrete else env.to_idx(*state)
+
         done = False
         while not done:
             # action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
@@ -43,11 +45,11 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
                 #action_idx = np.random.choice(env.action_space.n, 1, p=proba_actions)[0]
                 action_idx = np.random.randint(env.action_space.n)
 
-            action = env.A[action_idx]
+            action = action_idx if type(env.observation_space) == gym.spaces.discrete.Discrete else env.A[action_idx]
 
             # We get our transition <s, a, r, s'>
             next_state, r, done, _ = env.step(action)
-            next_state_idx = env.to_idx(*next_state)
+            next_state_idx = next_state if type(env.observation_space) == gym.spaces.discrete.Discrete else env.to_idx(*next_state)
 
             # We update the Q-table with using new knowledge
             old_value = Q[state_idx, action_idx]

@@ -1,13 +1,15 @@
 import numpy as np
 import gym
+import matplotlib.pyplot as plt
 
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.deepq.dqn import agent_builder
 
 from Collaboration_Competition.DQN_single_agent import train, update_target, initialize
-from Collaboration_Competition.q_learning_collaboration import q_learning_collaboration3D, q_learning_collaboration2D
+from Collaboration_Competition.q_learning_collaboration import q_learning_collaboration3D, q_learning_collaboration2D, \
+    q_learning_global
 from Collaboration_Competition.DQN_experience import parameters_dict_builder
-from Collaboration_Competition.competition import return_single_policies_from_collab_policy
+from Collaboration_Competition.competition import return_single_policies_from_collab_policy, plot_comparison_Q_learning_VS_stabilized_competition
 
 from visualization_and_metrics import average_n_episodes_collaboration_individual_3D_policies, \
     average_n_episodes_collaboration_individual_2D_policies, \
@@ -217,39 +219,39 @@ if __name__ == '__main__':
                                   micro_times=micro_times,
                                   capacity1=capacity1, capacity2=capacity2, actions=actions_individual)
 
-    parameters_dict1, parameters_dict2 = parameters_dict_builder(), parameters_dict_builder()
-    parameters_dict1["env_builder"], parameters_dict2[
-        "env_builder"] = individual_3D_env1, individual_3D_env2
-
-    env_vec1, env_vec2 = DummyVecEnv([lambda: individual_3D_env1]), DummyVecEnv(
-        [lambda: individual_3D_env2])
-
-    agent1, agent2 = agent_builder(env_vec1, parameters_dict1), agent_builder(env_vec2, parameters_dict2)
-
-    n_steps = 0
-    revenues1, revenues2 = [], []
-    states = [k for k in range(global_env.nS)]
-    callback_frequency = 1000
-
-    total_timesteps = 40000
+    # parameters_dict1, parameters_dict2 = parameters_dict_builder(), parameters_dict_builder()
+    # parameters_dict1["env_builder"], parameters_dict2[
+    #     "env_builder"] = individual_3D_env1, individual_3D_env2
+    #
+    # env_vec1, env_vec2 = DummyVecEnv([lambda: individual_3D_env1]), DummyVecEnv(
+    #     [lambda: individual_3D_env2])
+    #
+    # agent1, agent2 = agent_builder(env_vec1, parameters_dict1), agent_builder(env_vec2, parameters_dict2)
+    #
+    # n_steps = 0
+    # revenues1, revenues2 = [], []
+    # states = [k for k in range(global_env.nS)]
+    # callback_frequency = 1000
+    #
+    # total_timesteps = 40000
 
     # Dynamic Programming solution on global environment
 
-    V_global, P_global = dynamic_programming_collaboration(global_env)
-    P_global = P_global.reshape(micro_times * capacity1 * capacity2)
-    revenues_global, bookings_global = average_n_episodes_collaboration_global_policy(global_env, P_global,
-                                                                                      individual_3D_env1,
-                                                                                      10000)
+    # V_global, P_global = dynamic_programming_collaboration(global_env)
+    # P_global = P_global.reshape(micro_times * capacity1 * capacity2)
+    # revenues_global, bookings_global = average_n_episodes_collaboration_global_policy(global_env, P_global,
+    #                                                                                   individual_3D_env1,
+    #                                                                                   10000)
     # Fixed policy
 
-    P1, P2 = return_single_policies_from_collab_policy(P_global, global_env)
-    optimal_individual_policy = P1
-
-    constant_policy = np.zeros((global_env.nS))
-    for k in range(len(constant_policy)):
-        constant_policy[k] = 90
-
-    fixed_policy = constant_policy
+    # P1, P2 = return_single_policies_from_collab_policy(P_global, global_env)
+    # optimal_individual_policy = P1
+    #
+    # constant_policy = np.zeros((global_env.nS))
+    # for k in range(len(constant_policy)):
+    #     constant_policy[k] = 90
+    #
+    # fixed_policy = constant_policy
 
     # Deep Q-Learning Learning
 
@@ -258,42 +260,93 @@ if __name__ == '__main__':
 
     # Dynamic Programming solution for fixed policy
 
-    actions_global_fixed = [((k, fixed_action),) * len(actions_individual) for k in
-                            range(action_min, action_max + 1, action_offset)]
-    actions_global_fixed = np.array(actions_global_fixed).reshape(len(actions_individual) * len(actions_individual), 2)
-    global_env_fixed_policy = gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0', micro_times=micro_times,
-                                       capacity1=capacity1,
-                                       capacity2=capacity2,
-                                       actions=actions_global_fixed, beta=beta, k_airline1=k_airline1,
-                                       k_airline2=k_airline2,
-                                       lamb=lamb,
-                                       nested_lamb=nested_lamb)
-    V_global_fixed_policy, P_global_fixed_policy = dynamic_programming_collaboration(global_env_fixed_policy)
-    P_global_fixed_policy = P_global_fixed_policy.reshape(micro_times * capacity1 * capacity2)
-    revenues_global_fixed_policy, bookings_global_fixed_policy = average_n_episodes_collaboration_global_policy(
-        global_env_fixed_policy, P_global_fixed_policy,
-        individual_3D_env1,
-        10000)
+    # actions_global_fixed = [((k, fixed_action),) * len(actions_individual) for k in
+    #                         range(action_min, action_max + 1, action_offset)]
+    # actions_global_fixed = np.array(actions_global_fixed).reshape(len(actions_individual) * len(actions_individual), 2)
+    # global_env_fixed_policy = gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0', micro_times=micro_times,
+    #                                    capacity1=capacity1,
+    #                                    capacity2=capacity2,
+    #                                    actions=actions_global_fixed, beta=beta, k_airline1=k_airline1,
+    #                                    k_airline2=k_airline2,
+    #                                    lamb=lamb,
+    #                                    nested_lamb=nested_lamb)
+    # V_global_fixed_policy, P_global_fixed_policy = dynamic_programming_collaboration(global_env_fixed_policy)
+    # P_global_fixed_policy = P_global_fixed_policy.reshape(micro_times * capacity1 * capacity2)
+    # revenues_global_fixed_policy, bookings_global_fixed_policy = average_n_episodes_collaboration_global_policy(
+    #     global_env_fixed_policy, P_global_fixed_policy,
+    #     individual_3D_env1,
+    #     10000)
 
     # Q-Learning
 
     gamma = 0.99
-    alpha, alpha_min, alpha_decay = 0.8, 0, 0.999995
-    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.999995
-    total_timesteps_q_learning = 1_000_000
-    fully_collaborative = False
+    alpha, alpha_min, alpha_decay = 0.8, 0, 0.9999995
+    beta, beta_min, beta_decay = alpha / 2, 0, 0.9999995
+    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.9999995
+    total_timesteps_q_learning = 10000000
+    fully_collaborative = True
 
     visualizing_epsilon_decay(total_timesteps_q_learning, epsilon, epsilon_min,
                               epsilon_decay)  # Visualizing epsilon decay
     visualizing_epsilon_decay(total_timesteps_q_learning, alpha, alpha_min,
-                              alpha_decay)  # Visualizing epsilon decay
+                              alpha_decay)  # Visualizing alpha decay
+    visualizing_epsilon_decay(total_timesteps_q_learning, beta, beta_min,
+                              beta_decay)  # Visualizing beta decay
 
     individual_2D_env1 = gym.make('gym_CollaborationIndividual2D:CollaborationIndividual2D-v0', micro_times=micro_times,
                                   capacity=capacity1, actions=actions_individual)
     individual_2D_env2 = gym.make('gym_CollaborationIndividual2D:CollaborationIndividual2D-v0', micro_times=micro_times,
                                   capacity=capacity2, actions=actions_individual)
 
-    Q_tables, revenues, episodes = q_learning_collaboration3D(global_env, individual_3D_env1, individual_3D_env2, alpha,
-                                                              alpha_min, alpha_decay, gamma, total_timesteps_q_learning,
-                                                              epsilon,
-                                                              epsilon_min, epsilon_decay, fully_collaborative)
+    Q_tables_case1_hysteretic, revenues_case1_hysteretic, bookings_case1_hysteretic, episodes = q_learning_collaboration3D(
+        global_env,
+        individual_3D_env1,
+        individual_3D_env2, alpha,
+        alpha_min, alpha_decay, beta,
+        beta_min, beta_decay, gamma,
+        total_timesteps_q_learning,
+        epsilon,
+        epsilon_min, epsilon_decay,
+        fully_collaborative)
+
+    Q_tables_case2_hysteretic, revenues_case2_hysteretic, bookings_case2_hysteretic, _ = q_learning_collaboration2D(
+        global_env,
+        individual_2D_env1,
+        individual_2D_env2, alpha,
+        alpha_min, alpha_decay, beta,
+        beta_min, beta_decay, gamma,
+        total_timesteps_q_learning,
+        epsilon,
+        epsilon_min, epsilon_decay,
+        fully_collaborative)
+
+    Q_table_global, revenues_QL_global, bookings_QL_global, _ = q_learning_global(global_env, individual_2D_env1,
+                                                                                  alpha, alpha_min, alpha_decay,
+                                                                                  gamma,
+                                                                                  total_timesteps_q_learning,
+                                                                                  epsilon,
+                                                                                  epsilon_min, epsilon_decay)
+    revenue_global = 1649
+    revenue_competition = 1580
+    revenues_case1_hysteretic = np.array(revenues_case1_hysteretic)
+    revenues_case2_hysteretic = np.array(revenues_case2_hysteretic)
+    revenues_QL_global = np.array(revenues_QL_global)
+    print("Revenue case 1 hysteretic: ".format(revenues_case1_hysteretic[0, :][-1] + revenues_case1_hysteretic[1, :][-1]))
+    print("Revenue case 2 hysteretic: ".format(revenues_case2_hysteretic[0, :][-1] + revenues_case2_hysteretic[1, :][-1]))
+    print("Revenue centralized QL: ".format(revenues_QL_global[0, :][-1] + revenues_QL_global[1, :][-1]))
+
+    plt.figure()
+    plt.plot(episodes, [revenue_global] * len(episodes), 'g--', label="P_Global")
+    plt.plot(episodes, [revenue_competition] * len(episodes), 'r--',
+             label="Competition")
+    plt.plot(episodes, revenues_case1_hysteretic[0, :] + revenues_case1_hysteretic[1, :], color="m",
+             label="Case 1 - Hysteretic QL")
+    plt.plot(episodes, revenues_case2_hysteretic[0, :] + revenues_case2_hysteretic[1, :], color="y",
+             label="Case 2 - Hysteretic QL")
+    plt.plot(episodes, revenues_QL_global[0,:] + revenues_QL_global[1,:], color="orange", label="Centralized Q-Learning")
+
+    plt.legend(loc='best')
+    plt.xlabel("Number of episodes")
+    plt.ylabel("Average revenue on {} flights".format(10000))
+
+    plt.show()
