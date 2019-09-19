@@ -34,25 +34,26 @@ class RMDCPEnv(gym.Env):
         self.alpha = alpha
         self.lamb = lamb
 
-        self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
+        # self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
+        self.observation_space = spaces.MultiDiscrete([self.T, self.C])
         self.action_space = spaces.Discrete(self.nA)
         self.reward_range = [min(self.A), max(self.A)]
 
         self.seed()
 
-        self.s = (0, 0)
+        self.s = [0, 0]
 
         self.P, self.proba_cumsum = self.init_transitions()
 
 
     def init_transitions(self):
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
-        proba_cumsum = {(t, x): {a: [] for a in self.A} for t in range(self.T) for x in range(self.C)}
-        P = {(t, x): {a: [] for a in self.A} for t in range(self.T) for x in range(self.C)}
+        proba_cumsum = {(t, x): {a: [] for a in range(self.nA)} for t in range(self.T) for x in range(self.C)}
+        P = {(t, x): {a: [] for a in range(self.nA)} for t in range(self.T) for x in range(self.C)}
         for t in range(self.T):
             for x in range(self.C):
                 s = (t, x)
-                for a in self.A:
+                for a in range(self.nA):
                     transitions = self.transitions(s, a)
                     P[s][a] = transitions
                     prob_n = np.asarray([t[0] for t in transitions])
@@ -69,12 +70,12 @@ class RMDCPEnv(gym.Env):
         else:
             k = 0
             while k <= self.M:
-                proba_buy, reward = self.proba_buy(action)
+                proba_buy, reward = self.proba_buy(self.A[action])
                 proba_next_state = ((1 - proba_buy) ** (self.M - k)) * (proba_buy ** k) * scipy.special.binom(
                     self.M, k)
                 total_reward = k * reward
                 new_t, new_x = t + 1, x + k
-                new_state = (new_t, new_x)
+                new_state = [new_t, new_x]
                 if new_t == self.T - 1 or new_x == self.C - 1:
                     done = True
 
@@ -107,7 +108,7 @@ class RMDCPEnv(gym.Env):
         return [seed]
 
     def reset(self):
-        self.s = (0, 0)
+        self.s = [0, 0]
 
         return self.s
 
@@ -120,11 +121,12 @@ class RMDCPEnv(gym.Env):
 
     def step(self, a):
         # transitions = self.transitions(self.s, a)
-        csprob_n = self.proba_cumsum[self.s][a]
+        s_tuple = tuple(self.s)
+        csprob_n = self.proba_cumsum[s_tuple][a]
         transition_idx = self.categorical_sample(csprob_n)
-        p, s, r, d = self.P[self.s][a][transition_idx]
-        self.s = s
-        return s, r, d, {"prob": p}
+        p, s, r, d = self.P[s_tuple][a][transition_idx]
+        self.s = list(s)
+        return self.s, r, d, {"prob": p}
 
     def proba_buy(self, a):
         """Returns:

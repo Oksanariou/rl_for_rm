@@ -83,3 +83,18 @@ def dynamic_programming_collaboration(env):
                 P[t][x1][x2] = compute_policy_collaboration(d_list)
 
     return V, P
+
+def dynamic_programming_collaboration_n_flights(env):
+    V = np.zeros((env.T, env.C1, env.C2), float)
+    P = np.zeros((env.T, env.C1, env.C2), float)
+
+    for t in range(env.T - 2, -1, -1):
+        for x1 in range(env.C1 - 1, -1, -1):
+            for x2 in range(env.C2):
+                if x1 == env.C1 - 1 and x2 == env.C2 - 1:
+                    break
+                d_list = compute_d_list_collaboration(env, t, x1, x2, V)
+                V[t][x1][x2] = compute_value_collaboration(d_list)
+                P[t][x1][x2] = compute_policy_collaboration(d_list)
+
+    return V, P

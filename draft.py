@@ -22,27 +22,28 @@ from keras.losses import mean_squared_error, logcosh
 from keras.models import load_model
 
 if __name__ == '__main__':
-    micro_times = 10
-    capacity = 5
-    actions = tuple(k for k in range(10, 231, 20))
+    micro_times = 100
+    capacity = 50
+    actions = tuple(k for k in range(50, 231, 20))
     k = 7.5
     beta = 0.1
     nested_lamb = 0.1
-    lamb = 0.2
+    lamb = 0.65
+    alpha = 0.65
 
-    # env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=data_collection_points,
-    #                 capacity=capacity,
-    #                 micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
+    env = gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0', data_collection_points=micro_times,
+                    capacity=capacity,
+                    micro_times=1, actions=actions, alpha=alpha, lamb=lamb)
 
-    env = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity,
-                                  micro_times=micro_times, actions=actions, lamb=lamb, beta=beta,
-                                  k=k,
-                                  nested_lamb=nested_lamb,
-                                  competition_aware=False)
+    # env = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity,
+    #                               micro_times=micro_times, actions=actions, lamb=lamb, beta=beta,
+    #                               k=k,
+    #                               nested_lamb=nested_lamb,
+    #                               competition_aware=False)
     # print(env_DCP.P)
     # env_DCP.visualize_proba_actions()
     #
-    V, P_ref = dynamic_programming_env(env)
+    V, P_ref = dynamic_programming_env_DCP(env)
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
     P_ref = P_ref.reshape(env.T * env.C)
@@ -223,7 +224,9 @@ if __name__ == '__main__':
     mlp.rcParams['hatch.color']  = "white"
     rev_global, rev_case1, rev_case2, rev_case3, rev_case4, rev_case1_hyst, rev_case2_hyst = 1649, 1410.4, 1374.9, 1208.6, 1343.5, 1453.4, 1449.7
     rev_single_agent_QL = 1361.4
-    rev_competition = 1580
+    rev_single_agent_QL_bigger_lr = 1215.4
+    # rev_competition = 1580
+    rev_competition = 1637.8
     plt.figure()
     width = 1 / 2
     ind = np.array([0])
@@ -264,9 +267,13 @@ if __name__ == '__main__':
     # height = bar[0].get_height()
     # plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_case4), ha='center', va='bottom')
 
-    bar = plt.bar(["Centralized \n QL"], rev_single_agent_QL, color="orange", width=width, label="{}".format(rev_single_agent_QL))
+    bar = plt.bar(["Centralized \n QL \n lr 1"], rev_single_agent_QL, color="orange", width=width, label="{}".format(rev_single_agent_QL))
     height = bar[0].get_height()
     plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_single_agent_QL), ha='center', va='bottom')
+    #
+    bar = plt.bar(["Centralized \n QL \n lr 2"], rev_single_agent_QL_bigger_lr, color="orange", width=width, label="{}".format(rev_single_agent_QL_bigger_lr))
+    height = bar[0].get_height()
+    plt.text(bar[0].get_x() + bar[0].get_width() / 2.0, height, '%d' % int(rev_single_agent_QL_bigger_lr), ha='center', va='bottom')
 
     plt.xlabel("Scenarios")
     plt.ylabel("Average revenue \n (computed on 10000 flights)")

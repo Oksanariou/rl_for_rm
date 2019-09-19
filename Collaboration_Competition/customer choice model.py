@@ -52,7 +52,7 @@ if __name__ == '__main__':
     nest_1["lambda"] = 1
     nest_1["representative_utilities"] = [0]
 
-    X_nestlogic = [k1 - beta * X[0], k2 - beta * X[1]]
+    X_nestlogic = [-10000, k2 - beta * X[1]]
     nest_2 = {}
     nest_2["lambda"] = 0.3
     nest_2["representative_utilities"] = X_nestlogic

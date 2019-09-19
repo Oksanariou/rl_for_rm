@@ -63,8 +63,9 @@ def visualize_MNL_VS_nested(price_flight1, prices_flight2, values_of_lambda, glo
             action_idx = collaboration_env.A.index(action_tuple)
             proba_buy_price_2 = collaboration_env.P[0][action_idx][2][0]
             probas_buy_price_2.append(proba_buy_price_2)
-        plt.plot(prices_2, probas_buy_price_2, label="Lambda = {}".format(nested_lamb))
-    plt.axvline(x=price_1, color='g', label="Price of Flight 1", linestyle='--')
+        plt.plot(prices_flight2, probas_buy_price_2, label="Mu = {}".format(nested_lamb))
+    plt.axvline(x=price_flight1, color='g', label="Price of Flight 1", linestyle='--')
+    plt.xticks(prices_flight2.A)
     plt.xlabel("Prices of Flight 2")
     plt.ylabel("Probability to buy ticket from Flight 2")
     plt.title("Evolution of the probability to buy the ticket from Flight 2 \n when the price of Flight 1 is fixed")
@@ -182,15 +183,17 @@ def plot_global_bookings_histograms(individual_2D_env, bookings_collab, title=No
     plt.bar(individual_2D_env.A, bookings_collab[0], width, color="orange", label="Flight 1", bottom=bookings_collab[1])
     plt.xlabel("Prices")
     plt.ylabel("Average number of bookings")
-    if title is not None:
-        plt.title(title + " - Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
-            (lamb * micro_times) / (capacity1 + capacity2),
-            (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
-    else:
-        plt.title("Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
-            (lamb * micro_times) / (capacity1 + capacity2),
-            (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
+    plt.title("Overall load factor: {:.2}".format((np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
+    # if title is not None:
+    #     plt.title(title + " - Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
+    #         (lamb * micro_times) / (capacity1 + capacity2),
+    #         (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
+    # else:
+    #     plt.title("Global environment, demand ratio: {:.2}, load factor: {:.2}".format(
+    #         (lamb * micro_times) / (capacity1 + capacity2),
+    #         (np.sum(bookings_collab[0]) + np.sum(bookings_collab[1])) / (capacity1 + capacity2)))
     plt.legend()
+    plt.xticks(individual_2D_env.A)
     plt.show()
 
 
@@ -224,7 +227,11 @@ if __name__ == '__main__':
                            range(action_min, action_max + 1, action_offset))
     actions_individual = tuple(k for k in range(action_min, action_max + 1, action_offset))
 
-    lamb = 0.4
+    arrival_rate = 0.5
+    # demand_ratio = 1.8
+    # number_of_flights = 2
+    # arrival_rate = demand_ratio * (capacity1 * number_of_flights) / micro_times
+
     beta = 0.02
     k_airline1 = 1.5
     k_airline2 = 1.5
@@ -233,14 +240,15 @@ if __name__ == '__main__':
     global_env = gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0', micro_times=micro_times,
                           capacity1=capacity1,
                           capacity2=capacity2,
-                          actions=actions_global, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2, lamb=lamb,
+                          actions=actions_global, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2,
+                          lamb=arrival_rate,
                           nested_lamb=nested_lamb)
 
     # Customer choice models : Visualizing MNL VS nested
-    price_1 = 90
-    prices_2 = [k for k in range(10, 231, 20)]
-    values_of_lambda = [1, 0.3]
-    visualize_MNL_VS_nested(price_1, prices_2, values_of_lambda, global_env)
+    # price_1 = 90
+    # prices_2 = [k for k in range(10, 231, 20)]
+    # values_of_lambda = [1, 0.3]
+    # visualize_MNL_VS_nested(price_1, prices_2, values_of_lambda, global_env)
 
     # Dynamic Programming on the global environment
     V_global, P_global = dynamic_programming_collaboration(global_env)
@@ -250,8 +258,10 @@ if __name__ == '__main__':
     P1, P2 = return_single_policies_from_collab_policy(P_global, global_env)
 
     # Individual environment representing Flight 1 which is at first NOT aware of competition
+    arrival_rate_individual_env = arrival_rate / 2
     individual_2D_env1 = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity1,
-                                  micro_times=micro_times, actions=actions_individual, lamb=lamb, beta=beta,
+                                  micro_times=micro_times, actions=actions_individual, lamb=arrival_rate_individual_env,
+                                  beta=beta,
                                   k=k_airline1,
                                   nested_lamb=nested_lamb,
                                   competition_aware=False)
@@ -295,5 +305,3 @@ if __name__ == '__main__':
     #
     # plot_comparison_Q_learning_VS_stabilized_competition(episodes, revenues_global, revenues,
     #                                                      revenues_Q_learning)
-
-

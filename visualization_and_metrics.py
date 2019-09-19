@@ -37,22 +37,26 @@ def run_episode_FL(env, policy):
     return total_reward
 
 
-def run_episode(env, policy, epsilon=0.0):
+def run_episode(env, policy, agent=None, epsilon=0.0):
     """ Runs an episode and returns the total reward """
     state = env.reset()
     total_reward = 0
     bookings = np.zeros(env.nA)
     while True:
         # t, x = env.to_coordinate(state)
-        state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state
+        state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state #env.to_idx(state[0], state[1], state[2])
         if np.random.rand() <= epsilon:
             action_idx = random.randrange(env.action_space.n)
             action = env.A[action_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
 
         else:
-            action_idx = env.A.index(policy[state_idx])
-            action = policy[state_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
-        state, reward, done, _ = env.step(action)
+            if agent is not None:
+                action_idx, _ = agent.predict(state)
+                action = action_idx
+            else:
+                action_idx = policy[state_idx]
+                action = action_idx
+        state, reward, done, _ = env.step(action_idx)
         if reward != 0:
             bookings[action_idx] += 1
         total_reward += reward
@@ -71,6 +75,7 @@ def run_episode_collaboration(env, policy):
         if done[0] and done[1]:
             break
     return total_reward
+
 
 def run_episode_collaboration_global_policy(global_env, global_policy, individual2D_env):
     state_idx = global_env.reset()
@@ -94,6 +99,7 @@ def run_episode_collaboration_global_policy(global_env, global_policy, individua
         if done[0] and done[1]:
             break
     return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
 
 def run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_2D, policy_3D, individual2D_env):
     state_idx = global_env.reset()
@@ -123,6 +129,7 @@ def run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_2D
             break
     return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
 
+
 def run_episode_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env):
     state_idx = global_env.reset()
     total_reward = 0
@@ -148,6 +155,33 @@ def run_episode_collaboration_individual_3D_policies(global_env, policy1, policy
         if done[0] and done[1]:
             break
     return [reward_1, reward_2], [bookings_flight1, bookings_flight2]
+
+
+def run_episode_collaboration_individual_policy_on_n_flights_env(n_flights_env, individual2D_env, individual_policy):
+    state_idx = n_flights_env.reset()
+    individual_rewards = np.zeros((n_flights_env.number_of_flights))
+    individual_bookings = np.zeros((n_flights_env.number_of_flights, individual2D_env.nA))
+    while True:
+        t, x = n_flights_env.to_coordinate(state_idx)
+        actions = []
+        for k in range(n_flights_env.number_of_flights):
+            state_idx = individual2D_env.to_idx(t, x[k])
+            action = individual_policy[state_idx]
+            actions.append(action)
+        actions_tuple = tuple(int(a) for a in actions)
+        actions_idx = n_flights_env.A.index(actions_tuple)
+
+        state_idx, rewards, dones, _ = n_flights_env.step(actions_idx)
+
+        for k in range(len(rewards)):
+            individual_rewards[k] += rewards[k]
+            if rewards[k] != 0:
+                individual_bookings[k][individual2D_env.A.index(int(actions[k]))] += 1
+
+        if np.all(dones):
+            break
+    return individual_rewards, individual_bookings
+
 
 def run_episode_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2):
     state_idx = global_env.reset()
@@ -185,13 +219,14 @@ def average_n_episodes_FL(env, policy, n_eval):
     return np.mean(scores)
 
 
-def average_n_episodes(env, policy, n_eval, epsilon=0.0):
+def average_n_episodes(env, policy, n_eval, agent=None, epsilon=0.0):
     """ Runs n episodes and returns the average of the n total rewards"""
-    scores = [run_episode(env, policy, epsilon) for _ in range(n_eval)]
+    scores = [run_episode(env, policy, agent, epsilon) for _ in range(n_eval)]
     scores = np.array(scores)
-    revenue = np.mean(scores[:,0])
-    bookings = np.mean(scores[:,1], axis=0)
+    revenue = np.mean(scores[:, 0])
+    bookings = np.mean(scores[:, 1], axis=0)
     return revenue, bookings
+
 
 def average_n_episodes_collaboration_global_policy(global_env, global_policy, individual2D_env, n_eval):
     revenues_1, revenues_2 = [], []
@@ -204,39 +239,59 @@ def average_n_episodes_collaboration_global_policy(global_env, global_policy, in
         bookings_2.append(bookings[1])
     return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
 
-def average_n_episodes_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D, individual_2D_env, policy_2D, n_eval):
+
+def average_n_episodes_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D, individual_2D_env, policy_2D,
+                                                                  n_eval):
     revenues_1, revenues_2 = [], []
     bookings_1, bookings_2 = [], []
     for k in range(n_eval):
-        revenues, bookings = run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D, individual_2D_env, policy_2D)
+        revenues, bookings = run_episode_collaboration_individual_2D_VS_3D_policies(global_env, policy_3D,
+                                                                                    individual_2D_env, policy_2D)
         revenues_1.append(revenues[0])
         revenues_2.append(revenues[1])
         bookings_1.append(bookings[0])
         bookings_2.append(bookings[1])
     return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
 
 def average_n_episodes_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env, n_eval):
     revenues_1, revenues_2 = [], []
     bookings_1, bookings_2 = [], []
     for k in range(n_eval):
-        revenues, bookings = run_episode_collaboration_individual_3D_policies(global_env, policy1, policy2, individual3D_env)
+        revenues, bookings = run_episode_collaboration_individual_3D_policies(global_env, policy1, policy2,
+                                                                              individual3D_env)
         revenues_1.append(revenues[0])
         revenues_2.append(revenues[1])
         bookings_1.append(bookings[0])
         bookings_2.append(bookings[1])
     return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
+
 
 def average_n_episodes_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2, n_eval):
     revenues_1, revenues_2 = [], []
     bookings_1, bookings_2 = [], []
     for k in range(n_eval):
-        revenues, bookings = run_episode_collaboration_individual_2D_policies(global_env, individual2D_env, policy1, policy2)
+        revenues, bookings = run_episode_collaboration_individual_2D_policies(global_env, individual2D_env, policy1,
+                                                                              policy2)
         revenues_1.append(revenues[0])
         revenues_2.append(revenues[1])
         bookings_1.append(bookings[0])
         bookings_2.append(bookings[1])
     return [np.mean(revenues_1), np.mean(revenues_2)], [np.mean(bookings_1, axis=0), np.mean(bookings_2, axis=0)]
 
+
+def average_n_episodes_collaboration_individual_policy_on_n_flights_env(n_flights_env, individual2D_env,
+                                                                        individual_policy, n_eval):
+    all_revenues = [[] for k in range(n_flights_env.number_of_flights)]
+    all_bookings = [[] for k in range(n_flights_env.number_of_flights)]
+    for k in range(n_eval):
+        revenues, bookings = run_episode_collaboration_individual_policy_on_n_flights_env(n_flights_env,
+                                                                                          individual2D_env,
+                                                                                          individual_policy)
+        for i in range(n_flights_env.number_of_flights):
+            all_revenues[i].append(revenues)
+            all_bookings[i].append(bookings)
+    return np.array([np.mean(revenue) for revenue in all_revenues]), np.array([np.mean(booking, axis=0) for booking in all_bookings])
 
 
 def q_to_policy_FL(Q):

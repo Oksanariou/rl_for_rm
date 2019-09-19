@@ -199,6 +199,81 @@ def q_learning_collaboration2D(global_env, individual_env1, individual_env2, alp
 
     return [Q1, Q2], [revenue1, revenue2], [bookings1, bookings2], episodes
 
+def q_learning_collaboration2D_shared_Q_table(global_env, individual_env1, individual_env2, alpha, alpha_min, alpha_decay, beta,
+                               beta_min, beta_decay, gamma,
+                               nb_episodes, epsilon,
+                               epsilon_min, epsilon_decay, fully_collaborative):
+    # Initialize the Q-table with zeros
+    Q = np.zeros([individual_env1.nS, individual_env1.action_space.n])
+    revenue1, revenue2, bookings1, bookings2, episodes = [], [], [], [], []
+
+    for episode in range(nb_episodes):
+        state = global_env.reset()
+        t, x1, x2 = global_env.to_coordinate(state)
+        state1, state2 = individual_env1.to_idx(t, x1), individual_env2.to_idx(t, x2)
+
+        done1, done2 = False, False
+
+        while not (done1 and done2):
+
+            # Epsilon_greedy
+            if random.random() < 1 - epsilon:
+                action_idx1 = np.argmax(Q[state1])
+                action_idx2 = np.argmax(Q[state2])
+            else:
+                action_idx1 = np.random.randint(individual_env1.action_space.n)
+                action_idx2 = np.random.randint(individual_env2.action_space.n)
+
+            action1 = individual_env1.A[action_idx1]
+            action2 = individual_env2.A[action_idx2]
+            action = global_env.A.index((action1, action2))
+
+            # We get our transition <s, a, r, s'>
+            next_state, r, done, _ = global_env.step(action)
+            new_t, new_x1, new_x2 = global_env.to_coordinate(next_state)
+            next_state1, next_state2 = individual_env1.to_idx(new_t, new_x1), individual_env2.to_idx(new_t, new_x2)
+
+            reward1 = r[0] + r[1] if fully_collaborative else r[0]
+            reward2 = r[0] + r[1] if fully_collaborative else r[1]
+            done1, done2 = done[0], done[1]
+
+            # We update the Q-table with using new knowledge
+
+            old_value1 = Q[state1, action_idx1]
+            new_value1 = reward1 + gamma * np.max(Q[next_state1])
+            Q[state1, action_idx1] = alpha * new_value1 + (
+                    1 - alpha) * old_value1 if new_value1 > old_value1 else beta * new_value1 + (
+                    1 - beta) * old_value1
+
+            old_value2 = Q[state2, action_idx2]
+            new_value2 = (reward2 + gamma * np.max(Q[next_state2]))
+            Q[state2, action_idx2] = alpha * new_value2 + (
+                    1 - alpha) * old_value2 if new_value2 > old_value2 else beta * new_value2 + (
+                    1 - beta) * old_value2
+
+            state1 = next_state1
+            state2 = next_state2
+
+        if episode % int(nb_episodes / 10) == 0:
+            policy1 = q_to_policy_2D(individual_env1, Q)
+            policy2 = q_to_policy_2D(individual_env2, Q)
+
+            revenues, bookings = average_n_episodes_collaboration_individual_2D_policies(global_env, individual_env1,
+                                                                                         policy1, policy2, 10000)
+
+            revenue1.append(revenues[0])
+            revenue2.append(revenues[1])
+            bookings1.append(bookings[0])
+            bookings2.append(bookings[1])
+            episodes.append(episode)
+            print("Average reward after {} episodes : {}".format(episode, revenues))
+
+        epsilon = max(epsilon_min, epsilon * epsilon_decay)
+        alpha = max(alpha_min, alpha * alpha_decay)
+        beta = max(beta_min, beta * beta_decay)
+
+    return [Q], [revenue1, revenue2], [bookings1, bookings2], episodes
+
 
 def q_to_v(Q_table):
     V = []
