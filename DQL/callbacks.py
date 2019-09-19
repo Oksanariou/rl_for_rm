@@ -5,6 +5,7 @@ import numpy as np
 from q_learning import q_to_v
 from visualization_and_metrics import visualize_policy_RM, average_n_episodes, visualisation_value_RM, q_to_policy_RM
 
+
 class Callback(object):
     def __init__(self, condition, agent):
         super(Callback).__init__()
@@ -23,9 +24,15 @@ class Callback(object):
 
 class AgentMonitor(Callback):
 
+    def __init__(self, condition, agent):
+        super().__init__(condition, agent)
+        self.episode_rewards = []
+
     def _run(self):
-        print("episode: {}, replay count: {}, loss: {:.2}, e: {:.2}, b: {:.2}".format(
-            self.agent.episode, self.agent.replay_count, self.agent.loss_value, self.agent.epsilon,
+        self.episode_rewards.append(self.agent.episode_reward)
+        print("episode: {}, reward:{}, replay count: {}, loss: {:.2}, e: {:.2}, b: {:.2}".format(
+            self.agent.episode, self.agent.episode_reward, self.agent.replay_count, self.agent.loss_value,
+            self.agent.epsilon,
             self.agent.priority_b))
 
 
@@ -85,7 +92,6 @@ class QCompute(Callback):
         self.Q_tables = []
         self.policies = []
         self.V_tables = []
-
 
 
 class QErrorMonitor(Callback):
@@ -275,22 +281,22 @@ class MemoryMonitor(Callback):
 
     def _run(self):
         self.replays.append(self.agent.replay_count)
-        states = [self.env.nS - 1]
-        actions = [0]
-        weights = [0]
-        for k in range(len(self.agent.memory)):
-            states.append(self.env.to_idx(self.agent.memory[k][0][0][0], self.agent.memory[k][0][0][1]))
-            actions.append(self.agent.memory[k][1])
+        states = []
+        actions = []
+        weights = []
+        for state, action, _, _, _, _ in self.agent.memory:
+            t, c = self.agent.denormalize_state(state[0])
+            states.append(self.env.to_idx(t, c))
+            actions.append(action)
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
-                                           weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[self.env.nS, self.env.nA], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
     def reset(self, agent):
         self.agent = agent
 
         self.replays = []
-        self.hist2d=[]
+        self.hist2d = []
 
 
 class MemoryDisplay(Callback):
@@ -323,16 +329,16 @@ class BatchMonitor(Callback):
 
     def _run(self):
         self.replays.append(self.agent.replay_count)
-        states = [self.env.nS - 1]
-        actions = [0]
-        weights = [0]
+        states = []
+        actions = []
+        weights = []
         L = list(self.agent.last_visited)
-        for k in range(len(L)):
-            states.append(self.env.to_idx(L[k][0][0], L[k][0][1]))
-            actions.append(L[k][1])
+        for state, action in L:
+            t, c = self.agent.denormalize_state(state)
+            states.append(self.env.to_idx(t, c))
+            actions.append(action)
             weights.append(1)
-        h, xedges, yedges = np.histogram2d(states, actions, bins=[max(states) + 1, self.env.action_space.n],
-                                           weights=weights)
+        h, xedges, yedges = np.histogram2d(states, actions, bins=[self.env.nS, self.env.nA], weights=weights)
         self.hist2d.append((h, xedges, yedges))
 
 

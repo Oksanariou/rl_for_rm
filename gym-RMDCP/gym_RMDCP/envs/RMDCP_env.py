@@ -181,7 +181,7 @@ class ValueScaler(object):
         self.scale_value = 2. / (C * max(A))
 
     def scale(self, value):
-        return self.scale_value * value - 1
+        return self.scale_value * value + 1.
 
     def unscale(self, value):
-        return (value + 1) / self.scale_value
+        return (value - 1.) / self.scale_value

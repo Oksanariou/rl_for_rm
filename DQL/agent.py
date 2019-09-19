@@ -59,6 +59,7 @@ class DQNAgent:
         self.target_model_update = target_model_update
 
         self.episode = 0
+        self.episode_reward = 0
         self.replay_count = 0
         self.loss_value = 0.
         self.last_visited = []
@@ -308,8 +309,6 @@ class DQNAgent:
 
         return history
 
-
-
     def init_with_V(self):
         shape = [space.n for space in self.env.observation_space]
         states = [(t, x) for t in range(shape[0]) for x in range(shape[1])]
@@ -331,25 +330,35 @@ class DQNAgent:
             training_errors.append(error)
             # print("After {} epochs , error:{:.2}".format(total_epochs, error))
 
+        min_error, last_error = min(training_errors), training_errors[-1]
+
         # Q_table = self.compute_q_table(env, self)
         # V = q_to_v(env, Q_table)
         # visualisation_value_RM(V, env.T, env.C)
 
         plt.figure()
-        plt.plot(range(0, total_epochs, epochs), training_errors, '-o')
+        plt.plot(range(0, total_epochs, epochs), training_errors, '-o',
+                 label="min={:.2f},last={:.2f}".format(min_error, last_error))
         plt.xlabel("Epochs")
         plt.ylabel("Error between the true Q-table and the agent's Q-table")
+        plt.legend()
+        plt.title("Layer Size={}, Dueling={}, Learning rate={}, Batch={}".format(self.hidden_layer_size, self.dueling,
+                                                                                 self.learning_rate, self.batch_size))
         plt.show()
 
+        return min_error, last_error
+
     def init_network_with_true_Q_table(self):
-        self.init_with_V()
+        return self.init_with_V()
 
     def init_target_network_with_true_Q_table(self):
-        self.init_network_with_true_Q_table()
+        min_error, last_error = self.init_network_with_true_Q_table()
         # Reset main model
         self.model = self._build_model()
         # And make sure the target model is never updated
         self.target_model_update = sys.maxsize
+
+        return min_error, last_error
 
     def act(self, state):
         state_idx = self.env.to_idx(state[0], state[1])
@@ -424,6 +433,8 @@ class DQNAgent:
                 # state = self.env.set_random_state()
                 state = self.env.reset()
 
+                self.episode_reward = 0
+
                 done = False
 
                 while not done:
@@ -433,6 +444,8 @@ class DQNAgent:
                     self.remember(state, action_idx, reward, next_state, done)
 
                     state = next_state
+
+                    self.episode_reward += reward
 
                 self.replay(episode)
 
