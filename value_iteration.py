@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def value_iteration(env, max_iter, epsilon):
     U = np.zeros(env.nS)
@@ -26,6 +27,25 @@ def value_iteration_discrete(env, max_iter = 100_000, epsilon = 1e-20, P={}):
         prev_U = np.copy(U)
         for state_idx in range(env.nS):
             q_sa = [sum([p * (r + prev_U[s_]) for p, s_, r, _ in P[state_idx][a]]) for a in range(env.nA)]
+            U[state_idx] = max(q_sa)
+
+        delta = np.sum(np.fabs(prev_U - U))
+        #if delta > epsilon:
+            #print("delta = {:.2}".format(delta))
+        if delta <= epsilon:
+            print("Converged at " + str(i))
+            break
+
+    return U
+
+def value_iteration_discrete_collaboration(env, max_iter = 100_000, epsilon = 1e-20, P={}):
+    if P == {}:
+        P = env.P
+    U = np.zeros(env.nS)
+    for i in range(max_iter):
+        prev_U = np.copy(U)
+        for state_idx in range(env.nS):
+            q_sa = [sum([p * (np.sum(r) + prev_U[s_]) if (p != 0.0 and ~np.isnan(p)) else 0 for p, s_, r, _ in P[state_idx][a]]) for a in range(env.nA)]
             U[state_idx] = max(q_sa)
 
         delta = np.sum(np.fabs(prev_U - U))

@@ -1,0 +1,1 @@
+from gym_CompetitionIndividual2D.envs.CompetitionIndividual2D_env import CompetitionIndividual2DEnv

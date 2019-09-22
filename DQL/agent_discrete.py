@@ -59,6 +59,7 @@ class DQNAgent_discrete:
         self.target_model_update = target_model_update
 
         self.episode = 0
+        self.episode_reward = 0
         self.replay_count = 0
         self.loss_value = 0.
         self.last_visited = []
@@ -340,6 +341,7 @@ class DQNAgent_discrete:
             return random.randrange(self.action_size)
 
         state = to_categorical(state, self.input_size)
+        state = np.reshape(state, [1, self.input_size])
         q_values = self.model.predict(state)
         action = self.env.A.index(self.optimal_policy[state]) if self.use_optimal_policy else np.argmax(q_values[0])
 
@@ -402,6 +404,7 @@ class DQNAgent_discrete:
             # state = self.env.set_random_state()
             state = self.env.reset()
 
+            self.episode_reward = 0
             done = False
 
             while not done:
@@ -412,8 +415,10 @@ class DQNAgent_discrete:
 
                 state = next_state
 
-            self.replay(episode)
+                self.episode_reward += reward
 
-            for callback in callbacks:
-                callback.run(episode)
+                self.replay(episode)
+
+                for callback in callbacks:
+                    callback.run(episode)
 

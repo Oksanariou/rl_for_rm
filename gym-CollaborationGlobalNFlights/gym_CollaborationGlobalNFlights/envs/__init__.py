@@ -1,0 +1,1 @@
+from gym_CollaborationGlobalNFlights.envs.CollaborationGlobalNFlights_env import CollaborationGlobalNFlightsEnv
