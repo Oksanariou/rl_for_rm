@@ -3,81 +3,63 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-from Collaboration_Competition.DQN_single_agent import learn_single_agent_collaboration_global, run_DQN_single_agent
-from Collaboration_Competition.DQN_multi_agent import run_DQN_multi_agent
 from dynamic_programming_env import dynamic_programming_collaboration
-from dynamic_programming_env_DCP import dynamic_programming_env_DCP
-from visualization_and_metrics import average_n_episodes_collaboration_global_policy, average_n_episodes
-from Collaboration_Competition.competition import plot_global_bookings_histograms
-from Collaboration_Competition.q_learning_collaboration import q_learning_global
 
 from stable_baselines.common.policies import MlpPolicy
-# from stable_baselines.deepq.policies import MlpPolicy
 from stable_baselines.common.vec_env import DummyVecEnv
-from stable_baselines import ACKTR, DQN
+from stable_baselines import ACKTR
 from functools import partial
 from multiprocessing import Pool
+from pathlib import Path
+from scipy.stats import sem, t
+import glob
 
 
 def ACKTR_agent_builder(env_vec):
     return ACKTR(MlpPolicy, env_vec)
 
-def CollaborationGlobal3D_env_builder():
-    micro_times = 5
-    capacity1 = 2
-    capacity2 = 2
 
-    action_min = 50
-    action_max = 160
-    action_offset = 100
-    actions_global = tuple((k, m) for k in range(action_min, action_max + 1, action_offset) for m in
-                           range(action_min, action_max + 1, action_offset))
-    actions_individual = tuple(k for k in range(action_min, action_max + 1, action_offset))
+def environment_parameters():
+    env_parameters = {}
+    env_parameters["micro_times"] = 100
+    env_parameters["capacity1"] = 11
+    env_parameters["capacity2"] = 11
+    env_parameters["action_min"] = 10
+    env_parameters["action_max"] = 230
+    env_parameters["action_offset"] = 20
+    env_parameters["actions"] = tuple((k, m) for k in
+                                      range(env_parameters["action_min"], env_parameters["action_max"] + 1,
+                                            env_parameters["action_offset"]) for m in
+                                      range(env_parameters["action_min"], env_parameters["action_max"] + 1,
+                                            env_parameters["action_offset"]))
+    env_parameters["lamb"] = 0.4
+    env_parameters["beta"] = 0.02
+    env_parameters["k_airline1"] = 1.5
+    env_parameters["k_airline2"] = 1.5
+    env_parameters["nested_lamb"] = 0.3
+    return env_parameters
 
-    demand_ratio = 1.8
-    # lamb = demand_ratio * (capacity1 + capacity2) / micro_times
-    lamb = 0.9
 
-    beta = 0.04
-    k_airline1 = 5
-    k_airline2 = 5
-    nested_lamb = 0.3
-    return gym.make('gym_CollaborationGlobal3DMultiDiscrete:CollaborationGlobal3DMultiDiscrete-v0', micro_times=micro_times,
-                    capacity1=capacity1,
-                    capacity2=capacity2,
-                    actions=actions_global, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2,
-                    lamb=lamb,
-                    nested_lamb=nested_lamb)
+def CollaborationGlobal3D_env_builder(env_parameters):
+    return gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0',
+                    micro_times=env_parameters["micro_times"],
+                    capacity1=env_parameters["capacity1"],
+                    capacity2=env_parameters["capacity2"],
+                    actions=env_parameters["actions"], beta=env_parameters["beta"],
+                    k_airline1=env_parameters["k_airline1"], k_airline2=env_parameters["k_airline2"],
+                    lamb=env_parameters["lamb"],
+                    nested_lamb=env_parameters["nested_lamb"])
 
-def parameters_builder_DQN():
-    parameters_dict = {}
-    parameters_dict["env_builder"] = CollaborationGlobal3D_env_builder
-    parameters_dict["gamma"] = 0.99
-    parameters_dict["learning_rate"] = 0.001
-    parameters_dict["buffer_size"] = 500
-    parameters_dict["exploration_fraction"] = 0.6
-    parameters_dict["exploration_final_eps"] = 0.01
-    parameters_dict["train_freq"] = 1
-    parameters_dict["batch_size"] = 32
-    parameters_dict["checkpoint_freq"] = 10000
-    parameters_dict["checkpoint_path"] = None
-    parameters_dict["learning_starts"] = 1
-    parameters_dict["target_network_update_freq"] = 50
-    parameters_dict["prioritized_replay"] = False
-    parameters_dict["prioritized_replay_alpha"] = 0.6
-    parameters_dict["prioritized_replay_beta0"] = 0.4
-    parameters_dict["prioritized_replay_beta_iters"] = None
-    parameters_dict["prioritized_replay_eps"] = 1e-6
-    parameters_dict["param_noise"] = False
-    parameters_dict["verbose"] = 0
-    parameters_dict["tensorboard_log"] = None
-    parameters_dict["policy_kwargs"] = {}
-    parameters_dict["weights"] = False
+def CollaborationGlobal3DMultiDiscrete_env_builder(env_parameters):
+    return gym.make('gym_CollaborationGlobal3DMultiDiscrete:CollaborationGlobal3DMultiDiscrete-v0',
+                    micro_times=env_parameters["micro_times"],
+                    capacity1=env_parameters["capacity1"],
+                    capacity2=env_parameters["capacity2"],
+                    actions=env_parameters["actions"], beta=env_parameters["beta"],
+                    k_airline1=env_parameters["k_airline1"], k_airline2=env_parameters["k_airline2"],
+                    lamb=env_parameters["lamb"],
+                    nested_lamb=env_parameters["nested_lamb"])
 
-    # env = parameters_dict["env_builder"]()
-    parameters_dict["original_weights"] = None
-
-    return parameters_dict
 
 def callback(_locals, _globals):
     """
@@ -88,16 +70,17 @@ def callback(_locals, _globals):
     global n_steps, rewards, env, model, callback_frequency
     if n_steps == 0 or ((n_steps + 1) % callback_frequency == 0):
         print(n_steps)
-        policy,_ = model.predict(env.states)
+        policy, _ = model.predict(env.states)
         rewards.append(env.average_n_episodes(policy, 10000))
     n_steps += 1
     return True
 
-def run_once(env_builder, agent_builder, nb_timesteps, frequency, k):
+
+def run_once(env_builder, env_parameters, agent_builder, nb_timesteps, frequency, experience_name, k):
     global env, rewards, n_steps, steps, model, count, callback_frequency
     callback_frequency = frequency
 
-    env = env_builder()
+    env = env_builder(env_parameters)
     env_vec = DummyVecEnv([lambda: env])
 
     rewards, n_steps = [], 0
@@ -108,66 +91,77 @@ def run_once(env_builder, agent_builder, nb_timesteps, frequency, k):
     model = agent_builder(env_vec)
     model.learn(total_timesteps=nb_timesteps, callback=callback)
 
-def run_n_times(env_builder, agent_builder, nb_timesteps, number_of_runs, callback_frequency):
+    np.save(experience_name / ("Run" + str(k) + ".npy"), rewards)
 
-    f = partial(run_once, env_builder, agent_builder, nb_timesteps, callback_frequency)
+
+def run_n_times(experience_name, env_builder, env_parameter, agent_builder, nb_timesteps, number_of_runs, callback_frequency):
+    (experience_name).mkdir(parents=True, exist_ok=True)
+
+    f = partial(run_once, env_builder, env_parameter, agent_builder, nb_timesteps, callback_frequency, experience_name)
 
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
 
 
+def collect_list_of_mean_revenues(experience_name):
+    list_of_rewards = []
+    for np_name in glob.glob(str(experience_name) + '/*.np[yz]'):
+        list_of_rewards.append(list(np.load(np_name, allow_pickle=True)))
+
+    nb_collection_points = len(list_of_rewards[0])
+
+    all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+
+    for k in range(len(list_of_rewards)):
+        rewards = list_of_rewards[k]
+        for i in range(nb_collection_points):
+            all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
+
+    mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
+    std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+    confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                           range(nb_collection_points)]
+    min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+    max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
+    return mean_revenues, min_revenues, max_revenues
+
+
+def plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue):
+    steps = [0]
+    for k in range(len(mean_revenues) - 1):
+        steps.append(callback_frequency + steps[-1] - 1)
+
+    fig = plt.figure()
+    plt.plot(steps, mean_revenues, color="gray", label='ACKTR mean revenue')
+    plt.fill_between(steps, min_revenues, max_revenues, label='95% confidence interval', color="gray", alpha=0.2)
+    plt.plot(steps, [optimal_revenue] * len(steps), label="Optimal solution")
+    plt.legend()
+    plt.ylabel("Average revenue on 10000 flights")
+    plt.xlabel("Number of episodes")
+    return fig
+
+
 if __name__ == '__main__':
+    env_parameters = environment_parameters()
+
+    env_discrete = CollaborationGlobal3D_env_builder(env_parameters)
+    V, P_global = dynamic_programming_collaboration(env_discrete)
+    P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
+    P_global = [int(a) for a in P_global]
+    optimal_revenue = V[0][0][0]
+
     callback_frequency = 500
-    total_timesteps = 30000
-    number_of_runs = 10
+    total_timesteps = 50000
+    number_of_runs = 30
 
-    run_n_times(CollaborationGlobal3D_env_builder, ACKTR_agent_builder, total_timesteps, number_of_runs, callback_frequency)
+    experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
+    experience_name.mkdir(parents=True, exist_ok=True)
 
-    # Dynamic Programming
-    # V, P_global = dynamic_programming_collaboration(collab_global_env)
-    # P_global = P_global.reshape(collab_global_env.T * collab_global_env.C1 * collab_global_env.C2)
-    # revenues_global, bookings_global = average_n_episodes_collaboration_global_policy(collab_global_env, P_global,
-    #                                                                                   individual_3D_env1,
-    #                                                                                   10000)
+    run_n_times(experience_name, CollaborationGlobal3D_env_builder, env_parameters,ACKTR_agent_builder, total_timesteps, number_of_runs,
+                callback_frequency)
 
-    # V, P_global = dynamic_programming_env_DCP(simple_env)
-    # P_global = P_global.reshape(simple_env.T * simple_env.C)
-    # revenues_global, bookings_global = average_n_episodes(simple_env, P_global,10000)
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
+    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
 
-    # episodes = [k for k in range(0, total_timesteps + 1, callback_frequency)]
-
-    # revenues = np.array(revenues)
-    # plt.figure()
-    # plt.plot(episodes, [revenues_global] * len(episodes), 'g--', label="Optimal P_Global")
-    # plt.plot(episodes, np.array(revenues[:, 0]), label="DQN P_Global")
-    # plt.legend()
-    # plt.ylabel("Average revenue on 10000 flights")
-    # plt.xlabel("Number of episodes")
-    # plt.show()
-
-    # revenues = np.array(revenues)
-    # plt.figure()
-    # plt.plot(episodes, [revenues_global[0] + revenues_global[1]] * len(episodes), 'g--', label="Optimal P_Global")
-    # plt.plot(episodes, np.array(revenues[:, 0][:, 0]) + np.array(revenues[:, 0][:, 1]), label="DQN P_Global")
-    # plt.legend()
-    # plt.ylabel("Average revenue on 10000 flights")
-    # plt.xlabel("Number of episodes")
-    # plt.show()
-    #
-    # individual_env = gym.make('gym_CompetitionIndividual2D:CompetitionIndividual2D-v0', capacity=capacity1,
-    #                           micro_times=micro_times, actions=actions_individual, lamb=lamb, beta=beta,
-    #                           k=k_airline1,
-    #                           nested_lamb=nested_lamb,
-    #                           competition_aware=False)
-    # plot_global_bookings_histograms(individual_env,
-    #                                 [revenues[:, 1][:, 0][-1],
-    #                                  revenues[:, 1][:, 1][-1]])
-    # plot_global_bookings_histograms(individual_env,
-    #                                 bookings_global)
-
-
-    # plot_global_bookings_histograms(simple_env,
-    #                                  [revenues[:, 1][-1],
-    #                                  [0 for k in range(simple_env.nA)]])
-    # plot_global_bookings_histograms(simple_env,
-    #                                 [bookings_global, [0 for k in range(simple_env.nA)]])
+    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
