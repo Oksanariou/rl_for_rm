@@ -19,7 +19,7 @@ def value_iteration(env, max_iter, epsilon):
 
     return U
 
-def value_iteration_discrete(env, max_iter = 100_000, epsilon = 1e-20, P={}):
+def value_iteration_discrete(env, max_iter = 100000, epsilon = 1e-20, P={}):
     if P == {}:
         P = env.P
     U = np.zeros(env.nS)
@@ -38,7 +38,7 @@ def value_iteration_discrete(env, max_iter = 100_000, epsilon = 1e-20, P={}):
 
     return U
 
-def value_iteration_discrete_collaboration(env, max_iter = 100_000, epsilon = 1e-20, P={}):
+def value_iteration_discrete_collaboration(env, max_iter = 100000, epsilon = 1e-20, P={}):
     if P == {}:
         P = env.P
     U = np.zeros(env.nS)
