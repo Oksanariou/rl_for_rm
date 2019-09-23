@@ -28,6 +28,7 @@ class CollaborationGlobal3DEnv(discrete.DiscreteEnv):
         self.C1 = capacity1
         self.C2 = capacity2
         self.nS = self.T * self.C1 * self.C2  # number of states
+        self.states = [s for s in range(self.nS)]
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
@@ -253,3 +254,25 @@ class CollaborationGlobal3DEnv(discrete.DiscreteEnv):
             t, x1, x2 = self.to_coordinate(self.s)
 
         return self.s
+
+    def run_episode(self, policy):
+        state = self.reset()
+        total_reward = 0
+        bookings = np.zeros(self.nA)
+        while True:
+            action_idx = policy[state]
+            state, reward, done, _ = self.step(action_idx)
+            if reward != 0:
+                bookings[action_idx] += 1
+            total_reward += reward
+            if done:
+                break
+        return total_reward, bookings
+
+    def average_n_episodes(self, policy, n_eval):
+        """ Runs n episodes and returns the average of the n total rewards"""
+        scores = [self.run_episode(policy) for _ in range(n_eval)]
+        scores = np.array(scores)
+        revenue = np.mean(scores[:, 0])
+        bookings = np.mean(scores[:, 1], axis=0)
+        return revenue, bookings

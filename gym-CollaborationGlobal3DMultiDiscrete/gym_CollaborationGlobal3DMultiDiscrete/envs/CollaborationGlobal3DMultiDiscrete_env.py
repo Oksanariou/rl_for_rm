@@ -30,6 +30,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.C1 = capacity1
         self.C2 = capacity2
         self.nS = self.T * self.C1 * self.C2  # number of states
+        self.states = [[t, x1, x2] for t in range(self.T) for x1 in range(self.C1) for x2 in range(self.C2)]
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
@@ -274,4 +275,28 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         p, s, r, d = self.P[s_idx][a][transition_idx]
         self.s = list(self.to_coordinate(s))
         return self.s, r[0] + r[1], d[0] and d[1], {"prob": p}
+
+    def run_episode(self, policy):
+        state = self.reset()
+        total_reward = 0
+        bookings = np.zeros(self.nA)
+        while True:
+            # t, x = env.to_coordinate(state)
+            state_idx = self.to_idx(state[0], state[1], state[2])
+            action_idx = policy[state_idx]
+            state, reward, done, _ = self.step(action_idx)
+            if reward != 0:
+                bookings[action_idx] += 1
+            total_reward += reward
+            if done:
+                break
+        return total_reward, bookings
+
+    def average_n_episodes(self, policy, n_eval):
+        """ Runs n episodes and returns the average of the n total rewards"""
+        scores = [self.run_episode(policy) for _ in range(n_eval)]
+        scores = np.array(scores)
+        revenue = np.mean(scores[:, 0])
+        bookings = np.mean(scores[:, 1], axis=0)
+        return revenue, bookings
 
