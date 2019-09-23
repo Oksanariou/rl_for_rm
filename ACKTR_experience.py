@@ -195,7 +195,7 @@ if __name__ == '__main__':
     experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
     experience_name.mkdir(parents=True, exist_ok=True)
 
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
                 callback_frequency)
 
     mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
