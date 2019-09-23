@@ -21,8 +21,7 @@ def compute_value(env, t, x, V):
 
 def compute_policy(env, t, x, V):
     d_list = compute_d_list(env, t, x, V)
-    action_idx = np.argmax(d_list)
-    return env.A[action_idx]
+    return np.argmax(d_list)
 
 
 def dynamic_programming_env_DCP(env):
