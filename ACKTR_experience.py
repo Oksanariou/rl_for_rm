@@ -173,8 +173,6 @@ def plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency,
 if __name__ == '__main__':
     collab_env_parameters = collaboration_environment_parameters()
     RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.1
-    RMDCP_env_parameters["learning_rate"] = learning_rate
 
     # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
     # V, P_global = dynamic_programming_collaboration(env_discrete)
@@ -192,7 +190,7 @@ if __name__ == '__main__':
     number_of_runs = 20
     callback_frequency = int((nb_timesteps/20)/10)
     # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
+    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(0.00001))
     experience_name.mkdir(parents=True, exist_ok=True)
 
     run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
@@ -202,160 +200,4 @@ if __name__ == '__main__':
     figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
 
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
-    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.01
-    RMDCP_env_parameters["learning_rate"] = learning_rate
-
-    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
-    # V, P_global = dynamic_programming_collaboration(env_discrete)
-    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
-    # P_global = [int(a) for a in P_global]
-    # optimal_revenue = V[0][0][0]
-
-    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
-    V, P = dynamic_programming_env_DCP(env_rmdcp)
-    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
-    P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
-
-    nb_timesteps = 10000
-    number_of_runs = 20
-    callback_frequency = int((nb_timesteps/20)/10)
-    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
-    experience_name.mkdir(parents=True, exist_ok=True)
-
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
-
-    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
-    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
-
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
-    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.001
-    RMDCP_env_parameters["learning_rate"] = learning_rate
-
-    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
-    # V, P_global = dynamic_programming_collaboration(env_discrete)
-    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
-    # P_global = [int(a) for a in P_global]
-    # optimal_revenue = V[0][0][0]
-
-    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
-    V, P = dynamic_programming_env_DCP(env_rmdcp)
-    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
-    P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
-
-    nb_timesteps = 10000
-    number_of_runs = 20
-    callback_frequency = int((nb_timesteps/20)/10)
-    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
-    experience_name.mkdir(parents=True, exist_ok=True)
-
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
-
-    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
-    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
-
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
-    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.0001
-    RMDCP_env_parameters["learning_rate"] = learning_rate
-
-    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
-    # V, P_global = dynamic_programming_collaboration(env_discrete)
-    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
-    # P_global = [int(a) for a in P_global]
-    # optimal_revenue = V[0][0][0]
-
-    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
-    V, P = dynamic_programming_env_DCP(env_rmdcp)
-    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
-    P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
-
-    nb_timesteps = 10000
-    number_of_runs = 20
-    callback_frequency = int((nb_timesteps/20)/10)
-    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
-    experience_name.mkdir(parents=True, exist_ok=True)
-
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
-
-    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
-    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
-
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
-    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.00001
-    RMDCP_env_parameters["learning_rate"] = learning_rate
-
-    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
-    # V, P_global = dynamic_programming_collaboration(env_discrete)
-    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
-    # P_global = [int(a) for a in P_global]
-    # optimal_revenue = V[0][0][0]
-
-    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
-    V, P = dynamic_programming_env_DCP(env_rmdcp)
-    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
-    P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
-
-    nb_timesteps = 10000
-    number_of_runs = 20
-    callback_frequency = int((nb_timesteps/20)/10)
-    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
-    experience_name.mkdir(parents=True, exist_ok=True)
-
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
-
-    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
-    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
-
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
-    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.000001
-    RMDCP_env_parameters["learning_rate"] = learning_rate
-
-    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
-    # V, P_global = dynamic_programming_collaboration(env_discrete)
-    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
-    # P_global = [int(a) for a in P_global]
-    # optimal_revenue = V[0][0][0]
-
-    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
-    V, P = dynamic_programming_env_DCP(env_rmdcp)
-    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
-    P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
-
-    nb_timesteps = 10000
-    number_of_runs = 20
-    callback_frequency = int((nb_timesteps/20)/10)
-    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(learning_rate))
-    experience_name.mkdir(parents=True, exist_ok=True)
-
-    run_n_times(experience_name, CollaborationGlobal3D_env_builder, collab_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
-
-    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
-    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
-
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
-
 
