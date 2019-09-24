@@ -17,7 +17,7 @@ import glob
 
 
 def ACKTR_agent_builder(env_vec):
-    return ACKTR(MlpPolicy, env_vec, learning_rate=0.00001)
+    return ACKTR(MlpPolicy, env_vec, learning_rate=0.0001)
 
 
 def collaboration_environment_parameters():
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     number_of_runs = 20
     callback_frequency = int((nb_timesteps/20)/10)
     # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(0.00001))
+    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(0.0001))
     experience_name.mkdir(parents=True, exist_ok=True)
 
     run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
