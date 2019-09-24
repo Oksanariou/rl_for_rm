@@ -26,6 +26,7 @@ class RMDCPDiscreteEnv(discrete.DiscreteEnv):
         self.C = capacity
         self.M = micro_times
         self.nS = data_collection_points * capacity  # number of states
+        self.states = [k for k in range(self.nS)]
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
@@ -142,6 +143,29 @@ class RMDCPDiscreteEnv(discrete.DiscreteEnv):
                    range(self.T * self.C)]
         return weights
 
+    def run_episode(self, policy):
+        state = self.reset()
+        total_reward = 0
+        bookings = np.zeros(self.nA)
+        while True:
+            action_idx = policy[state]
+            state, reward, done, _ = self.step(action_idx)
+            if reward != 0:
+                bookings[action_idx] += 1
+            total_reward += reward
+            if done:
+                break
+        return total_reward, bookings
+
+    def average_n_episodes(self, policy, n_eval):
+        """ Runs n episodes and returns the average of the n total rewards"""
+        scores = [self.run_episode(policy) for _ in range(n_eval)]
+        scores = np.array(scores)
+        revenue = np.mean(scores[:, 0])
+        bookings = np.mean(scores[:, 1], axis=0)
+        return revenue, bookings
+
+
 
 class StateScaler(object):
     def __init__(self, T, C):
@@ -170,4 +194,6 @@ class ValueScaler(object):
 
     def unscale(self, value):
         return (value + 1) / self.scale_value
+
+
 
