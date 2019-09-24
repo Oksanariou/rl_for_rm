@@ -47,7 +47,8 @@ if __name__ == '__main__':
     visualisation_value_RM(V, env.T, env.C)
     visualize_policy_RM(P_ref, env.T, env.C)
     P_ref = P_ref.reshape(env.T * env.C)
-    mean_revenue, mean_bookings = average_n_episodes(env, P_ref, 10000)
+    P_ref = [int(a) for a in P_ref]
+    mean_revenue, mean_bookings = env.average_n_episodes(P_ref, 10000)
     print("Average reward over 1000 episodes : " + str(mean_revenue))
 
     plt.figure()
@@ -55,16 +56,33 @@ if __name__ == '__main__':
     plt.bar(env.A, mean_bookings, width=width)
     plt.xlabel("Prices")
     plt.ylabel("Average number of bookings")
-    plt.title("Demand ratio: {:.2}, Average load factor: {:.2}".format((lamb * data_collection_points) / capacity,
+    plt.title("Demand ratio: {:.2}, Average load factor: {:.2}".format((lamb * micro_times) / capacity,
                                                                        np.sum(mean_bookings) / capacity))
     plt.show()
+
+    alpha, alpha_min, alpha_decay, gamma = 0.8, 0, 0.99999, 0.99
+    # alpha, alpha_min, alpha_decay, gamma = 0.2, 0, 1, 0.99
+    nb_episodes = 600000
+    epsilon, epsilon_min, epsilon_decay = 1, 0.01, 0.99999
+    temp = 100
+
+    visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay)
+    # visualizing_epsilon_decay(nb_episodes, alpha, alpha_min, alpha_decay)
+    q_table, nb_episodes_list, diff_with_policy_opt_list, M, trajectories, revenues_QL = q_learning(env, alpha,
+                                                                                                    alpha_min,
+                                                                                                    alpha_decay, gamma,
+                                                                                                    nb_episodes,
+                                                                                                    epsilon,
+                                                                                                    epsilon_min,
+                                                                                                    epsilon_decay,
+                                                                                                    P_ref, temp)
 
     plt.figure()
     width = 1 / 4
     ind = np.array([0])
     plt.bar(["RMS"], mean_revenue, width=width, label="{}".format(round(mean_revenue)))
     plt.bar(["QL"], np.mean(revenues_QL[:, 0][-1]), width=width, label="{}".format(round(revenues_QL[:, 0][-1])))
-    plt.bar(["DQL"], np.mean(revenues[:, 0][-1]), width=width, label="{}".format(round(revenues[:, 0][-1])))
+    # plt.bar(["DQL"], np.mean(revenues[:, 0][-1]), width=width, label="{}".format(round(revenues[:, 0][-1])))
     plt.xlabel("Strategies")
     plt.ylabel("Average revenue \n (computed on 10000 flights)")
     plt.title("Revenues produced by the optimal policies \n of the different strategies")

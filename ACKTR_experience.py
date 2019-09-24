@@ -17,7 +17,7 @@ import glob
 
 
 def ACKTR_agent_builder(env_vec):
-    return ACKTR(MlpPolicy, env_vec, learning_rate=0.0001)
+    return ACKTR(MlpPolicy, env_vec, learning_rate=0.1)
 
 
 def collaboration_environment_parameters():
@@ -43,12 +43,12 @@ def collaboration_environment_parameters():
 
 def RMDCPDiscrete_environment_parameters():
     env_parameters = {}
-    env_parameters["data_collection_points"] = 80
-    env_parameters["micro_times"] = 5
-    env_parameters["capacity"] = 50
+    env_parameters["data_collection_points"] = 20
+    env_parameters["micro_times"] = 1
+    env_parameters["capacity"] = 10
     env_parameters["action_min"] = 50
-    env_parameters["action_max"] = 230
-    env_parameters["action_offset"] = 30
+    env_parameters["action_max"] = 150
+    env_parameters["action_offset"] = 50
     env_parameters["actions"] = [k for k in range(env_parameters["action_min"], env_parameters["action_max"] + 1,
                                                   env_parameters["action_offset"])]
     env_parameters["lamb"] = 0.7
@@ -169,10 +169,22 @@ def plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency,
     plt.xlabel("Number of episodes")
     return fig
 
+def plot_bookings(env, bookings):
+    plt.figure()
+    width = 5
+    capacity = env.C
+    plt.bar(env.A, bookings, width)
+    plt.xlabel("Prices")
+    plt.ylabel("Average number of bookings")
+    plt.title("Overall load factor: {:.2}".format(np.sum(bookings) / capacity))
+    plt.xticks(env.A)
+    plt.show()
+
 
 if __name__ == '__main__':
     collab_env_parameters = collaboration_environment_parameters()
     RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
+    learning_rate = 0.1
 
     # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
     # V, P_global = dynamic_programming_collaboration(env_discrete)
@@ -184,17 +196,170 @@ if __name__ == '__main__':
     V, P = dynamic_programming_env_DCP(env_rmdcp)
     P = P.reshape(env_rmdcp.T * env_rmdcp.C)
     P = [int(a) for a in P]
-    optimal_revenue = V[0][0]
+    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    plot_bookings(env_rmdcp, optimal_bookings)
 
-    nb_timesteps = 10000
-    number_of_runs = 20
+    nb_timesteps = 500000
+    number_of_runs = 16
     callback_frequency = int((nb_timesteps/20)/10)
     # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_ACKTR/lr_of_"+str(0.0001))
+    experience_name = Path("../Results/Test_ACKTR/small_env/lr_of_"+str(learning_rate))
     experience_name.mkdir(parents=True, exist_ok=True)
 
-    run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
-                callback_frequency)
+    # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    #             callback_frequency)
+    for k in range(20):
+        run_once(RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps,
+                callback_frequency, experience_name, k)
+
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
+    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
+
+    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
+
+    def ACKTR_agent_builder(env_vec):
+        return ACKTR(MlpPolicy, env_vec, learning_rate=0.01)
+    collab_env_parameters = collaboration_environment_parameters()
+    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
+    learning_rate = 0.01
+
+    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
+    # V, P_global = dynamic_programming_collaboration(env_discrete)
+    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
+    # P_global = [int(a) for a in P_global]
+    # optimal_revenue = V[0][0][0]
+
+    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
+    V, P = dynamic_programming_env_DCP(env_rmdcp)
+    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
+    P = [int(a) for a in P]
+    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    plot_bookings(env_rmdcp, optimal_bookings)
+
+    nb_timesteps = 500000
+    number_of_runs = 16
+    callback_frequency = int((nb_timesteps/20)/10)
+    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
+    experience_name = Path("../Results/Test_ACKTR/small_env/lr_of_"+str(learning_rate))
+    experience_name.mkdir(parents=True, exist_ok=True)
+
+    # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    #             callback_frequency)
+    for k in range(20):
+        run_once(RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps,
+                callback_frequency, experience_name, k)
+
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
+    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
+
+    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
+
+
+    def ACKTR_agent_builder(env_vec):
+        return ACKTR(MlpPolicy, env_vec, learning_rate=0.0001)
+    collab_env_parameters = collaboration_environment_parameters()
+    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
+    learning_rate = 0.0001
+
+    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
+    # V, P_global = dynamic_programming_collaboration(env_discrete)
+    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
+    # P_global = [int(a) for a in P_global]
+    # optimal_revenue = V[0][0][0]
+
+    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
+    V, P = dynamic_programming_env_DCP(env_rmdcp)
+    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
+    P = [int(a) for a in P]
+    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    plot_bookings(env_rmdcp, optimal_bookings)
+
+    nb_timesteps = 500000
+    number_of_runs = 16
+    callback_frequency = int((nb_timesteps/20)/10)
+    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
+    experience_name = Path("../Results/Test_ACKTR/small_env/lr_of_"+str(learning_rate))
+    experience_name.mkdir(parents=True, exist_ok=True)
+
+    # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    #             callback_frequency)
+    for k in range(20):
+        run_once(RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps,
+                callback_frequency, experience_name, k)
+
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
+    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
+
+    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
+
+    def ACKTR_agent_builder(env_vec):
+        return ACKTR(MlpPolicy, env_vec, learning_rate=0.00001)
+    collab_env_parameters = collaboration_environment_parameters()
+    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
+    learning_rate = 0.00001
+
+    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
+    # V, P_global = dynamic_programming_collaboration(env_discrete)
+    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
+    # P_global = [int(a) for a in P_global]
+    # optimal_revenue = V[0][0][0]
+
+    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
+    V, P = dynamic_programming_env_DCP(env_rmdcp)
+    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
+    P = [int(a) for a in P]
+    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    plot_bookings(env_rmdcp, optimal_bookings)
+
+    nb_timesteps = 500000
+    number_of_runs = 16
+    callback_frequency = int((nb_timesteps/20)/10)
+    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
+    experience_name = Path("../Results/Test_ACKTR/small_env/lr_of_"+str(learning_rate))
+    experience_name.mkdir(parents=True, exist_ok=True)
+
+    # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    #             callback_frequency)
+    for k in range(20):
+        run_once(RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps,
+                callback_frequency, experience_name, k)
+
+    mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
+    figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
+
+    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
+
+    def ACKTR_agent_builder(env_vec):
+        return ACKTR(MlpPolicy, env_vec, learning_rate=0.25)
+    collab_env_parameters = collaboration_environment_parameters()
+    RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
+    learning_rate = 0.25
+
+    # env_discrete = CollaborationGlobal3D_env_builder(collab_env_parameters)
+    # V, P_global = dynamic_programming_collaboration(env_discrete)
+    # P_global = P_global.reshape(env_discrete.T * env_discrete.C1 * env_discrete.C2)
+    # P_global = [int(a) for a in P_global]
+    # optimal_revenue = V[0][0][0]
+
+    env_rmdcp = RMDCPDiscrete_env_builder(RMDCP_env_parameters)
+    V, P = dynamic_programming_env_DCP(env_rmdcp)
+    P = P.reshape(env_rmdcp.T * env_rmdcp.C)
+    P = [int(a) for a in P]
+    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    plot_bookings(env_rmdcp, optimal_bookings)
+
+    nb_timesteps = 500000
+    number_of_runs = 16
+    callback_frequency = int((nb_timesteps/20)/10)
+    # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
+    experience_name = Path("../Results/Test_ACKTR/small_env/lr_of_"+str(learning_rate))
+    experience_name.mkdir(parents=True, exist_ok=True)
+
+    # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,
+    #             callback_frequency)
+    for k in range(20):
+        run_once(RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps,
+                callback_frequency, experience_name, k)
 
     mean_revenues, min_revenues, max_revenues = collect_list_of_mean_revenues(experience_name)
     figure = plot_revenues(mean_revenues, min_revenues, max_revenues, callback_frequency, optimal_revenue)
