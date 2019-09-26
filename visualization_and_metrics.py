@@ -61,6 +61,8 @@ def run_episode(env, policy, agent=None, epsilon=0.0):
 
         bookings[action_idx] += (next_state[1] - state[1])
         total_reward += reward
+
+        state = next_state
         if done:
             break
     return total_reward, bookings
