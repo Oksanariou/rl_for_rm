@@ -68,9 +68,8 @@ def q_learning(env, alpha, alpha_min, alpha_decay, gamma, nb_episodes, epsilon, 
             # visualize_policy_RM(policy, env.T, env.C)
 
             N = 10000
-            revenue = average_n_episodes(env, policy, N)
-            revenues.append(revenue)
-            print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenue))
+            revenues.append(env.average_n_episodes(policy, N))
+            print("Average reward over {} episodes after {} episodes : {}".format(N, episode, revenues[-1]))
             difference_with_optimal_policy = difference_between_policies(policy, P_ref)
             print("Difference with the optimal policy after {} episodes : {}".format(episode, difference_with_optimal_policy))
             diff_with_policy_opt_list.append(difference_with_optimal_policy)

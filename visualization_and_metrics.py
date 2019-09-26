@@ -317,9 +317,9 @@ def visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay):
             epsilon *= epsilon_decay
         Y.append(epsilon)
     plt.plot(X, Y, 'b')
-    plt.title("Decaying epsilon over the number of episodes")
+    plt.title("Decaying alpha over the number of episodes")
     plt.xlabel("Number of episodes")
-    plt.ylabel("Epsilon")
+    plt.ylabel("Alpha")
     plt.grid()
     return plt.show()
 
@@ -394,7 +394,7 @@ def q_to_policy_RM(env, Q):
     policy = []
     for l in Q:
         idx_action = np.argmax(l)
-        policy.append(env.A[idx_action])
+        policy.append(idx_action)
     policy = np.array(policy).reshape(env.T, env.C)
     policy[:, -1] = 0.
     policy[-1] = 0.

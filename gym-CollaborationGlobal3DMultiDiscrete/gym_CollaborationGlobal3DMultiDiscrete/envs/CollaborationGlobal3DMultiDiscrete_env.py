@@ -2,6 +2,8 @@ import gym
 import numpy as np
 from gym import spaces
 from gym.utils import seeding
+from scipy.stats import sem, t
+import glob
 from gym.envs.toy_text import discrete
 import scipy.special
 
@@ -29,6 +31,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.T = micro_times
         self.C1 = capacity1
         self.C2 = capacity2
+        self.C = self.C1 + self.C2
         self.nS = self.T * self.C1 * self.C2  # number of states
         self.states = [[t, x1, x2] for t in range(self.T) for x1 in range(self.C1) for x2 in range(self.C2)]
 
@@ -274,23 +277,30 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         transition_idx = self.categorical_sample(csprob_n)
         p, s, r, d = self.P[s_idx][a][transition_idx]
         self.s = list(self.to_coordinate(s))
-        return self.s, r[0] + r[1], d[0] and d[1], {"prob": p}
+        return self.s, r[0] + r[1], d[0] and d[1], r
 
     def run_episode(self, policy):
         state = self.reset()
         total_reward = 0
         bookings = np.zeros(self.nA)
+        bookings_flight1 = np.zeros(len(self.prices_flight1))
+        bookings_flight2 = np.zeros(len(self.prices_flight2))
         while True:
             # t, x = env.to_coordinate(state)
             state_idx = self.to_idx(state[0], state[1], state[2])
             action_idx = policy[state_idx]
-            state, reward, done, _ = self.step(action_idx)
-            if reward != 0:
+            state, reward, done, rewards = self.step(action_idx)
+            action1, action2 = self.A[action_idx][0], self.A[action_idx][1]
+            if rewards[0] != 0:
+                bookings_flight1[self.prices_flight1.index(int(action1))] += 1
+                bookings[action_idx] += 1
+            if rewards[1] != 0:
+                bookings_flight2[self.prices_flight2.index(int(action2))] += 1
                 bookings[action_idx] += 1
             total_reward += reward
             if done:
                 break
-        return total_reward, bookings
+        return total_reward, bookings, bookings_flight1, bookings_flight2
 
     def average_n_episodes(self, policy, n_eval):
         """ Runs n episodes and returns the average of the n total rewards"""
@@ -298,5 +308,39 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         scores = np.array(scores)
         revenue = np.mean(scores[:, 0])
         bookings = np.mean(scores[:, 1], axis=0)
-        return revenue, bookings
+        bookings_flight1 = np.mean(scores[:, 2], axis=0)
+        bookings_flight2 = np.mean(scores[:, 3], axis=0)
+        return revenue, bookings, bookings_flight1, bookings_flight2
+
+    def collect_list_of_mean_revenues_and_bookings(self, experience_name):
+        list_of_rewards = []
+        for np_name in glob.glob(str(experience_name) + '/*.np[yz]'):
+            list_of_rewards.append(list(np.load(np_name, allow_pickle=True)))
+
+        nb_collection_points = len(list_of_rewards[0])
+
+        all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        bookings1_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        bookings2_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+
+        for k in range(len(list_of_rewards)):
+            rewards = list_of_rewards[k]
+            for i in range(nb_collection_points):
+                all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
+                all_bookings_combined_at_each_collection_point[i].append(rewards[i][1])
+                bookings1_combined_at_each_collection_point[i].append(rewards[i][2])
+                bookings2_combined_at_each_collection_point[i].append(rewards[i][3])
+
+        mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
+        mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
+        mean_bookings1 = [np.mean(list, axis=0) for list in bookings1_combined_at_each_collection_point]
+        mean_bookings2 = [np.mean(list, axis=0) for list in bookings2_combined_at_each_collection_point]
+        std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                               range(nb_collection_points)]
+        min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
+        return mean_revenues, min_revenues, max_revenues, mean_bookings, mean_bookings1, mean_bookings2
 

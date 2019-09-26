@@ -27,6 +27,7 @@ class CollaborationGlobal3DEnv(discrete.DiscreteEnv):
         self.T = micro_times
         self.C1 = capacity1
         self.C2 = capacity2
+        self.C = self.C1 + self.C2
         self.nS = self.T * self.C1 * self.C2  # number of states
         self.states = [s for s in range(self.nS)]
 
