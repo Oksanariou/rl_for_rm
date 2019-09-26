@@ -39,26 +39,27 @@ def run_episode_FL(env, policy):
 
 def run_episode(env, policy, agent=None, epsilon=0.0):
     """ Runs an episode and returns the total reward """
+
+    if agent is None:
+        policy = np.asarray(policy, dtype=np.int16).flatten()
+
     state = env.reset()
     total_reward = 0
     bookings = np.zeros(env.nA)
     while True:
         # t, x = env.to_coordinate(state)
-        state_idx = env.to_idx(*state) if type(env.observation_space) == gym.spaces.tuple.Tuple else state #env.to_idx(state[0], state[1], state[2])
+        state_idx = env.to_idx(*state)
         if np.random.rand() <= epsilon:
             action_idx = random.randrange(env.action_space.n)
-            action = env.A[action_idx] if type(env.observation_space) == gym.spaces.tuple.Tuple else action_idx
-
         else:
             if agent is not None:
                 action_idx, _ = agent.predict(state)
-                action = action_idx
             else:
                 action_idx = policy[state_idx]
-                action = action_idx
-        state, reward, done, _ = env.step(action_idx)
-        if reward != 0:
-            bookings[action_idx] += 1
+
+        next_state, reward, done, _ = env.step(action_idx)
+
+        bookings[action_idx] += (next_state[1] - state[1])
         total_reward += reward
         if done:
             break

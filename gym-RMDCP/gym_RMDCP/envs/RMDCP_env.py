@@ -27,6 +27,7 @@ class RMDCPEnv(gym.Env):
         self.C = capacity
         self.M = micro_times
         self.nS = data_collection_points * capacity  # number of states
+        self.states = [[t, x] for t in range(self.T) for x in range(self.C)]
 
         self.A = actions
         self.nA = len(self.A)  # number of actions
@@ -108,7 +109,7 @@ class RMDCPEnv(gym.Env):
         return [seed]
 
     def reset(self):
-        self.s = [0, 0]
+        self.s = (0, 0)
 
         return self.s
 
@@ -125,7 +126,7 @@ class RMDCPEnv(gym.Env):
         csprob_n = self.proba_cumsum[s_tuple][a]
         transition_idx = self.categorical_sample(csprob_n)
         p, s, r, d = self.P[s_tuple][a][transition_idx]
-        self.s = list(s)
+        self.s = tuple(s)
         return self.s, r, d, {"prob": p}
 
     def proba_buy(self, a):
