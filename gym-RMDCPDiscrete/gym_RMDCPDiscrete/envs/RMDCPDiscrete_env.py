@@ -5,6 +5,8 @@ from gym import spaces
 from gym.utils import seeding
 import scipy.special
 from gym.envs.toy_text import discrete
+from scipy.stats import sem, t
+import glob
 import matplotlib.pyplot as plt
 
 default_data_collection_points = 500
@@ -164,6 +166,32 @@ class RMDCPDiscreteEnv(discrete.DiscreteEnv):
         revenue = np.mean(scores[:, 0])
         bookings = np.mean(scores[:, 1], axis=0)
         return revenue, bookings
+
+    def collect_list_of_mean_revenues_and_bookings(self, experience_name):
+        list_of_rewards = []
+        for np_name in glob.glob(str(experience_name) + '/*.np[yz]'):
+            list_of_rewards.append(list(np.load(np_name, allow_pickle=True)))
+
+        nb_collection_points = len(list_of_rewards[0])
+
+        all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+
+        for k in range(len(list_of_rewards)):
+            rewards = list_of_rewards[k]
+            for i in range(nb_collection_points):
+                all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
+                all_bookings_combined_at_each_collection_point[i].append(rewards[i][1])
+
+        mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
+        mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
+        std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                               range(nb_collection_points)]
+        min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
+        return mean_revenues, min_revenues, max_revenues, mean_bookings
 
 
 
