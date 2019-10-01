@@ -224,3 +224,5 @@ if __name__ == '__main__':
     plot_bookings(env_rmdcp, mean_bookings[-1])
     # plot_bookings_by_flight(env_discrete, mean_bookings1[0], mean_bookings2[0])
 
+
+

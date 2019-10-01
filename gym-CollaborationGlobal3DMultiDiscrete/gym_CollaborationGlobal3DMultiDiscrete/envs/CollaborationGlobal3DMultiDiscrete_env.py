@@ -277,7 +277,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         transition_idx = self.categorical_sample(csprob_n)
         p, s, r, d = self.P[s_idx][a][transition_idx]
         self.s = list(self.to_coordinate(s))
-        return self.s, r[0] + r[1], d[0] and d[1], r
+        return self.s, r[0] + r[1], d[0] and d[1], {"prob": p, "individual_rewards": r}
 
     def run_episode(self, policy):
         state = self.reset()
@@ -290,6 +290,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
             state_idx = self.to_idx(state[0], state[1], state[2])
             action_idx = policy[state_idx]
             state, reward, done, rewards = self.step(action_idx)
+            rewards = rewards["individual_rewards"]
             action1, action2 = self.A[action_idx][0], self.A[action_idx][1]
             if rewards[0] != 0:
                 bookings_flight1[self.prices_flight1.index(int(action1))] += 1

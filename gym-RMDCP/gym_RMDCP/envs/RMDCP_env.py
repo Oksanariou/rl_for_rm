@@ -4,6 +4,8 @@ import random
 from gym import spaces
 from gym.utils import seeding
 import scipy.special
+from scipy.stats import sem, t
+import glob
 import matplotlib.pyplot as plt
 
 default_data_collection_points = 500
@@ -43,6 +45,7 @@ class RMDCPEnv(gym.Env):
         self.seed()
 
         self.s = [0, 0]
+        self.trajectory_matrix = np.zeros((self.T, self.C))
 
         self.P, self.proba_cumsum = self.init_transitions()
 
@@ -159,6 +162,63 @@ class RMDCPEnv(gym.Env):
     def get_value_scaler(self):
 
         return ValueScaler(self.A, self.C)
+
+    def run_episode(self, policy):
+        """ Runs an episode and returns the total reward """
+        policy = np.asarray(policy, dtype=np.int16).flatten()
+        state = self.reset()
+        self.trajectory_matrix[state[0]][state[1]] += 1
+        total_reward = 0
+        bookings = np.zeros(self.nA)
+        while True:
+            state_idx = self.to_idx(*state)
+            action_idx = policy[state_idx]
+
+            next_state, reward, done, _ = self.step(action_idx)
+            bookings[action_idx] += (next_state[1] - state[1])
+            total_reward += reward
+
+            state = next_state
+            self.trajectory_matrix[state[0]][state[1]] += 1
+            if done:
+                break
+        return total_reward, bookings
+
+    def average_n_episodes(self, policy, n_eval, agent=None, epsilon=0.0):
+        """ Runs n episodes and returns the average of the n total rewards"""
+        self.trajectory_matrix = np.zeros((self.T, self.C))
+        scores = [self.run_episode(policy) for _ in range(n_eval)]
+        scores = np.array(scores)
+        revenue = np.mean(scores[:, 0])
+        bookings = np.mean(scores[:, 1], axis=0)
+        return revenue, bookings
+
+
+    def collect_list_of_mean_revenues_and_bookings(self, experience_name):
+        list_of_rewards = []
+        for np_name in glob.glob(str(experience_name) + '/*.np[yz]'):
+            list_of_rewards.append(list(np.load(np_name, allow_pickle=True)))
+
+        nb_collection_points = len(list_of_rewards[0])
+
+        all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+
+        for k in range(len(list_of_rewards)):
+            rewards = list_of_rewards[k]
+            for i in range(nb_collection_points):
+                all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
+                all_bookings_combined_at_each_collection_point[i].append(rewards[i][1])
+
+        mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
+        mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
+        std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                               range(nb_collection_points)]
+        min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
+        return mean_revenues, min_revenues, max_revenues, mean_bookings
 
 
 class StateScaler(object):

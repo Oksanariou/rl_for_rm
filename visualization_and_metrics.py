@@ -58,7 +58,6 @@ def run_episode(env, policy, agent=None, epsilon=0.0):
                 action_idx = policy[state_idx]
 
         next_state, reward, done, _ = env.step(action_idx)
-
         bookings[action_idx] += (next_state[1] - state[1])
         total_reward += reward
 
