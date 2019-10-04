@@ -165,9 +165,9 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn', force=True)
-
     env = env_builder()
+
+    mp.set_start_method('spawn', force=True)
 
     if env.observation_space.shape[0] == 2:
         true_V, true_P = dynamic_programming_env_DCP(env)
