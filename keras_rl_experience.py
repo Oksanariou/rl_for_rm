@@ -120,7 +120,7 @@ def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, k):
                    enable_double_dqn=parameters_dict["enable_double_dqn"], enable_dueling_network=parameters_dict["enable_dueling_network"],
                    target_model_update=parameters_dict["target_model_update"], policy=policy)
     dqn.compile(Adam(lr=parameters_dict["learning_rate"]), metrics=['mae'])
-    rewards = callback()
+    rewards = callback(env)
     history = dqn.fit(env, nb_steps=nb_timesteps, visualize=False, verbose=2, callbacks=[rewards])
     np.save(experience_name / ("Run" + str(k) + ".npy"), rewards.rewards)
 
@@ -167,7 +167,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 if __name__ == '__main__':
     env = env_builder()
 
-    mp.set_start_method('spawn', force=True)
+    # mp.set_start_method('spawn', force=True)
 
     if env.observation_space.shape[0] == 2:
         true_V, true_P = dynamic_programming_env_DCP(env)
