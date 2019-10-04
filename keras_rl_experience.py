@@ -183,7 +183,7 @@ if __name__ == '__main__':
         true_V, true_P = dynamic_programming_collaboration(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
-    nb_timesteps = 1001
+    nb_timesteps = 20001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 10
@@ -225,7 +225,14 @@ if __name__ == '__main__':
     # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
 
     # parameter_name = "target_model_update"
-    # parameter_values = [0.01, 0.1, 10, 100, 1000]
+    # parameter_values = [0.01, 0.1, 10, 100, 500, 1000]
+    # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+    # experience_name.mkdir(parents=True, exist_ok=True)
+    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+
+    # parameter_name = "epsilon"
+    # parameter_values = [0.05, 0.1, 0.2, 0.3, 0.4]
     # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
     # experience_name.mkdir(parents=True, exist_ok=True)
     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
