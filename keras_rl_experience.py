@@ -193,7 +193,20 @@ if __name__ == '__main__':
     parameter_values = [True, False]
     experience_name = Path("../Results/03_10_19") / Path(parameter_name)
     experience_name.mkdir(parents=True, exist_ok=True)
-    parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    for parameter_value in parameter_values:
+
+        param_dict = parameters_dict()
+        param_dict[parameter_name] = parameter_value
+        parameter_value_name = experience_name / Path(str(parameter_value))
+        parameter_value_name.mkdir(parents=True, exist_ok=True)
+        # for k in range(nb_runs):
+        #     run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, period, k)
+        run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
+        list_of_rewards, mean_revenues = env.collect_revenues(parameter_value_name)
+        env.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
+        plt.title(parameter_name + " = "+ str(parameter_value))
+        plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
+    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
     plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
 
     # parameter_name = "batch_size"
