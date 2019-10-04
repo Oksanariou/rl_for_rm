@@ -3,6 +3,7 @@ import gym
 import keras
 import matplotlib.pyplot as plt
 from pathlib import Path
+import os
 
 from dynamic_programming_env import dynamic_programming_collaboration
 from q_learning import q_to_v
@@ -21,7 +22,7 @@ from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from ACKTR_experience import plot_revenues
 from functools import partial
 from multiprocessing import Pool
-
+import multiprocessing as mp
 
 def global_env_builder():
     # Parameters of the environment
@@ -164,6 +165,8 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
+
     env = env_builder()
 
     if env.observation_space.shape[0] == 2:
@@ -176,7 +179,7 @@ if __name__ == '__main__':
     nb_timesteps = 20001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
-    nb_runs = 2
+    nb_runs = 16
 
     try:
         parameter_name = "enable_double_dqn"
@@ -211,11 +214,11 @@ if __name__ == '__main__':
     # policy = EpsGreedyQPolicy(eps=.2)
     # dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=1000,
     #                enable_double_dqn=True, enable_dueling_network=True,
-    #                target_model_update=1e-2, policy=policy, batch_size=256)
+    #                target_model_update=1e-2, policy=policy, batch_size=32)
     # dqn.compile(Adam(lr=1e-3), metrics=['mae'])
     #
     # rewards = callback()
-    # history = dqn.fit(env, nb_steps=nb_timesteps, visualize=False, verbose=2, callbacks=[rewards])
+    # history = dqn.fit(env, nb_steps=20000, visualize=False, verbose=2, callbacks=[rewards])
     # test_history = dqn.test(env, nb_episodes=100, visualize=False)
     #
     # import matplotlib.pyplot as plt
