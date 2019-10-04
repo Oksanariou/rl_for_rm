@@ -74,15 +74,21 @@ def env_builder():
 
 
 class callback(keras.callbacks.Callback):
+    def __init__(self, env, nb_timesteps, period):
+        super(callback, self).__init__()
+        self.env = env
+        self.nb_timesteps = nb_timesteps
+        self.period = period
+
     def on_train_begin(self, logs={}):
         self.rewards = []
 
     def on_batch_end(self, batch, logs={}):
-        if ((self.model.step % (20000 // 10)) == 0):
-            Q_table = [self.model.compute_q_values([state]) for state in env.states]
+        if ((self.model.step % (self.nb_timesteps // self.period)) == 0):
+            Q_table = [self.model.compute_q_values([state]) for state in self.env.states]
             policy = [np.argmax(q) for q in Q_table]
-            policy = np.asarray(policy).reshape(env.observation_space.nvec)
-            self.rewards.append(env.average_n_episodes(policy, 1000))
+            policy = np.asarray(policy).reshape(self.env.observation_space.nvec)
+            self.rewards.append(self.env.average_n_episodes(policy, 1000))
 
 
 def build_model(env, hidden_layer_size, layers_nb):
@@ -111,7 +117,7 @@ def parameters_dict():
     parameters_dict["learning_rate"] = 1e-3
     return parameters_dict
 
-def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, k):
+def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
     env = env_builder()
     model = build_model(env, parameters_dict["hidden_layer_size"], parameters_dict["layers_nb"])
     memory = SequentialMemory(limit=parameters_dict["memory_buffer_size"], window_length=1)
@@ -120,15 +126,15 @@ def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, k):
                    enable_double_dqn=parameters_dict["enable_double_dqn"], enable_dueling_network=parameters_dict["enable_dueling_network"],
                    target_model_update=parameters_dict["target_model_update"], policy=policy)
     dqn.compile(Adam(lr=parameters_dict["learning_rate"]), metrics=['mae'])
-    rewards = callback()
+    rewards = callback(env, nb_timesteps, period)
     history = dqn.fit(env, nb_steps=nb_timesteps, visualize=False, verbose=2, callbacks=[rewards])
     np.save(experience_name / ("Run" + str(k) + ".npy"), rewards.rewards)
 
 
-def run_n_times(experience_name, env_builder, parameters_dict, nb_timesteps, number_of_runs):
+def run_n_times(experience_name, env_builder, parameters_dict, nb_timesteps, number_of_runs, period):
     (experience_name).mkdir(parents=True, exist_ok=True)
 
-    f = partial(run_once, env_builder, parameters_dict, nb_timesteps, experience_name)
+    f = partial(run_once, env_builder, parameters_dict, nb_timesteps, experience_name, period)
 
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
@@ -150,24 +156,23 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     plt.xlabel("Number of episodes")
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
-def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs):
+def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, period):
     for parameter_value in parameter_values:
         param_dict = parameters_dict()
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
         parameter_value_name.mkdir(parents=True, exist_ok=True)
-        # for k in range(nb_runs):
-        #     run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, k)
-        run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs)
+        for k in range(nb_runs):
+            run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, period, k)
+        # run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs, period)
         list_of_rewards, mean_revenues = env.collect_revenues(parameter_value_name)
         env.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
         plt.title(parameter_name + " = "+ str(parameter_value))
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
     env = env_builder()
-
-    # mp.set_start_method('spawn', force=True)
 
     if env.observation_space.shape[0] == 2:
         true_V, true_P = dynamic_programming_env_DCP(env)
@@ -179,14 +184,14 @@ if __name__ == '__main__':
     nb_timesteps = 20001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
-    nb_runs = 16
+    nb_runs = 10
 
     # try:
     parameter_name = "enable_double_dqn"
     parameter_values = [True, False]
     experience_name = Path("../Results/03_10_19") / Path(parameter_name)
     experience_name.mkdir(parents=True, exist_ok=True)
-    parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs)
+    parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
     plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
     # except Exception:
     #     pass
