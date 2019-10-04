@@ -154,9 +154,9 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
         parameter_value_name.mkdir(parents=True, exist_ok=True)
-        for k in range(nb_runs):
-            run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, k)
-        # run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs)
+        # for k in range(nb_runs):
+        #     run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, k)
+        run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs)
         list_of_rewards, mean_revenues = env.collect_revenues(parameter_value_name)
         env.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
         plt.title(parameter_name + " = "+ str(parameter_value))
