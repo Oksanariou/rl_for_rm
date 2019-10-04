@@ -158,7 +158,7 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
 
 def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, period):
     for parameter_value in parameter_values:
-        mp.set_start_method('spawn', force=True)
+
         param_dict = parameters_dict()
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
@@ -172,6 +172,8 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
+
     env = env_builder()
 
     if env.observation_space.shape[0] == 2:
@@ -181,7 +183,7 @@ if __name__ == '__main__':
         true_V, true_P = dynamic_programming_collaboration(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
-    nb_timesteps = 20001
+    nb_timesteps = 1001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 10
@@ -209,7 +211,7 @@ if __name__ == '__main__':
     # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
     #
     # parameter_name = "layers_nb"
-    # parameter_values = [10, 50, 100, 150, 200, 250]
+    # parameter_values = [1, 2, 3, 4, 5]
     # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
     # experience_name.mkdir(parents=True, exist_ok=True)
     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
