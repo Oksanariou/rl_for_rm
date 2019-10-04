@@ -172,7 +172,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn', force=True)
+    mp.set_start_method('spawn')
 
     env = env_builder()
 
