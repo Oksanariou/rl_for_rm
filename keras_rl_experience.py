@@ -77,7 +77,7 @@ class callback(keras.callbacks.Callback):
         self.rewards = []
 
     def on_batch_end(self, batch, logs={}):
-        if ((self.model.step % (1000 // 10)) == 0):
+        if ((self.model.step % (20000 // 10)) == 0):
             Q_table = [self.model.compute_q_values([state]) for state in env.states]
             policy = [np.argmax(q) for q in Q_table]
             policy = np.asarray(policy).reshape(env.observation_space.nvec)
@@ -133,7 +133,7 @@ def run_n_times(experience_name, env_builder, parameters_dict, nb_timesteps, num
         pool.map(f, range(number_of_runs))
 
 
-def plot_comparison(experience_name, parameters, env, absc):
+def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     comparison_mean_revenues = []
     for parameter in parameters:
         parameter_name = experience_name / Path(str(parameter))
@@ -144,6 +144,7 @@ def plot_comparison(experience_name, parameters, env, absc):
         plt.plot(absc, comparison_mean_revenues[k], label=str(parameters[k]))
     plt.legend()
     plt.title(experience_name.name)
+    plt.plot(absc, [optimal_revenue] * len(absc), label="Optimal solution")
     plt.ylabel("Average revenue on 10000 flights")
     plt.xlabel("Number of episodes")
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
@@ -172,17 +173,21 @@ if __name__ == '__main__':
         true_V, true_P = dynamic_programming_collaboration(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
-    nb_timesteps = 1001
+    nb_timesteps = 20001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 2
 
-    parameter_name = "enable_double_dqn"
-    parameter_values = [True, False]
-    experience_name = Path("../Results/03_10_19") / Path(parameter_name)
-    experience_name.mkdir(parents=True, exist_ok=True)
-    parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs)
-    plot_comparison(experience_name, parameter_values, env, absc)
+    try:
+        parameter_name = "enable_double_dqn"
+        parameter_values = [True, False]
+        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name.mkdir(parents=True, exist_ok=True)
+        parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs)
+        plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+    except Exception:
+        pass
+    print("ok")
 
     # np.random.seed(123)
     # env.seed(123)
