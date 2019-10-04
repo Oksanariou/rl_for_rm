@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     data_collection_points = 20
     micro_times = 1
-    capacity = 10
+    capacity = 25
 
     action_min = 100
     action_max = 401
@@ -65,19 +65,36 @@ if __name__ == '__main__':
                     micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
 
     true_V, true_P = dynamic_programming_env_DCP(env)
-    true_revenues, true_bookings = env.average_n_episodes(true_P, 10000)
+    mean_revenue, revenue_time, revenues, bookings, prices_proposed = env.average_n_episodes(true_P, 10000)
 
-    plot_bookings(env, true_bookings)
+    plot_bookings(env, bookings)
     visualize_policy_RM(true_P, data_collection_points, capacity)
 
+    marginal_profit = [400, 172, 80, -22.2]
+    prices = [400, 300, 200, 100]
+    capacities = [10, 4, 8, capacity - 2]
+    fares = ['{Y}', '{B}', '{M}', '{Q}']
+
     # Bid price vector
-    for time in range(1):
+    for time in range(0,1):
         Y = []
-        X = [k for k in range(19)]
+        X = [k for k in range(capacity - 1)]
         for k in range(len(true_V[time]) - 1):
-            Y.append(true_V[time][19 - k - 1] - true_V[time][19 - k])
+            Y.append(true_V[time][capacity - 1 - k - 1] - true_V[time][capacity - 1 - k])
         plt.plot(X, Y)
+        for m in range(len(marginal_profit)-1):
+            # plt.plot(X[:int(capacities[m]) + 1], [marginal_profit[m]] * (X[int(capacities[m])] + 1), 'g--')
+            plt.plot(X[:int(capacities[0]) + 1], [marginal_profit[m]] * (X[int(capacities[0])] + 1), 'g:')
+            plt.text(X[0] + 0.2, marginal_profit[m] + 7, fares[m])
         plt.xticks(X)
+        axes = plt.gca()
+        axes.set_ylim()
+        plt.xlabel("Remaining capacity")
+        plt.ylabel("Bid price")
+        plt.title("Bid price vector")
+        plt.axvline(x=capacities[0], ymax=1., color='red', ls=':', lw = 2)
+        plt.axvline(x=capacities[1], ymax=0.43, color='green', ls=':')
+        plt.axvline(x=capacities[2], ymax=0.22, color='green', ls=':')
         plt.show()
 
     # Convex hull

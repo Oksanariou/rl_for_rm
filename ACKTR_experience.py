@@ -22,8 +22,8 @@ def ACKTR_agent_builder(env_vec):
 
 
 def DQN_agent_builder(env_vec):
-    return DQN(MlpPolicyDQN, env_vec, learning_rate=0.001, buffer_size=5000, exploration_fraction=0.6,
-               exploration_final_eps=0.01, target_network_update_freq=50, prioritized_replay=False)
+    return DQN(MlpPolicyDQN, env_vec, learning_rate=1e-3, buffer_size=50000, exploration_fraction=0.001,
+               exploration_final_eps=0.2, target_network_update_freq=100, prioritized_replay=False, verbose=1)
 
 
 def collaboration_environment_parameters():
@@ -49,11 +49,11 @@ def collaboration_environment_parameters():
 
 def RMDCPDiscrete_environment_parameters():
     env_parameters = {}
-    env_parameters["data_collection_points"] = 20
+    env_parameters["data_collection_points"] = 50
     env_parameters["micro_times"] = 1
-    env_parameters["capacity"] = 10
+    env_parameters["capacity"] = 20
     env_parameters["action_min"] = 50
-    env_parameters["action_max"] = 150
+    env_parameters["action_max"] = 230
     env_parameters["action_offset"] = 50
     env_parameters["actions"] = [k for k in range(env_parameters["action_min"], env_parameters["action_max"] + 1,
                                                   env_parameters["action_offset"])]
@@ -63,7 +63,7 @@ def RMDCPDiscrete_environment_parameters():
 
 
 def RMDCPDiscrete_env_builder(env_parameters):
-    return gym.make('gym_RMDCPDiscrete:RMDCPDiscrete-v0',
+    return gym.make('gym_RMDCP:RMDCP-v0',
                     micro_times=env_parameters["micro_times"],
                     data_collection_points=env_parameters["data_collection_points"],
                     capacity=env_parameters["capacity"],
@@ -185,7 +185,6 @@ def plot_bookings_by_flight(env, bookings1, bookings2):
 if __name__ == '__main__':
     collab_env_parameters = collaboration_environment_parameters()
     RMDCP_env_parameters = RMDCPDiscrete_environment_parameters()
-    learning_rate = 0.1
 
     # env_discrete = CollaborationGlobal3DMultiDiscrete_env_builder(collab_env_parameters)
     # V, P_global = dynamic_programming_collaboration(env_discrete)
@@ -199,14 +198,14 @@ if __name__ == '__main__':
     V, P = dynamic_programming_env_DCP(env_rmdcp)
     P = P.reshape(env_rmdcp.T * env_rmdcp.C)
     P = [int(a) for a in P]
-    optimal_revenue, optimal_bookings = env_rmdcp.average_n_episodes(P, 10000)
+    optimal_revenue, _, all_revenues, optimal_bookings, prices_proposed = env_rmdcp.average_n_episodes(P, 10000)
     plot_bookings(env_rmdcp, optimal_bookings)
 
-    nb_timesteps = 30000
+    nb_timesteps = 20000
     number_of_runs = 16
     callback_frequency = int(nb_timesteps / 10)
     # experience_name = Path("../Results/ACKTR/Collaboration_medium_env_dr_1_8")
-    experience_name = Path("../Results/Test_DQN/multiagent")
+    experience_name = Path("../Results/Test_DQN_same_parameters_than_keras_rl")
     experience_name.mkdir(parents=True, exist_ok=True)
 
     # run_n_times(experience_name, RMDCPDiscrete_env_builder, RMDCP_env_parameters,ACKTR_agent_builder, nb_timesteps, number_of_runs,

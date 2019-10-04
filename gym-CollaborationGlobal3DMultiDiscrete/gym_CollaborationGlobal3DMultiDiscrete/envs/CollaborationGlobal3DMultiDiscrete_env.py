@@ -277,9 +277,10 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         transition_idx = self.categorical_sample(csprob_n)
         p, s, r, d = self.P[s_idx][a][transition_idx]
         self.s = list(self.to_coordinate(s))
-        return self.s, r[0] + r[1], d[0] and d[1], {"prob": p, "individual_rewards": r}
+        return self.s, r[0] + r[1], d[0] and d[1], {"prob": p, "individual_reward1": r[0], "individual_reward2": r[1]}
 
     def run_episode(self, policy):
+        policy = np.asarray(policy, dtype=np.int16).flatten()
         state = self.reset()
         total_reward = 0
         bookings = np.zeros(self.nA)
@@ -289,14 +290,16 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
             # t, x = env.to_coordinate(state)
             state_idx = self.to_idx(state[0], state[1], state[2])
             action_idx = policy[state_idx]
-            state, reward, done, rewards = self.step(action_idx)
-            rewards = rewards["individual_rewards"]
+            state, reward, done, info = self.step(action_idx)
+            rewards = (info["individual_reward1"], info["individual_reward2"])
             action1, action2 = self.A[action_idx][0], self.A[action_idx][1]
             if rewards[0] != 0:
                 bookings_flight1[self.prices_flight1.index(int(action1))] += 1
+                # self.A[action_idx][0]
                 bookings[action_idx] += 1
             if rewards[1] != 0:
                 bookings_flight2[self.prices_flight2.index(int(action2))] += 1
+                # self.A[action_idx][1]
                 bookings[action_idx] += 1
             total_reward += reward
             if done:

@@ -47,25 +47,45 @@ class RMDCPEnv(gym.Env):
         self.s = [0, 0]
         self.trajectory_matrix = np.zeros((self.T, self.C))
 
+        self.probas = [self.proba_buy(self.A[k])[0] for k in range(self.nA)]
+
         self.P, self.proba_cumsum = self.init_transitions()
 
 
     def init_transitions(self):
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
+        transition_function = self.transitions_several_microtimes if self.M > 1 else self.transitions_one_microtime
         proba_cumsum = {(t, x): {a: [] for a in range(self.nA)} for t in range(self.T) for x in range(self.C)}
         P = {(t, x): {a: [] for a in range(self.nA)} for t in range(self.T) for x in range(self.C)}
         for t in range(self.T):
             for x in range(self.C):
                 s = (t, x)
                 for a in range(self.nA):
-                    transitions = self.transitions(s, a)
+                    transitions = transition_function(s, a)
                     P[s][a] = transitions
                     prob_n = np.asarray([t[0] for t in transitions])
                     csprob_n = np.cumsum(prob_n)
                     proba_cumsum[s][a] = csprob_n
         return P, proba_cumsum
 
-    def transitions(self, state, action):
+    def transitions_one_microtime(self, state, action):
+        list_transitions = []
+        t, x = state[0], state[1]
+        done = False
+        if t == self.T - 1 or x == self.C - 1:
+            list_transitions.append((1, state, 0, True))
+        else:
+            proba_buy = self.probas[action]
+            if t + 1 == self.T - 1 or x + 1 == self.C - 1:
+                done = True
+            list_transitions.append((proba_buy, [t + 1, x + 1], self.A[action], done))
+            done = False
+            if t + 1 == self.T - 1 or x  == self.C - 1:
+                done = True
+            list_transitions.append((1 - proba_buy, [t + 1, x], 0, done))
+        return list_transitions
+
+    def transitions_several_microtimes(self, state, action):
         list_transitions = []
         t, x = state[0], state[1]
         done = False
@@ -168,33 +188,42 @@ class RMDCPEnv(gym.Env):
         policy = np.asarray(policy, dtype=np.int16).flatten()
         state = self.reset()
         self.trajectory_matrix[state[0]][state[1]] += 1
-        total_reward = 0
+        total_reward = np.zeros(self.T)
         bookings = np.zeros(self.nA)
+        prices_proposed = np.zeros(self.nA)
         while True:
             state_idx = self.to_idx(*state)
             action_idx = policy[state_idx]
 
             next_state, reward, done, _ = self.step(action_idx)
             bookings[action_idx] += (next_state[1] - state[1])
-            total_reward += reward
+            prices_proposed[action_idx] += 1
 
             state = next_state
+            total_reward[state[0]] += reward
             self.trajectory_matrix[state[0]][state[1]] += 1
             if done:
                 break
-        return total_reward, bookings
+        return total_reward, bookings, prices_proposed
 
     def average_n_episodes(self, policy, n_eval, agent=None, epsilon=0.0):
         """ Runs n episodes and returns the average of the n total rewards"""
         self.trajectory_matrix = np.zeros((self.T, self.C))
         scores = [self.run_episode(policy) for _ in range(n_eval)]
+        revenue_time = []
         scores = np.array(scores)
-        revenue = np.mean(scores[:, 0])
+        revenues_at_each_time = scores[:,0]
+        sum_revenues_at_each_time = np.array([np.cumsum(k) for k in revenues_at_each_time])
+        for k in range(self.T):
+            revenue_time.append(sum_revenues_at_each_time[:,k])
+        revenues = [np.sum(k) for k in revenues_at_each_time]
+        mean_revenue = np.mean(revenues)
         bookings = np.mean(scores[:, 1], axis=0)
-        return revenue, bookings
+        prices_proposed = np.mean(scores[:, 2], axis=0)
+        return mean_revenue, revenue_time, revenues, bookings, prices_proposed
 
 
-    def collect_list_of_mean_revenues_and_bookings(self, experience_name):
+    def collect_revenues(self, experience_name):
         list_of_rewards = []
         for np_name in glob.glob(str(experience_name) + '/*.np[yz]'):
             list_of_rewards.append(list(np.load(np_name, allow_pickle=True)))
@@ -202,23 +231,34 @@ class RMDCPEnv(gym.Env):
         nb_collection_points = len(list_of_rewards[0])
 
         all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
-        all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        # all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
 
         for k in range(len(list_of_rewards)):
             rewards = list_of_rewards[k]
             for i in range(nb_collection_points):
                 all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
-                all_bookings_combined_at_each_collection_point[i].append(rewards[i][1])
+                # all_bookings_combined_at_each_collection_point[i].append(rewards[i][3])
 
         mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
-        mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
-        std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
-        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
-                               range(nb_collection_points)]
-        min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
-        max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+        # mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
+        # std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+        # confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+        #                        range(nb_collection_points)]
+        # min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        # max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
 
-        return mean_revenues, min_revenues, max_revenues, mean_bookings
+        return list_of_rewards, mean_revenues
+
+    def plot_collected_data(self, mean_revenues, list_of_revenues, absc, optimal_revenue):
+        fig = plt.figure()
+        plt.plot(absc, mean_revenues, color="gray", label='Mean revenue')
+        for revenues in list_of_revenues:
+            plt.plot(absc, np.array(revenues)[:,0], color="gray", alpha=0.2)
+        plt.plot(absc, [optimal_revenue] * len(absc), label="Optimal solution")
+        plt.legend()
+        plt.ylabel("Average revenue on 10000 flights")
+        plt.xlabel("Number of episodes")
+        return fig
 
 
 class StateScaler(object):
