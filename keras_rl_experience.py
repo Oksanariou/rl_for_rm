@@ -105,7 +105,7 @@ def build_model(env, hidden_layer_size, layers_nb):
 
 def parameters_dict():
     parameters_dict = {}
-    parameters_dict["nb_steps_warmup"] = 100
+    parameters_dict["nb_steps_warmup"] = 1000
     parameters_dict["enable_double_dqn"] = True
     parameters_dict["enable_dueling_network"] = True
     parameters_dict["target_model_update"] = 100
@@ -158,6 +158,7 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
 
 def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, period):
     for parameter_value in parameter_values:
+        mp.set_start_method('spawn', force=True)
         param_dict = parameters_dict()
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
@@ -171,7 +172,6 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
-    # mp.set_start_method('spawn', force=True)
     env = env_builder()
 
     if env.observation_space.shape[0] == 2:
@@ -193,6 +193,30 @@ if __name__ == '__main__':
     experience_name.mkdir(parents=True, exist_ok=True)
     parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
     plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+
+    # parameter_name = "batch_size"
+    # parameter_values = [32, 128, 256, 512, 1024]
+    # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+    # experience_name.mkdir(parents=True, exist_ok=True)
+    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+    #
+    # parameter_name = "hidden_layer_size"
+    # parameter_values = [10, 50, 100, 150, 200, 250]
+    # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+    # experience_name.mkdir(parents=True, exist_ok=True)
+    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+    #
+    # parameter_name = "layers_nb"
+    # parameter_values = [10, 50, 100, 150, 200, 250]
+    # experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+    # experience_name.mkdir(parents=True, exist_ok=True)
+    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    # plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+
+
+
     # except Exception:
     #     pass
     # print("ok")
