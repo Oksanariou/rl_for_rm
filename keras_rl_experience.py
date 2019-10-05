@@ -166,15 +166,16 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         # for k in range(nb_runs):
         #     run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, period, k)
         run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs, period)
-        list_of_rewards, mean_revenues = env.collect_revenues(parameter_value_name)
-        env.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
+        list_of_rewards, mean_revenues = env_single_agent.collect_revenues(parameter_value_name)
+        env_single_agent.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
         plt.title(parameter_name + " = "+ str(parameter_value))
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
 
 if __name__ == '__main__':
     # mp.set_start_method('spawn')
 
-    env = env_builder()
+    env = global_env_builder()
+    env_single_agent = env_builder()
 
     if env.observation_space.shape[0] == 2:
         true_V, true_P = dynamic_programming_env_DCP(env)
@@ -188,6 +189,8 @@ if __name__ == '__main__':
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 20
 
+    env_builder = global_env_builder
+
     try:
         parameter_name = "enable_double_dqn"
         parameter_values = [True, False]
@@ -200,7 +203,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "batch_size"
         parameter_values = [32, 128, 256, 512, 1024]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -209,7 +212,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "hidden_layer_size"
         parameter_values = [10, 50, 100, 200, 300]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -218,7 +221,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "layers_nb"
         parameter_values = [1, 2, 3, 4, 5]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -227,7 +230,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "enable_dueling_network"
         parameter_values = [True, False]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -236,7 +239,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "target_model_update"
         parameter_values = [0.01, 0.1, 10, 100, 1000]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -245,7 +248,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "epsilon"
         parameter_values = [0.05, 0.1, 0.2, 0.3, 0.4]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -254,7 +257,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "learning_rate"
         parameter_values = [1e-1, 1e-2, 1e-3, 1e-4]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -263,7 +266,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "memory_buffer_size"
         parameter_values = [1000, 5000, 10000, 50000, 100000]
-        experience_name = Path("../Results/03_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/global_env") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
