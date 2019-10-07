@@ -110,11 +110,11 @@ def parameters_dict():
     parameters_dict["enable_dueling_network"] = True
     parameters_dict["target_model_update"] = 100
     parameters_dict["batch_size"] = 128
-    parameters_dict["hidden_layer_size"] = 100
+    parameters_dict["hidden_layer_size"] = 200
     parameters_dict["layers_nb"] = 3
     parameters_dict["memory_buffer_size"] = 50000
     parameters_dict["epsilon"] = 0.2
-    parameters_dict["learning_rate"] = 1e-3
+    parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
@@ -174,7 +174,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 if __name__ == '__main__':
     # mp.set_start_method('spawn')
 
-    env = global_env_builder()
+    env = env_builder()
     env_single_agent = env_builder()
 
     if env.observation_space.shape[0] == 2:
@@ -185,11 +185,18 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
     nb_timesteps = 100001
-    callback_frequency = 10
+    callback_frequency = 100
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 20
 
-    env_builder = global_env_builder
+    env_builder = env_builder
+
+    experience_name = Path("../Results/Best_run")
+    experience_name.mkdir(parents=True, exist_ok=True)
+    param_dict = parameters_dict()
+
+    run_n_times(experience_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
+
 
     # try:
     #     parameter_name = "enable_double_dqn"
@@ -200,90 +207,6 @@ if __name__ == '__main__':
     #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
     # except Exception:
     #     pass
-    # try:
-    #     parameter_name = "batch_size"
-    #     parameter_values = [32, 128, 256, 512, 1024]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_single_agent, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "hidden_layer_size"
-    #     parameter_values = [10, 50, 100, 200, 300]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "layers_nb"
-    #     parameter_values = [1, 2, 3, 4, 5]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "enable_dueling_network"
-    #     parameter_values = [True, False]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "target_model_update"
-    #     parameter_values = [0.01, 0.1, 10, 100, 1000]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "epsilon"
-    #     parameter_values = [0.05, 0.1, 0.2, 0.3, 0.4]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "learning_rate"
-    #     parameter_values = [1e-1, 1e-2, 1e-3, 1e-4]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-    # try:
-    #     parameter_name = "memory_buffer_size"
-    #     parameter_values = [1000, 5000, 10000, 50000, 100000]
-    #     experience_name = Path("../Results/global_env") / Path(parameter_name)
-    #     experience_name.mkdir(parents=True, exist_ok=True)
-    #     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    #     plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-    # except Exception:
-    #     pass
-
-    parameter_name = "memory_buffer_size"
-    parameter_values = [1000, 5000, 10000]
-    experience_name = Path("../Results/global_env") / Path(parameter_name)
-    experience_name.mkdir(parents=True, exist_ok=True)
-    # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-    plot_comparison(experience_name, parameter_values, env_single_agent, absc, true_revenues)
-
-
-    # except Exception:
-    #     pass
-    # print("ok")
 
     # np.random.seed(123)
     # env.seed(123)

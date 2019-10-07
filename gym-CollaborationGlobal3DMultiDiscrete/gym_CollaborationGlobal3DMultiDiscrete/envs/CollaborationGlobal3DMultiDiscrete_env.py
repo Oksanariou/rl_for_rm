@@ -4,6 +4,7 @@ from gym import spaces
 from gym.utils import seeding
 from scipy.stats import sem, t
 import glob
+import itertools
 from gym.envs.toy_text import discrete
 import scipy.special
 
@@ -16,13 +17,16 @@ default_k_airline1 = 1.5
 default_k_airline2 = 1.5
 default_lambda = 0.8
 default_nested_lambda = 1.
+default_prices_flight1 = [k for k in range(50, 231, 20)]
+default_prices_flight2 = [k for k in range(50, 231, 20)]
 
 
 class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, micro_times=default_micro_times, capacity1=default_capacity_airline_1,
-                 capacity2=default_capacity_airline_2, actions=default_actions,
+                 capacity2=default_capacity_airline_2, prices_flight1=default_prices_flight1,
+                 prices_flight2=default_prices_flight2,
                  beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2, lamb=default_lambda,
                  nested_lamb=default_nested_lambda):
 
@@ -35,10 +39,10 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.nS = self.T * self.C1 * self.C2  # number of states
         self.states = [[t, x1, x2] for t in range(self.T) for x1 in range(self.C1) for x2 in range(self.C2)]
 
-        self.A = actions
+        self.prices_flight1 = prices_flight1
+        self.prices_flight2 = prices_flight2
+        self.A = list(itertools.product(self.prices_flight1, self.prices_flight2))
         self.nA = len(self.A)  # number of actions
-        self.prices_flight1 = list(np.array(self.A)[:, 0][::int(np.sqrt(self.nA))])
-        self.prices_flight2 = list(np.array(self.A)[:, 1][:int(np.sqrt(self.nA))])
 
         self.beta = beta
         self.k_airline1 = k_airline1
@@ -52,7 +56,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
 
         self.seed()
 
-        self.s = [0,0,0]
+        self.s = [0, 0, 0]
 
         self.nested_lamb = nested_lamb
         self.nest1 = {"lambda": 1, "representative_utilities": [0]}
@@ -347,4 +351,3 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
 
         return mean_revenues, min_revenues, max_revenues, mean_bookings, mean_bookings1, mean_bookings2
-
