@@ -274,7 +274,7 @@ if __name__ == '__main__':
     #     pass
 
     parameter_name = "memory_buffer_size"
-    parameter_values = [1000, 5000, 10000, 50000, 100000]
+    parameter_values = [1000, 5000, 10000, 50000]
     experience_name = Path("../Results/global_env") / Path(parameter_name)
     experience_name.mkdir(parents=True, exist_ok=True)
     # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
