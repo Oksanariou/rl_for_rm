@@ -22,20 +22,21 @@ from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from ACKTR_experience import plot_revenues
 from functools import partial
 from multiprocessing import Pool
+from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent
 import multiprocessing as mp
+
 
 def global_env_builder():
     # Parameters of the environment
-    micro_times = 100
-    capacity1 = 20
-    capacity2 = 20
+    micro_times = 50
+    capacity1 = 15
+    capacity2 = 15
 
     action_min = 50
     action_max = 231
     action_offset = 30
-
-    actions_global = tuple((k, m) for k in range(action_min, action_max + 1, action_offset) for m in
-                           range(action_min, action_max + 1, action_offset))
+    prices_flight1 = [k for k in range(action_min, action_max + 1, action_offset)]
+    prices_flight2 = [k for k in range(action_min, action_max + 1, action_offset)]
 
     demand_ratio = 1.8
     # lamb = demand_ratio * (capacity1 + capacity2) / micro_times
@@ -50,16 +51,17 @@ def global_env_builder():
                     micro_times=micro_times,
                     capacity1=capacity1,
                     capacity2=capacity2,
-                    actions=actions_global, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2,
+                    prices=[prices_flight1, prices_flight2], beta=beta, k_airline1=k_airline1,
+                    k_airline2=k_airline2,
                     lamb=lamb,
                     nested_lamb=nested_lamb)
 
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 100
+    data_collection_points = 30
     micro_times = 1
-    capacity = 50
+    capacity = 15
 
     action_min = 50
     action_max = 231
@@ -91,10 +93,9 @@ class callback(keras.callbacks.Callback):
             self.rewards.append(self.env.average_n_episodes(policy, 1000))
 
 
-def build_model(env, hidden_layer_size, layers_nb):
-    nb_actions = env.action_space.n
+def build_model(nb_actions, shape, hidden_layer_size, layers_nb):
     model = Sequential()
-    model.add(Flatten(input_shape=((1,) + env.observation_space.shape)))
+    model.add(Flatten(input_shape=((1,) + shape)))
     for k in range(layers_nb):
         model.add(Dense(hidden_layer_size))
         model.add(Activation('relu'))
@@ -102,6 +103,7 @@ def build_model(env, hidden_layer_size, layers_nb):
     model.add(Activation('linear'))
     print(model.summary())
     return model
+
 
 def parameters_dict():
     parameters_dict = {}
@@ -117,13 +119,16 @@ def parameters_dict():
     parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
+
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
     env = env_builder()
     model = build_model(env, parameters_dict["hidden_layer_size"], parameters_dict["layers_nb"])
     memory = SequentialMemory(limit=parameters_dict["memory_buffer_size"], window_length=1)
     policy = EpsGreedyQPolicy(eps=parameters_dict["epsilon"])
-    dqn = DQNAgent(model=model, nb_actions=env.action_space.n, memory=memory, nb_steps_warmup=parameters_dict["nb_steps_warmup"],
-                   enable_double_dqn=parameters_dict["enable_double_dqn"], enable_dueling_network=parameters_dict["enable_dueling_network"],
+    dqn = DQNAgent(model=model, nb_actions=env.action_space.n, memory=memory,
+                   nb_steps_warmup=parameters_dict["nb_steps_warmup"],
+                   enable_double_dqn=parameters_dict["enable_double_dqn"],
+                   enable_dueling_network=parameters_dict["enable_dueling_network"],
                    target_model_update=parameters_dict["target_model_update"], policy=policy)
     dqn.compile(Adam(lr=parameters_dict["learning_rate"]), metrics=['mae'])
     rewards = callback(env, nb_timesteps, period)
@@ -156,9 +161,10 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     plt.xlabel("Number of episodes")
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
-def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, period):
-    for parameter_value in parameter_values:
 
+def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues,
+                         absc, nb_runs, period):
+    for parameter_value in parameter_values:
         param_dict = parameters_dict()
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
@@ -166,15 +172,17 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         # for k in range(nb_runs):
         #     run_once(env_builder, param_dict, nb_timesteps, parameter_value_name, period, k)
         run_n_times(parameter_value_name, env_builder, param_dict, nb_timesteps, nb_runs, period)
-        list_of_rewards, mean_revenues = env_single_agent.collect_revenues(parameter_value_name)
-        env_single_agent.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
-        plt.title(parameter_name + " = "+ str(parameter_value))
+
+        list_of_rewards, mean_revenues = env_builder().collect_revenues(parameter_value_name)
+        env_builder().plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
+        plt.title(parameter_name + " = " + str(parameter_value))
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
+
 
 if __name__ == '__main__':
     # mp.set_start_method('spawn')
 
-    env = env_builder()
+    env = global_env_builder()
     env_single_agent = env_builder()
 
     if env.observation_space.shape[0] == 2:
@@ -195,8 +203,42 @@ if __name__ == '__main__':
     experience_name.mkdir(parents=True, exist_ok=True)
     param_dict = parameters_dict()
 
-    run_n_times(experience_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
+    list_of_rewards, mean_revenues = env_single_agent.collect_revenues(experience_name)
+    env_single_agent.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
+    plt.title(experience_name)
+    plt.savefig(str(experience_name) + '.png')
 
+    # parameters = {}
+    # parameters["2D_individual_reward"] = {"shape": (2,), }
+    #
+    # configuration = "2D_individual_reward"
+    #
+    # shape = parameters[configuration]["shape"]
+    #
+    # model1 = build_model(len(env.prices[0]), shape, param_dict["hidden_layer_size"], param_dict["layers_nb"])
+    # memory1 = SequentialMemory(limit=param_dict["memory_buffer_size"], window_length=1)
+    # policy1 = EpsGreedyQPolicy(eps=param_dict["epsilon"])
+    # dqn1 = DQNAgent(model=model1, nb_actions=len(env.prices[0]), memory=memory1,
+    #                 nb_steps_warmup=param_dict["nb_steps_warmup"],
+    #                 enable_double_dqn=param_dict["enable_double_dqn"],
+    #                 enable_dueling_network=param_dict["enable_dueling_network"],
+    #                 target_model_update=param_dict["target_model_update"], policy=policy1)
+    # dqn1.compile(Adam(lr=param_dict["learning_rate"]), metrics=['mae'])
+    #
+    # memory2 = SequentialMemory(limit=param_dict["memory_buffer_size"], window_length=1)
+    # policy2 = EpsGreedyQPolicy(eps=param_dict["epsilon"])
+    # model2 = build_model(len(env.prices[0]), shape, param_dict["hidden_layer_size"], param_dict["layers_nb"])
+    # dqn2 = DQNAgent(model=model2, nb_actions=len(env.prices[1]), memory=memory2,
+    #                 nb_steps_warmup=param_dict["nb_steps_warmup"],
+    #                 enable_double_dqn=param_dict["enable_double_dqn"],
+    #                 enable_dueling_network=param_dict["enable_dueling_network"],
+    #                 target_model_update=param_dict["target_model_update"], policy=policy2)
+    # dqn2.compile(Adam(lr=param_dict["learning_rate"]), metrics=['mae'])
+    #
+    # rewards = callback(env, nb_timesteps, callback_frequency)
+    # history = fit_multi_agent([dqn1, dqn2], env, nb_timesteps)
+
+    # run_n_times(experience_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
 
     # try:
     #     parameter_name = "enable_double_dqn"

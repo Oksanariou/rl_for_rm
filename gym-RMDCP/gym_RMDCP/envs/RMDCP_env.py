@@ -31,6 +31,7 @@ class RMDCPEnv(gym.Env):
         self.nS = data_collection_points * capacity  # number of states
         self.states = [[t, x] for t in range(self.T) for x in range(self.C)]
 
+        self.prices = [actions]
         self.A = actions
         self.nA = len(self.A)  # number of actions
 

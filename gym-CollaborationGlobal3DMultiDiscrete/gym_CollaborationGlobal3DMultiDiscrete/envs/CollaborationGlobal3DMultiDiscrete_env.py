@@ -25,8 +25,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, micro_times=default_micro_times, capacity1=default_capacity_airline_1,
-                 capacity2=default_capacity_airline_2, prices_flight1=default_prices_flight1,
-                 prices_flight2=default_prices_flight2,
+                 capacity2=default_capacity_airline_2, prices=[default_prices_flight1, default_prices_flight2],
                  beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2, lamb=default_lambda,
                  nested_lamb=default_nested_lambda):
 
@@ -39,9 +38,10 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.nS = self.T * self.C1 * self.C2  # number of states
         self.states = [[t, x1, x2] for t in range(self.T) for x1 in range(self.C1) for x2 in range(self.C2)]
 
-        self.prices_flight1 = prices_flight1
-        self.prices_flight2 = prices_flight2
-        self.A = list(itertools.product(self.prices_flight1, self.prices_flight2))
+        self.prices = prices
+        self.prices_flight1 = self.prices[0]
+        self.prices_flight2 = self.prices[1]
+        self.A = list(itertools.product(self.prices[0], self.prices[1]))
         self.nA = len(self.A)  # number of actions
 
         self.beta = beta
