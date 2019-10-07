@@ -59,9 +59,9 @@ def global_env_builder():
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 30
+    data_collection_points = 100
     micro_times = 1
-    capacity = 15
+    capacity = 50
 
     action_min = 50
     action_max = 231
@@ -277,19 +277,26 @@ if __name__ == '__main__':
     #
     # rewards = callback()
     # history = dqn.fit(env, nb_steps=20000, visualize=False, verbose=2, callbacks=[rewards])
-    # test_history = dqn.test(env, nb_episodes=100, visualize=False)
-    #
-    # import matplotlib.pyplot as plt
-    #
+
+
+
+    # test_history = dqn1.test(env, nb_episodes=100, visualize=False)
+    # #
+    # # import matplotlib.pyplot as plt
+    # #
     # w = 100
-    # moving_average = np.convolve(history.history['episode_reward'], np.ones(w), 'valid') / w
-    # plt.plot(list(range(0, w * len(moving_average), w)), moving_average, 'red', lw=4)
+    # moving_average1 = np.convolve(history.history['episode_reward1'], np.ones(w), 'valid') / w
+    # plt.plot(list(range(0, w * len(moving_average1), w)), moving_average1, 'red', lw=4)
+    # moving_average2 = np.convolve(history.history['episode_reward2'], np.ones(w), 'valid') / w
+    # plt.plot(list(range(0, w * len(moving_average2), w)), moving_average2, 'blue', lw=4)
+    # #plt.ylim([0, 3000])
     # plt.show()
-    # print("V(0,0)={}".format(max(dqn.compute_q_values([env.states[0]]))))
-    # print("evaluated revenue={}".format(np.mean(test_history.history['episode_reward'])))
-    #
-    # Q_table = [dqn.compute_q_values([state]) for state in env.states]
+    # # print("V(0,0)={}".format(max(dqn.compute_q_values([env.states[0]]))))
+    # # print("evaluated revenue={}".format(np.mean(test_history.history['episode_reward'])))
+    # #
+    # Q_table = [dqn1.compute_q_values([state]) for state in env.states]
     # policy = [np.argmax(q) for q in Q_table]
     # policy = np.asarray(policy).reshape(env.observation_space.nvec)
+    #
     # revenues, bookings = average_n_episodes(env, policy, 10000)
     # V = q_to_v(env, Q_table).reshape(env.observation_space.nvec)
