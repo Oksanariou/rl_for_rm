@@ -182,7 +182,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 if __name__ == '__main__':
     # mp.set_start_method('spawn')
 
-    env = global_env_builder()
+    env = env_builder()
     env_single_agent = env_builder()
 
     if env.observation_space.shape[0] == 2:
