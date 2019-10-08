@@ -91,6 +91,7 @@ class callback_multiagent(keras.callbacks.Callback):
 
     def on_batch_end(self, batch, logs={}):
         if ((self.model[0].step % (self.nb_timesteps // self.period)) == 0):
+            print(self.model[0].step)
             if parameters[self.configuration_name]["shape"][0] == 3:
                 states1, states2 = self.env.states, self.env.states
                 dim1, dim2 = (self.env.T, self.env.C1, self.env.C2), (self.env.T, self.env.C1, self.env.C2)

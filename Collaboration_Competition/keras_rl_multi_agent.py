@@ -93,7 +93,6 @@ def fit_multi_agent(agents, global_env, nb_steps, callbacks=None,
     did_abort = False
     try:
         while agents[0].step < nb_steps:
-            print(agents[0].step)
             if observation is None:  # start of a new episode
                 callbacks.on_episode_begin(episode)
                 episode_step = np.int16(0)
