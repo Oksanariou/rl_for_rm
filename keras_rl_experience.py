@@ -95,7 +95,7 @@ class callback_multiagent(keras.callbacks.Callback):
                 states1, states2 = self.env.states, self.env.states
                 dim1, dim2 = (self.env.T, self.env.C1, self.env.C2), (self.env.T, self.env.C1, self.env.C2)
             else:
-                states1, states2 = env.states1, env.states2
+                states1, states2 = self.env.states1, self.env.states2
                 dim1, dim2 = (self.env.T, self.env.C1), (self.env.T, self.env.C2)
             Q_table1 = [self.model[0].compute_q_values([state]) for state in states1]
             policy1 = [np.argmax(q) for q in Q_table1]
