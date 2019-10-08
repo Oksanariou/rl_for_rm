@@ -103,7 +103,7 @@ class callback_multiagent(keras.callbacks.Callback):
             Q_table2 = [self.model[1].compute_q_values([state]) for state in states2]
             policy2 = [np.argmax(q) for q in Q_table2]
             policy2 = np.asarray(policy2).reshape(dim2)
-            combined_policy = combine_two_policies(env, policy1, policy2,
+            combined_policy = combine_two_policies(self.env, policy1, policy2,
                                                    parameters[self.configuration_name]["observation_split"],
                                                    parameters[self.configuration_name]["action_merge"])
             self.rewards.append(self.env.average_n_episodes(combined_policy, 1000))
