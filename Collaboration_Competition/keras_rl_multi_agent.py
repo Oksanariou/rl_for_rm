@@ -13,13 +13,18 @@ from rl.callbacks import (
 )
 
 
-def observation_split(observation):
+def observation_split_2D(observation):
     time = observation[0]
     splited_observations = []
     for x in range(1, len(observation)):
         splited_observations.append((time, observation[x]))
     return splited_observations
 
+def observation_split_3D(observation):
+    splited_observations = []
+    for x in range(1, len(observation)):
+        splited_observations.append(tuple(observation))
+    return splited_observations
 
 def action_merge(actions, global_env):
     nb_flight = len(actions)
@@ -31,7 +36,20 @@ def action_merge(actions, global_env):
     return global_env.A.index(individual_actions)
 
 
-def fit_multi_agent(agents, global_env, nb_steps, verbose=1, log_interval=10000, callbacks=None, nb_max_episode_steps=None):
+def combine_two_policies(global_env, policy1, policy2, observation_split, action_merge):
+    combined_policy = np.zeros(global_env.observation_space.nvec)
+
+    for state in global_env.states:
+        splited_observation = observation_split(state)
+        action1, action2 = policy1[splited_observation[0]], policy2[splited_observation[1]]
+        combined_policy[state[0]][state[1]][state[2]] = action_merge([action1, action2], global_env)
+
+    return combined_policy
+
+
+def fit_multi_agent(agents, global_env, nb_steps, callbacks=None,
+                    nb_max_episode_steps=None, fully_collaborative=False, observation_split=observation_split_2D,
+                    action_merge=action_merge):
     agents_nb = len(agents)
 
     callbacks = [] if not callbacks else callbacks[:]
@@ -45,26 +63,26 @@ def fit_multi_agent(agents, global_env, nb_steps, verbose=1, log_interval=10000,
         agent._on_train_begin()
         agent.step = np.int16(0)
 
-    if verbose == 1:
-        callbacks += [TrainIntervalLogger(interval=log_interval)]
-    elif verbose > 1:
-        callbacks += [TrainEpisodeLogger()]
+    # if verbose == 1:
+    #     callbacks += [TrainIntervalLogger(interval=log_interval)]
+    # elif verbose > 1:
+    #     callbacks += [TrainEpisodeLogger()]
 
     history = History()
     callbacks += [history]
     callbacks = CallbackList(callbacks)
-    # if hasattr(callbacks, 'set_model'):
-    #     callbacks.set_model(agents)
-    # else:
-    #     callbacks._set_model(agents)
-    # callbacks._set_env(global_env)
-    # params = {
-    #     'nb_steps': nb_steps,
-    # }
-    # if hasattr(callbacks, 'set_params'):
-    #     callbacks.set_params(params)
-    # else:
-    #     callbacks._set_params(params)
+    if hasattr(callbacks, 'set_model'):
+        callbacks.set_model(agents)
+    else:
+        callbacks._set_model(agents)
+    callbacks._set_env(global_env)
+    params = {
+        'nb_steps': nb_steps,
+    }
+    if hasattr(callbacks, 'set_params'):
+        callbacks.set_params(params)
+    else:
+        callbacks._set_params(params)
 
     callbacks.on_train_begin()
 
@@ -75,6 +93,7 @@ def fit_multi_agent(agents, global_env, nb_steps, verbose=1, log_interval=10000,
     did_abort = False
     try:
         while agents[0].step < nb_steps:
+            print(agents[0].step)
             if observation is None:  # start of a new episode
                 callbacks.on_episode_begin(episode)
                 episode_step = np.int16(0)
@@ -103,7 +122,7 @@ def fit_multi_agent(agents, global_env, nb_steps, verbose=1, log_interval=10000,
 
             metrics = {}
             for k in range(agents_nb):
-                reward = info.get('individual_reward' + str(k + 1), r / agents_nb)
+                reward = r if fully_collaborative else info.get('individual_reward' + str(k + 1), r / agents_nb)
                 metrics['metrics' + str(k + 1)] = agents[k].backward(reward, terminal=done)
                 episode_reward[k] += reward
 

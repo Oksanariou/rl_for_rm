@@ -10,7 +10,7 @@ from Collaboration_Competition.q_learning_collaboration import q_learning_collab
     q_learning_global, q_learning_collaboration2D_shared_Q_table
 from Collaboration_Competition.DQN_experience import parameters_dict_builder
 from Collaboration_Competition.competition import return_single_policies_from_collab_policy, \
-    plot_comparison_Q_learning_VS_stabilized_competition
+    plot_comparison_Q_learning_VS_stabilized_competition, plot_global_bookings_histograms
 
 from visualization_and_metrics import average_n_episodes_collaboration_individual_3D_policies, \
     average_n_episodes_collaboration_individual_2D_policies, \

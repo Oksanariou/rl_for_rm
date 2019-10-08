@@ -22,39 +22,24 @@ from visualization_and_metrics import average_n_episodes, q_to_policy_RM
 from ACKTR_experience import plot_revenues
 from functools import partial
 from multiprocessing import Pool
-from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent
+from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent, combine_two_policies, observation_split_2D, \
+    action_merge, observation_split_3D
 import multiprocessing as mp
 
 
-def global_env_builder():
-    # Parameters of the environment
-    micro_times = 50
-    capacity1 = 15
-    capacity2 = 15
-
-    action_min = 50
-    action_max = 231
-    action_offset = 30
-    prices_flight1 = [k for k in range(action_min, action_max + 1, action_offset)]
-    prices_flight2 = [k for k in range(action_min, action_max + 1, action_offset)]
-
-    demand_ratio = 1.8
-    # lamb = demand_ratio * (capacity1 + capacity2) / micro_times
-    lamb = 0.7
-
-    beta = 0.04
-    k_airline1 = 5.
-    k_airline2 = 5.
-    nested_lamb = 0.3
+def global_env_builder(parameters_dict):
+    prices_flight1 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1, parameters_dict["action_offset"])]
+    prices_flight2 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1, parameters_dict["action_offset"])]
+    lamb = parameters_dict["demand_ratio"] * (parameters_dict["capacity1"] + parameters_dict["capacity2"]) / parameters_dict["micro_times"]
 
     return gym.make('gym_CollaborationGlobal3DMultiDiscrete:CollaborationGlobal3DMultiDiscrete-v0',
-                    micro_times=micro_times,
-                    capacity1=capacity1,
-                    capacity2=capacity2,
-                    prices=[prices_flight1, prices_flight2], beta=beta, k_airline1=k_airline1,
-                    k_airline2=k_airline2,
+                    micro_times=parameters_dict["micro_times"],
+                    capacity1=parameters_dict["capacity1"],
+                    capacity2=parameters_dict["capacity2"],
+                    prices=[prices_flight1, prices_flight2], beta=parameters_dict["beta"], k_airline1=parameters_dict["k_airline1"],
+                    k_airline2=parameters_dict["k_airline2"],
                     lamb=lamb,
-                    nested_lamb=nested_lamb)
+                    nested_lamb=parameters_dict["nested_lamb"])
 
 
 def env_builder():
@@ -93,6 +78,37 @@ class callback(keras.callbacks.Callback):
             self.rewards.append(self.env.average_n_episodes(policy, 1000))
 
 
+class callback_multiagent(keras.callbacks.Callback):
+    def __init__(self, env, nb_timesteps, period, configuration_name):
+        super(callback_multiagent, self).__init__()
+        self.env = env
+        self.nb_timesteps = nb_timesteps
+        self.period = period
+        self.configuration_name = configuration_name
+
+    def on_train_begin(self, logs={}):
+        self.rewards = []
+
+    def on_batch_end(self, batch, logs={}):
+        if ((self.model[0].step % (self.nb_timesteps // self.period)) == 0):
+            if parameters[self.configuration_name]["shape"][0] == 3:
+                states1, states2 = env.states, env.states
+                dim1, dim2 = (self.env.T, self.env.C1, self.env.C2), (self.env.T, self.env.C1, self.env.C2)
+            else:
+                states1, states2 = env.states1, env.states2
+                dim1, dim2 = (self.env.T, self.env.C1), (self.env.T, self.env.C2)
+            Q_table1 = [self.model[0].compute_q_values([state]) for state in states1]
+            policy1 = [np.argmax(q) for q in Q_table1]
+            policy1 = np.asarray(policy1).reshape(dim1)
+            Q_table2 = [self.model[1].compute_q_values([state]) for state in states2]
+            policy2 = [np.argmax(q) for q in Q_table2]
+            policy2 = np.asarray(policy2).reshape(dim2)
+            combined_policy = combine_two_policies(env, policy1, policy2,
+                                                   parameters[self.configuration_name]["observation_split"],
+                                                   parameters[self.configuration_name]["action_merge"])
+            self.rewards.append(self.env.average_n_episodes(combined_policy, 1000))
+
+
 def build_model(nb_actions, shape, hidden_layer_size, layers_nb):
     model = Sequential()
     model.add(Flatten(input_shape=((1,) + shape)))
@@ -105,7 +121,7 @@ def build_model(nb_actions, shape, hidden_layer_size, layers_nb):
     return model
 
 
-def parameters_dict():
+def agent_parameters_dict():
     parameters_dict = {}
     parameters_dict["nb_steps_warmup"] = 1000
     parameters_dict["enable_double_dqn"] = True
@@ -119,6 +135,20 @@ def parameters_dict():
     parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
+def multiagent_env_parameters_dict():
+    parameters_dict = {}
+    parameters_dict["micro_times"] = 100
+    parameters_dict["capacity1"] = 20
+    parameters_dict["capacity2"] = 20
+    parameters_dict["action_min"] = 50
+    parameters_dict["action_max"] = 231
+    parameters_dict["action_offset"] = 30
+    parameters_dict["demand_ratio"] = 1.8
+    parameters_dict["beta"] = 0.04
+    parameters_dict["k_airline1"] = 5.
+    parameters_dict["k_airline2"] = 5.
+    parameters_dict["nested_lamb"] = 0.3
+    return parameters_dict
 
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
     env = env_builder()
@@ -134,6 +164,38 @@ def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period
     rewards = callback(env, nb_timesteps, period)
     history = dqn.fit(env, nb_steps=nb_timesteps, visualize=False, verbose=2, callbacks=[rewards])
     np.save(experience_name / ("Run" + str(k) + ".npy"), rewards.rewards)
+
+def run_once_multiagent(env_parameters, agent_parameter_dict, configuration_name, nb_timesteps, experience_name, callback_frequency, k):
+    env = global_env_builder(env_parameters)
+    model1 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"], agent_parameter_dict["hidden_layer_size"],
+                         agent_parameter_dict["layers_nb"])
+    memory1 = SequentialMemory(limit=agent_parameter_dict["memory_buffer_size"], window_length=1)
+    policy1 = EpsGreedyQPolicy(eps=agent_parameter_dict["epsilon"])
+    dqn1 = DQNAgent(model=model1, nb_actions=len(env.prices[0]), memory=memory1,
+                    nb_steps_warmup=agent_parameter_dict["nb_steps_warmup"],
+                    enable_double_dqn=agent_parameter_dict["enable_double_dqn"],
+                    enable_dueling_network=agent_parameter_dict["enable_dueling_network"],
+                    target_model_update=agent_parameter_dict["target_model_update"], policy=policy1)
+    dqn1.compile(Adam(lr=agent_parameter_dict["learning_rate"]), metrics=['mae'])
+
+    memory2 = SequentialMemory(limit=agent_parameter_dict["memory_buffer_size"], window_length=1)
+    policy2 = EpsGreedyQPolicy(eps=agent_parameter_dict["epsilon"])
+    model2 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"], agent_parameter_dict["hidden_layer_size"],
+                         agent_parameter_dict["layers_nb"])
+    dqn2 = DQNAgent(model=model2, nb_actions=len(env.prices[1]), memory=memory2,
+                    nb_steps_warmup=agent_parameter_dict["nb_steps_warmup"],
+                    enable_double_dqn=agent_parameter_dict["enable_double_dqn"],
+                    enable_dueling_network=agent_parameter_dict["enable_dueling_network"],
+                    target_model_update=agent_parameter_dict["target_model_update"], policy=policy2)
+    dqn2.compile(Adam(lr=agent_parameter_dict["learning_rate"]), metrics=['mae'])
+
+    callback = callback_multiagent(env, nb_timesteps, callback_frequency, configuration_name)
+    history = fit_multi_agent(agents=[dqn1, dqn2], global_env=env, nb_steps=nb_timesteps,
+                              callbacks=[callback],
+                              fully_collaborative=parameters[configuration_name]["fully_collaborative"],
+                              observation_split=parameters[configuration_name]["observation_split"],
+                              action_merge=parameters[configuration_name]["action_merge"])
+    np.save(experience_name / ("Run" + str(k) + ".npy"), callback.rewards)
 
 
 def run_n_times(experience_name, env_builder, parameters_dict, nb_timesteps, number_of_runs, period):
@@ -161,11 +223,30 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     plt.xlabel("Number of episodes")
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
+def multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs):
+
+    for dr in demand_ratios:
+        env_param = multiagent_env_parameters_dict()
+        env_param["demand_ratio"] = dr
+
+        experience_name = Path("../Results/"+configuration_name+"/"+str(dr))
+        (experience_name).mkdir(parents=True, exist_ok=True)
+
+        agent_param = agent_parameters_dict()
+
+        for k in range(number_of_runs):
+            run_once_multiagent(env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency,k)
+
+        # f = partial(run_once_multiagent, env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency)
+        #
+        # with Pool(number_of_runs) as pool:
+        #     pool.map(f, range(number_of_runs))
+
 
 def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues,
                          absc, nb_runs, period):
     for parameter_value in parameter_values:
-        param_dict = parameters_dict()
+        param_dict = agent_parameters_dict()
         param_dict[parameter_name] = parameter_value
         parameter_value_name = experience_name / Path(str(parameter_value))
         parameter_value_name.mkdir(parents=True, exist_ok=True)
@@ -181,41 +262,43 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 
 if __name__ == '__main__':
     # mp.set_start_method('spawn')
-
-    env = env_builder()
-    env_single_agent = env_builder()
-
-    if env.observation_space.shape[0] == 2:
-        true_V, true_P = dynamic_programming_env_DCP(env)
-        true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
-    else:
-        true_V, true_P = dynamic_programming_collaboration(env)
-        true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
-
-    nb_timesteps = 100001
-    callback_frequency = 100
-    absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
-    nb_runs = 20
-
-    env_builder = env_builder
-
-    experience_name = Path("../Results/Best_run")
-    experience_name.mkdir(parents=True, exist_ok=True)
-    param_dict = parameters_dict()
-
-    list_of_rewards, mean_revenues = env_single_agent.collect_revenues(experience_name)
-    env_single_agent.plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
-    plt.title(experience_name)
-    plt.savefig(str(experience_name) + '.png')
-
-    # parameters = {}
-    # parameters["2D_individual_reward"] = {"shape": (2,), }
+    # env_parameters_dict = multiagent_env_parameters_dict()
+    # env = global_env_builder(env_parameters_dict)
     #
-    # configuration = "2D_individual_reward"
+    # if env.observation_space.shape[0] == 2:
+    #     true_V, true_P = dynamic_programming_env_DCP(env)
+    #     true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
+    # else:
+    #     true_V, true_P = dynamic_programming_collaboration(env)
+    #     true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+    #         true_P, 10000)
+
+    # nb_timesteps = 100001
+    # callback_frequency = 10
+    # absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
+    # nb_runs = 20
     #
-    # shape = parameters[configuration]["shape"]
+    # env_builder = env_builder
     #
-    # model1 = build_model(len(env.prices[0]), shape, param_dict["hidden_layer_size"], param_dict["layers_nb"])
+    # # experience_name = Path("../Results/Best_run")
+    # # experience_name.mkdir(parents=True, exist_ok=True)
+    # param_dict = agent_parameters_dict()
+    #
+    parameters = {}
+    parameters["2D_individual_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
+                                           "fully_collaborative": False, "action_merge": action_merge}
+    parameters["2D_shared_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
+                                       "fully_collaborative": True, "action_merge": action_merge}
+    parameters["3D_individual_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
+                                           "fully_collaborative": False, "action_merge": action_merge}
+    parameters["3D_shared_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
+                                       "fully_collaborative": True, "action_merge": action_merge}
+    #
+    # # configuration = "2D_shared_rewards"
+    # configuration = "2D_individual_rewards"
+    #
+    # model1 = build_model(len(env.prices[0]), parameters[configuration]["shape"], param_dict["hidden_layer_size"],
+    #                      param_dict["layers_nb"])
     # memory1 = SequentialMemory(limit=param_dict["memory_buffer_size"], window_length=1)
     # policy1 = EpsGreedyQPolicy(eps=param_dict["epsilon"])
     # dqn1 = DQNAgent(model=model1, nb_actions=len(env.prices[0]), memory=memory1,
@@ -227,7 +310,8 @@ if __name__ == '__main__':
     #
     # memory2 = SequentialMemory(limit=param_dict["memory_buffer_size"], window_length=1)
     # policy2 = EpsGreedyQPolicy(eps=param_dict["epsilon"])
-    # model2 = build_model(len(env.prices[0]), shape, param_dict["hidden_layer_size"], param_dict["layers_nb"])
+    # model2 = build_model(len(env.prices[0]), parameters[configuration]["shape"], param_dict["hidden_layer_size"],
+    #                      param_dict["layers_nb"])
     # dqn2 = DQNAgent(model=model2, nb_actions=len(env.prices[1]), memory=memory2,
     #                 nb_steps_warmup=param_dict["nb_steps_warmup"],
     #                 enable_double_dqn=param_dict["enable_double_dqn"],
@@ -235,8 +319,42 @@ if __name__ == '__main__':
     #                 target_model_update=param_dict["target_model_update"], policy=policy2)
     # dqn2.compile(Adam(lr=param_dict["learning_rate"]), metrics=['mae'])
     #
-    # rewards = callback(env, nb_timesteps, callback_frequency)
-    # history = fit_multi_agent([dqn1, dqn2], env, nb_timesteps)
+    # callback = callback_multiagent(env, nb_timesteps, callback_frequency, configuration)
+    # history = fit_multi_agent(agents=[dqn1, dqn2], global_env=env, nb_steps=nb_timesteps,
+    #                           callbacks=[callback],
+    #                           fully_collaborative=parameters[configuration]["fully_collaborative"],
+    #                           observation_split=parameters[configuration]["observation_split"],
+    #                           action_merge=parameters[configuration]["action_merge"])
+
+
+    demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
+    configuration_names = ["2D_individual_rewards", "2D_shared_rewards"]
+    nb_timesteps = 100001
+    callback_frequency = 10
+    number_of_runs = 20
+    for configuration_name in configuration_names:
+        multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
+
+    plt.figure()
+    for configuration_name in configuration_names:
+        list_mean_final_revenues = []
+        for dr in demand_ratios:
+            env_param = multiagent_env_parameters_dict()
+            env_param["demand_ratio"] = dr
+            env = global_env_builder(env_param)
+            true_V, true_P = dynamic_programming_collaboration(env)
+            true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+                true_P, 10000)
+            experience_name = Path("../Results/"+configuration_name+"/"+str(dr))
+            mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+            difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
+            list_mean_final_revenues.append(difference_to_true_revenue)
+        plt.plot(demand_ratios, list_mean_final_revenues, label=configuration_name)
+    plt.legend(loc='best')
+    plt.xlabel("Demand ratio")
+    plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
+    # axes.set_ylim([0, 265])
+    plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios.png')
 
     # run_n_times(experience_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
 
@@ -278,25 +396,60 @@ if __name__ == '__main__':
     # rewards = callback()
     # history = dqn.fit(env, nb_steps=20000, visualize=False, verbose=2, callbacks=[rewards])
 
-
-
     # test_history = dqn1.test(env, nb_episodes=100, visualize=False)
-    # #
-    # # import matplotlib.pyplot as plt
-    # #
+    #
+    # import matplotlib.pyplot as plt
+    #
     # w = 100
     # moving_average1 = np.convolve(history.history['episode_reward1'], np.ones(w), 'valid') / w
     # plt.plot(list(range(0, w * len(moving_average1), w)), moving_average1, 'red', lw=4)
     # moving_average2 = np.convolve(history.history['episode_reward2'], np.ones(w), 'valid') / w
     # plt.plot(list(range(0, w * len(moving_average2), w)), moving_average2, 'blue', lw=4)
-    # #plt.ylim([0, 3000])
+    # plt.ylim([0, 3000])
     # plt.show()
-    # # print("V(0,0)={}".format(max(dqn.compute_q_values([env.states[0]]))))
-    # # print("evaluated revenue={}".format(np.mean(test_history.history['episode_reward'])))
-    # #
+    # print("V(0,0)={}".format(max(dqn.compute_q_values([env.states[0]]))))
+    # print("evaluated revenue={}".format(np.mean(test_history.history['episode_reward'])))
+    #
     # Q_table = [dqn1.compute_q_values([state]) for state in env.states]
     # policy = [np.argmax(q) for q in Q_table]
     # policy = np.asarray(policy).reshape(env.observation_space.nvec)
     #
     # revenues, bookings = average_n_episodes(env, policy, 10000)
     # V = q_to_v(env, Q_table).reshape(env.observation_space.nvec)
+
+    revenues = np.array(callback.rewards)
+    axes = plt.gca()
+    plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
+    # plt.plot(absc, revenues[:, 0] + revenues[:, 1], color="y", label="Case 2")
+    plt.plot(absc, revenues[:, 0] + revenues[:, 1], color="c", label="Case 3")
+    plt.plot(absc, revenues[:, 0], color="orange", label="Flight1")
+    plt.plot(absc, revenues[:, 1], color="blue", label="Flight2")
+    plt.legend(loc='best')
+    plt.xlabel("Number of steps")
+    plt.ylabel("Average revenue on {} flights".format(10000))
+    # axes.set_ylim([0, 265])
+    plt.show()
+
+    indx_nb = -1
+    bookings1 = revenues[:, 3][indx_nb]
+    bookings2 = revenues[:, 4][indx_nb]
+    # bookings1 = true_bookings_flight1
+    # bookings2 = true_bookings_flight2
+
+    prices_proposed1 = revenues[:, 5][indx_nb]
+    prices_proposed2 = revenues[:, 6][indx_nb]
+    # prices_proposed1 = true_prices_proposed_flight1
+    # prices_proposed2 = true_prices_proposed_flight2
+
+    plt.figure()
+    width = 5
+    plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Bookings flight 2")
+    plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Bookings flight 1", bottom=bookings2)
+    plt.bar(np.array(env.prices_flight2) - 2*width/3, prices_proposed2, width, color="blue", alpha = 0.3, label="Prices proposed flight 2")
+    plt.bar(np.array(env.prices_flight1) - 2*width/3, prices_proposed1, width, color="orange", alpha = 0.3, label="Prices proposed flight 1", bottom=prices_proposed2)
+    plt.xlabel("Prices")
+    plt.ylabel("Average computed on 10000 flights")
+    plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
+    plt.legend()
+    plt.xticks(env.prices_flight1)
+    plt.show()
