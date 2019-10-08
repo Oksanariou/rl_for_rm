@@ -234,13 +234,13 @@ def multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, call
 
         agent_param = agent_parameters_dict()
 
-        for k in range(number_of_runs):
-            run_once_multiagent(env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency,k)
+        # for k in range(number_of_runs):
+        #     run_once_multiagent(env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency,k)
 
-        # f = partial(run_once_multiagent, env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency)
-        #
-        # with Pool(number_of_runs) as pool:
-        #     pool.map(f, range(number_of_runs))
+        f = partial(run_once_multiagent, env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency)
+
+        with Pool(number_of_runs) as pool:
+            pool.map(f, range(number_of_runs))
 
 
 def parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues,
