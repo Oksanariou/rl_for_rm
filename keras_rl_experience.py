@@ -285,13 +285,13 @@ if __name__ == '__main__':
 
     parameters = {}
     parameters["2D_individual_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
-                                           "fully_collaborative": False, "action_merge": action_merge}
+                                           "fully_collaborative": False, "action_merge": action_merge, "color": "c"}
     parameters["2D_shared_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
-                                       "fully_collaborative": True, "action_merge": action_merge}
+                                       "fully_collaborative": True, "action_merge": action_merge, "color":"y"}
     parameters["3D_individual_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
-                                           "fully_collaborative": False, "action_merge": action_merge}
+                                           "fully_collaborative": False, "action_merge": action_merge, "color":"black"}
     parameters["3D_shared_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
-                                       "fully_collaborative": True, "action_merge": action_merge}
+                                       "fully_collaborative": True, "action_merge": action_merge, "color":"m"}
 
     # configuration = "2D_shared_rewards"
     configuration = "2D_individual_rewards"
@@ -333,69 +333,70 @@ if __name__ == '__main__':
     number_of_runs = 20
     # for configuration_name in configuration_names:
     #     multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
+    env_param = multiagent_env_parameters_dict()
+    env = global_env_builder(env_param)
+    for configuration_name in configuration_names:
+        for dr_idx in range(len(demand_ratios)):
+            env_param = multiagent_env_parameters_dict()
+            env_param["demand_ratio"] = demand_ratios[dr_idx]
+            env = global_env_builder(env_param)
+            true_V, true_P = dynamic_programming_collaboration(env)
+            true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+                true_P, 10000)
+            plt.figure()
+            plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
+            experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
+            list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+            for reward in list_of_rewards:
+                plt.plot(absc, np.array(reward[:,0]) + np.array(reward[:,1]), alpha=0.2, color=parameters[configuration]["color"])
+            plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2), alpha=0.2, color=parameters[configuration]["color"])
+            plt.legend(loc='best')
+            plt.xlabel("Number of steps")
+            plt.ylabel("Average revenue on {} flights".format(10000))
+            plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_revenues.png")
+
+            plt.figure()
+            width = 5
+            bookings1, bookings2 = mean_bookings1[-1], mean_bookings2[-1]
+            prices_proposed1, prices_proposed2 = mean_prices_proposed1[-1], mean_prices_proposed2[-1]
+            plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Bookings flight 2")
+            plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Bookings flight 1", bottom=bookings2)
+            plt.bar(np.array(env.prices_flight2) - 2*width/3, prices_proposed2, width, color="blue", alpha = 0.3, label="Prices proposed flight 2")
+            plt.bar(np.array(env.prices_flight1) - 2*width/3, prices_proposed1, width, color="orange", alpha = 0.3, label="Prices proposed flight 1", bottom=prices_proposed2)
+            plt.xlabel("Prices")
+            plt.ylabel("Average computed on 10000 flights")
+            plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
+            plt.legend()
+            plt.xticks(env.prices_flight1)
+            plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
     # plt.figure()
-    # configuration_name = "2D_individual_rewards"
-    # for dr_idx in range(len(demand_ratios)):
-    #     experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
-    #     list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
-    #     for reward in list_of_rewards:
-    #         plt.plot(absc, np.array(reward[:,0]) + np.array(reward[:,1]), alpha=0.2, color="c")
-    #     plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2), alpha=0.2, color="c")
-    # for k in range(number_of_runs):
-    #     plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="c")
-    # plt.plot(demand_ratios, list_mean_final_revenues, color="c", label=configuration_name)
-
-    plt.figure()
-
-    configuration_name = "2D_individual_rewards"
-    list_mean_final_revenues = []
-    list_final_revenues = [[] for k in range(len(demand_ratios))]
-    for dr_idx in range(len(demand_ratios)):
-        env_param = multiagent_env_parameters_dict()
-        env_param["demand_ratio"] = demand_ratios[dr_idx]
-        env = global_env_builder(env_param)
-        true_V, true_P = dynamic_programming_collaboration(env)
-        true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
-                true_P, 10000)
-        experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
-        list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
-        difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
-        list_mean_final_revenues.append(difference_to_true_revenue)
-        list_of_rewards = np.array(list_of_rewards)
-        for reward in list_of_rewards:
-            list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
-    for k in range(number_of_runs):
-        plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="c")
-    plt.plot(demand_ratios, list_mean_final_revenues, color="c", label=configuration_name)
-
-    configuration_name = "2D_shared_rewards"
-    list_mean_final_revenues = []
-    list_final_revenues = [[] for k in range(len(demand_ratios))]
-    for dr_idx in range(len(demand_ratios)):
-        env_param = multiagent_env_parameters_dict()
-        env_param["demand_ratio"] = demand_ratios[dr_idx]
-        env = global_env_builder(env_param)
-        true_V, true_P = dynamic_programming_collaboration(env)
-        true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
-            true_P, 10000)
-        experience_name = Path("../Results/" + configuration_name + "/" + str(demand_ratios[dr_idx]))
-        list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(
-            experience_name)
-        difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1]) / (true_revenue1 + true_revenue2)) * 100
-        list_mean_final_revenues.append(difference_to_true_revenue)
-        list_of_rewards = np.array(list_of_rewards)
-        for reward in list_of_rewards:
-            list_final_revenues[dr_idx].append(reward[:, 0][-1] + reward[:, 1][-1])
-    for k in range(number_of_runs):
-        plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="y")
-    plt.plot(demand_ratios, list_mean_final_revenues, color="y", label=configuration_name)
-
-    plt.legend(loc='best')
-    plt.xlabel("Demand ratio")
-    plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
-    # axes.set_ylim([0, 265])
-    plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
+    # for configuration_name in configuration_names:
+    #     list_mean_final_revenues = []
+    #     list_final_revenues = [[] for k in range(len(demand_ratios))]
+    #     for dr_idx in range(len(demand_ratios)):
+    #         env_param = multiagent_env_parameters_dict()
+    #         env_param["demand_ratio"] = demand_ratios[dr_idx]
+    #         env = global_env_builder(env_param)
+    #         true_V, true_P = dynamic_programming_collaboration(env)
+    #         true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+    #                 true_P, 10000)
+    #         experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
+    #         list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+    #         difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
+    #         list_mean_final_revenues.append(difference_to_true_revenue)
+    #         list_of_rewards = np.array(list_of_rewards)
+    #         for reward in list_of_rewards:
+    #             list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+    #     for k in range(number_of_runs):
+    #         plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration]["shape"])
+    #     plt.plot(demand_ratios, list_mean_final_revenues, color="c", label=configuration_name)
+    #
+    # plt.legend(loc='best')
+    # plt.xlabel("Demand ratio")
+    # plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
+    # # axes.set_ylim([0, 265])
+    # plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
 
     # plt.figure()
     # for configuration_name in configuration_names:
