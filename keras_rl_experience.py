@@ -370,7 +370,7 @@ if __name__ == '__main__':
     #         plt.xticks(env.prices_flight1)
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
-
+    plt.figure()
     for configuration_name in configuration_names:
         list_mean_final_revenues = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
@@ -416,7 +416,6 @@ if __name__ == '__main__':
             # plt.xticks(env.prices_flight1)
             # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
-        plt.figure()
         for k in range(number_of_runs):
             plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration_name]["color"])
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
