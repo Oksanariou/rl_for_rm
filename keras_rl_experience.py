@@ -390,10 +390,10 @@ if __name__ == '__main__':
 
             # plt.figure()
             # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
-            # for reward in list_of_rewards:
-            #     list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
-            #     plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
-            #              color=parameters[configuration_name]["color"])
+            for reward in list_of_rewards:
+                list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+                # plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
+                #          color=parameters[configuration_name]["color"])
             # plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2),
             #          color=parameters[configuration_name]["color"])
             # plt.legend(loc='best')
