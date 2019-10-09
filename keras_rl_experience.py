@@ -274,9 +274,9 @@ if __name__ == '__main__':
     #     true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
     #         true_P, 10000)
     #
-    # nb_timesteps = 60001
-    # callback_frequency = 10
-    # absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
+    nb_timesteps = 100001
+    callback_frequency = 10
+    absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     # nb_runs = 20
 
     # experience_name = Path("../Results/Best_run")
@@ -334,6 +334,17 @@ if __name__ == '__main__':
     # for configuration_name in configuration_names:
     #     multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
 
+    # plt.figure()
+    # configuration_name = "2D_individual_rewards"
+    # for dr_idx in range(len(demand_ratios)):
+    #     experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
+    #     list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+    #     for reward in list_of_rewards:
+    #         plt.plot(absc, np.array(reward[:,0]) + np.array(reward[:,1]), alpha=0.2, color="c")
+    #     plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2), alpha=0.2, color="c")
+    # for k in range(number_of_runs):
+    #     plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="c")
+    # plt.plot(demand_ratios, list_mean_final_revenues, color="c", label=configuration_name)
 
     plt.figure()
 
@@ -376,7 +387,7 @@ if __name__ == '__main__':
         list_of_rewards = np.array(list_of_rewards)
         for reward in list_of_rewards:
             list_final_revenues[dr_idx].append(reward[:, 0][-1] + reward[:, 1][-1])
-    for k in range(nb_runs):
+    for k in range(number_of_runs):
         plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="y")
     plt.plot(demand_ratios, list_mean_final_revenues, color="y", label=configuration_name)
 
