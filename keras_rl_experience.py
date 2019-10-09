@@ -388,38 +388,39 @@ if __name__ == '__main__':
             list_mean_final_revenues.append(difference_to_true_revenue)
             list_of_rewards = np.array(list_of_rewards)
 
-            plt.figure()
-            plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
-            for reward in list_of_rewards:
-                list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
-                plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
-                         color=parameters[configuration_name]["color"])
-            plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2),
-                     color=parameters[configuration_name]["color"])
-            plt.legend(loc='best')
-            plt.xlabel("Number of steps")
-            plt.ylabel("Average revenue on {} flights".format(10000))
-            plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_revenues.png")
-
-            plt.figure()
-            width = 5
-            bookings1, bookings2 = mean_bookings1[-1], mean_bookings2[-1]
-            prices_proposed1, prices_proposed2 = mean_prices_proposed1[-1], mean_prices_proposed2[-1]
-            plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Bookings flight 2")
-            plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Bookings flight 1", bottom=bookings2)
-            plt.bar(np.array(env.prices_flight2) - 2*width/3, prices_proposed2, width, color="blue", alpha=0.3, label="Prices proposed flight 2")
-            plt.bar(np.array(env.prices_flight1) - 2*width/3, prices_proposed1, width, color="orange", alpha=0.3, label="Prices proposed flight 1", bottom=prices_proposed2)
-            plt.xlabel("Prices")
-            plt.ylabel("Average computed on 10000 flights")
-            plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
-            plt.legend()
-            plt.xticks(env.prices_flight1)
-            plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
+            # plt.figure()
+            # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
+            # for reward in list_of_rewards:
+            #     list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+            #     plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
+            #              color=parameters[configuration_name]["color"])
+            # plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2),
+            #          color=parameters[configuration_name]["color"])
+            # plt.legend(loc='best')
+            # plt.xlabel("Number of steps")
+            # plt.ylabel("Average revenue on {} flights".format(10000))
+            # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_revenues.png")
+            #
+            # plt.figure()
+            # width = 5
+            # bookings1, bookings2 = mean_bookings1[-1], mean_bookings2[-1]
+            # prices_proposed1, prices_proposed2 = mean_prices_proposed1[-1], mean_prices_proposed2[-1]
+            # plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Bookings flight 2")
+            # plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Bookings flight 1", bottom=bookings2)
+            # plt.bar(np.array(env.prices_flight2) - 2*width/3, prices_proposed2, width, color="blue", alpha=0.3, label="Prices proposed flight 2")
+            # plt.bar(np.array(env.prices_flight1) - 2*width/3, prices_proposed1, width, color="orange", alpha=0.3, label="Prices proposed flight 1", bottom=prices_proposed2)
+            # plt.xlabel("Prices")
+            # plt.ylabel("Average computed on 10000 flights")
+            # plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
+            # plt.legend()
+            # plt.xticks(env.prices_flight1)
+            # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
         plt.figure()
         for k in range(number_of_runs):
             plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration_name]["color"])
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
+        plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
     #
     # plt.legend(loc='best')
     # plt.xlabel("Demand ratio")
