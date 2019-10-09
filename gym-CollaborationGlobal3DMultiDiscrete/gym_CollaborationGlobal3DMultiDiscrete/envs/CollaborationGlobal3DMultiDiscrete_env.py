@@ -365,4 +365,4 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         mean_prices_proposed1 = [np.mean(list, axis=0) for list in prices_proposed1_combined_at_each_collection_point]
         mean_prices_proposed2 = [np.mean(list, axis=0) for list in prices_proposed2_combined_at_each_collection_point]
 
-        return mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2
+        return list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2

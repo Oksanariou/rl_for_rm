@@ -217,24 +217,24 @@ def plot_comparison_Q_learning_VS_stabilized_competition(episodes, revenues_glob
 
 if __name__ == '__main__':
     micro_times = 100
-    capacity1 = 11
-    capacity2 = 11
-    action_min = 10
-    action_max = 230
-    action_offset = 20
+    capacity1 = 20
+    capacity2 = 20
+    action_min = 50
+    action_max = 231
+    action_offset = 30
     fixed_action = 90
     actions_global = tuple((k, m) for k in range(action_min, action_max + 1, action_offset) for m in
                            range(action_min, action_max + 1, action_offset))
     actions_individual = tuple(k for k in range(action_min, action_max + 1, action_offset))
 
-    arrival_rate = 0.5
-    # demand_ratio = 1.8
+    # arrival_rate = 0.5
+    demand_ratio = 1.8
     # number_of_flights = 2
-    # arrival_rate = demand_ratio * (capacity1 * number_of_flights) / micro_times
+    arrival_rate = demand_ratio * (capacity1 + capacity2) / micro_times
 
-    beta = 0.02
-    k_airline1 = 1.5
-    k_airline2 = 1.5
+    beta = 0.04
+    k_airline1 = 5.
+    k_airline2 = 5.
     nested_lamb = 0.3
 
     global_env = gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0', micro_times=micro_times,
@@ -288,7 +288,7 @@ if __name__ == '__main__':
                                                                                                  10000)
 
     # Revenues and bookings made by the two individual policies coming from the two flights AWARE of competition and adapting to the other flight's policy
-    nb_iterations = 10
+    nb_iterations = 20
     revenues, bookings = compute_revenues_and_bookings_from_competition(nb_iterations, initial_revenues,
                                                                         initial_bookings,
                                                                         individual_2D_env1, P_flight1, global_env)
