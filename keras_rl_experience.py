@@ -353,8 +353,8 @@ if __name__ == '__main__':
         list_mean_final_revenues.append(difference_to_true_revenue)
         list_of_rewards = np.array(list_of_rewards)
         for reward in list_of_rewards:
-            list_final_revenues[dr_idx].append(reward[:,0][-1] + reward[:,1][-1])
-    for k in range(nb_runs):
+            list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+    for k in range(number_of_runs):
         plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color="c")
     plt.plot(demand_ratios, list_mean_final_revenues, color="c", label=configuration_name)
 
