@@ -420,7 +420,7 @@ if __name__ == '__main__':
         for k in range(number_of_runs):
             plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration_name]["color"])
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
-        plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
+    plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
     #
     # plt.legend(loc='best')
     # plt.xlabel("Demand ratio")
