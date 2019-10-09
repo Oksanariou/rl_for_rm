@@ -348,8 +348,8 @@ if __name__ == '__main__':
     #         list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
     #         list_of_rewards = np.array(list_of_rewards)
     #         for reward in list_of_rewards:
-    #             plt.plot(absc, np.array(reward[:,0]) + np.array(reward[:,1]), alpha=0.2, color=parameters[configuration]["color"])
-    #         plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2), alpha=0.2, color=parameters[configuration]["color"])
+    #             plt.plot(absc, np.array(reward[:,0]) + np.array(reward[:,1]), alpha=0.2, color=parameters[configuration_name]["color"])
+    #         plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2), color=parameters[configuration_name]["color"])
     #         plt.legend(loc='best')
     #         plt.xlabel("Number of steps")
     #         plt.ylabel("Average revenue on {} flights".format(10000))
@@ -389,8 +389,8 @@ if __name__ == '__main__':
             for reward in list_of_rewards:
                 list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
         for k in range(number_of_runs):
-            plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration]["color"])
-        plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration]["color"], label=configuration_name)
+            plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration_name]["color"])
+        plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
     #
     # plt.legend(loc='best')
     # plt.xlabel("Demand ratio")
