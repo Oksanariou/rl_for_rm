@@ -384,8 +384,10 @@ if __name__ == '__main__':
             experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
             list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
             difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
+
             list_mean_final_revenues.append(difference_to_true_revenue)
             list_of_rewards = np.array(list_of_rewards)
+
             plt.figure()
             plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
             for reward in list_of_rewards:
