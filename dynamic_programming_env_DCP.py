@@ -5,7 +5,7 @@ import scipy.special
 def compute_d_list(env, t, x, V):
     d_list = []
     for a in env.A:
-        p, reward = env.proba_buy(a)
+        p = env.probas[env.A.index(a)]
         sum = 0
         for k in range(env.M+1):
             r = k * a + V[t + 1, x + k] if x + k <= env.C - 1 else V[t + 1, env.C - 1] + a * (env.C - 1 - x)

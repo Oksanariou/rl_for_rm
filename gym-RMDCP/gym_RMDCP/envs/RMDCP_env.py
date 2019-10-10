@@ -14,6 +14,10 @@ default_actions = tuple(k for k in range(50, 231, 20))
 default_alpha = 0.66
 default_lambda = 0.2
 default_micro_times = 20
+default_noise_average = 0
+default_noise_std_deviation = 0
+default_compute_P_matrix = True
+default_noise_percentage = 0
 
 
 class RMDCPEnv(gym.Env):
@@ -21,7 +25,9 @@ class RMDCPEnv(gym.Env):
 
     def __init__(self, data_collection_points=default_data_collection_points, capacity=default_capacity,
                  micro_times=default_micro_times, actions=default_actions,
-                 alpha=default_alpha, lamb=default_lambda):
+                 alpha=default_alpha, lamb=default_lambda, noise_average=default_noise_average,
+                 noise_std_deviation=default_noise_std_deviation, compute_P_matrix=default_compute_P_matrix,
+                 noise_percentage=default_noise_percentage):
 
         super(RMDCPEnv, self).__init__()
 
@@ -38,6 +44,11 @@ class RMDCPEnv(gym.Env):
         self.alpha = alpha
         self.lamb = lamb
 
+        self.noise_average = noise_average
+        self.noise_std_deviation = noise_std_deviation
+        self.compute_P_matrix = compute_P_matrix
+        self.noise_percentage = noise_percentage
+
         # self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
         self.observation_space = spaces.MultiDiscrete([self.T, self.C])
         self.action_space = spaces.Discrete(self.nA)
@@ -50,8 +61,8 @@ class RMDCPEnv(gym.Env):
 
         self.probas = [self.proba_buy(self.A[k])[0] for k in range(self.nA)]
 
-        self.P, self.proba_cumsum = self.init_transitions()
-
+        if self.compute_P_matrix:
+            self.P, self.proba_cumsum = self.init_transitions()
 
     def init_transitions(self):
         # Transitions: P[s][a] = [(probability, nextstate, reward, done), ...]
@@ -81,7 +92,7 @@ class RMDCPEnv(gym.Env):
                 done = True
             list_transitions.append((proba_buy, [t + 1, x + 1], self.A[action], done))
             done = False
-            if t + 1 == self.T - 1 or x  == self.C - 1:
+            if t + 1 == self.T - 1 or x == self.C - 1:
                 done = True
             list_transitions.append((1 - proba_buy, [t + 1, x], 0, done))
         return list_transitions
@@ -158,6 +169,8 @@ class RMDCPEnv(gym.Env):
             - the probability that a person will buy the ticket at the price p
             - the reward that the agent gets if the person buys the ticket"""
         proba = self.lamb * np.exp(-self.alpha * ((a / self.A[0]) - 1))
+        # proba += np.random.normal(self.noise_average, self.noise_std_deviation, 1)[0]
+        proba += self.noise_percentage * proba * np.random.random([1]) * [-1, 1][random.randrange(2)]
         reward = a
         return proba, reward
 
@@ -213,16 +226,15 @@ class RMDCPEnv(gym.Env):
         scores = [self.run_episode(policy) for _ in range(n_eval)]
         revenue_time = []
         scores = np.array(scores)
-        revenues_at_each_time = scores[:,0]
+        revenues_at_each_time = scores[:, 0]
         sum_revenues_at_each_time = np.array([np.cumsum(k) for k in revenues_at_each_time])
         for k in range(self.T):
-            revenue_time.append(sum_revenues_at_each_time[:,k])
+            revenue_time.append(sum_revenues_at_each_time[:, k])
         revenues = [np.sum(k) for k in revenues_at_each_time]
         mean_revenue = np.mean(revenues)
         bookings = np.mean(scores[:, 1], axis=0)
         prices_proposed = np.mean(scores[:, 2], axis=0)
         return mean_revenue, revenue_time, revenues, bookings, prices_proposed
-
 
     def collect_revenues(self, experience_name):
         list_of_rewards = []
@@ -254,7 +266,7 @@ class RMDCPEnv(gym.Env):
         fig = plt.figure()
         plt.plot(absc, mean_revenues, color="gray", label='Mean revenue')
         for revenues in list_of_revenues:
-            plt.plot(absc, np.array(revenues)[:,0], color="gray", alpha=0.2)
+            plt.plot(absc, np.array(revenues)[:, 0], color="gray", alpha=0.2)
         plt.plot(absc, [optimal_revenue] * len(absc), label="Optimal solution")
         plt.legend()
         plt.ylabel("Average revenue on 10000 flights")

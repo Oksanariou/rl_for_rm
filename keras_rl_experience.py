@@ -274,7 +274,7 @@ if __name__ == '__main__':
     #     true_V, true_P = dynamic_programming_collaboration(env)
     #     true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
     #         true_P, 10000)
-    #
+
     nb_timesteps = 100001
     callback_frequency = 10
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
@@ -327,7 +327,8 @@ if __name__ == '__main__':
     #                           action_merge=parameters[configuration]["action_merge"])
 
 
-    demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
+    # demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
+    demand_ratios = [0.5, 0.6]
     configuration_names = ["2D_individual_rewards", "2D_shared_rewards"]
     nb_timesteps = 100001
     callback_frequency = 10
@@ -375,6 +376,7 @@ if __name__ == '__main__':
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
         list_mean_final_revenues = []
+        list_difference_to_true_revenue_mnl = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
         for dr_idx in range(len(demand_ratios)):
             env_param = multiagent_env_parameters_dict()
@@ -383,13 +385,19 @@ if __name__ == '__main__':
             true_V, true_P = dynamic_programming_collaboration(env)
             true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
                     true_P, 10000)
+            env_param["nested_lamb"] = 1.
+            env_mnl = global_env_builder(env_param)
+            V, P = dynamic_programming_collaboration(env_mnl)
+            revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
+                P, 10000)
+            difference_to_true_revenue_mnl = ((revenue1 + revenue2)/(true_revenue1 + true_revenue2))*100
             experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
             list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
             difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
 
             list_mean_final_revenues.append(difference_to_true_revenue)
             list_of_rewards = np.array(list_of_rewards)
-
+            list_difference_to_true_revenue_mnl.append(difference_to_true_revenue_mnl)
             # plt.figure()
             # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
 
@@ -427,11 +435,12 @@ if __name__ == '__main__':
         max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
         plt.fill_between(demand_ratios, min_revenues, max_revenues, label='95% confidence interval', color=parameters[configuration_name]["color"], alpha=0.2)
+    plt.plot(demand_ratios, list_difference_to_true_revenue_mnl, color="red", label="Model-based with MNL CCM assumption")
     plt.legend(loc='best')
     plt.xlabel("Demand ratio")
     plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
     # axes.set_ylim([0, 265])
-    plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
+    plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance_mnl.png')
 
     # plt.figure()
     # for configuration_name in configuration_names:
