@@ -428,13 +428,10 @@ if __name__ == '__main__':
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
         plt.fill_between(demand_ratios, min_revenues, max_revenues, label='95% confidence interval', color=parameters[configuration_name]["color"], alpha=0.2)
     plt.legend(loc='best')
+    plt.xlabel("Demand ratio")
+    plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
+    # axes.set_ylim([0, 265])
     plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
-    #
-    # plt.legend(loc='best')
-    # plt.xlabel("Demand ratio")
-    # plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
-    # # axes.set_ylim([0, 265])
-    # plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
 
     # plt.figure()
     # for configuration_name in configuration_names:
@@ -533,15 +530,15 @@ if __name__ == '__main__':
     # plt.show()
     #
     # indx_nb = 6
-    # bookings1 = revenues[:, 3][indx_nb]
-    # bookings2 = revenues[:, 4][indx_nb]
-    # # bookings1 = true_bookings_flight1
-    # # bookings2 = true_bookings_flight2
+    # # bookings1 = revenues[:, 3][indx_nb]
+    # # bookings2 = revenues[:, 4][indx_nb]
+    # bookings1 = true_bookings_flight1
+    # bookings2 = true_bookings_flight2
     #
-    # prices_proposed1 = revenues[:, 5][indx_nb]
-    # prices_proposed2 = revenues[:, 6][indx_nb]
-    # # prices_proposed1 = true_prices_proposed_flight1
-    # # prices_proposed2 = true_prices_proposed_flight2
+    # # prices_proposed1 = revenues[:, 5][indx_nb]
+    # # prices_proposed2 = revenues[:, 6][indx_nb]
+    # prices_proposed1 = true_prices_proposed_flight1
+    # prices_proposed2 = true_prices_proposed_flight2
     #
     # plt.figure()
     # width = 5
