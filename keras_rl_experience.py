@@ -24,6 +24,7 @@ from functools import partial
 from multiprocessing import Pool
 from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent, combine_two_policies, observation_split_2D, \
     action_merge, observation_split_3D
+from scipy.stats import sem, t
 import multiprocessing as mp
 
 
@@ -371,6 +372,7 @@ if __name__ == '__main__':
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
     plt.figure()
+    nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
         list_mean_final_revenues = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
@@ -390,10 +392,12 @@ if __name__ == '__main__':
 
             # plt.figure()
             # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
+
             for reward in list_of_rewards:
                 list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
                 # plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
                 #          color=parameters[configuration_name]["color"])
+
             # plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2),
             #          color=parameters[configuration_name]["color"])
             # plt.legend(loc='best')
@@ -416,9 +420,14 @@ if __name__ == '__main__':
             # plt.xticks(env.prices_flight1)
             # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
-        for k in range(number_of_runs):
-            plt.plot(demand_ratios, [list_final_revenues[i][k] for i in range(len(demand_ratios))], alpha=0.2, color=parameters[configuration_name]["color"])
+        std_revenues = [sem(list) for list in list_final_revenues]
+        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                               range(nb_collection_points)]
+        min_revenues = [list_mean_final_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
         plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
+        plt.fill_between(demand_ratios, min_revenues, max_revenues, label='95% confidence interval', color=parameters[configuration_name]["color"], alpha=0.2)
+    plt.legend(loc='best')
     plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios_variance.png')
     #
     # plt.legend(loc='best')
