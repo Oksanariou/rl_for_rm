@@ -19,7 +19,7 @@ default_lambda = 0.8
 default_nested_lambda = 1.
 default_prices_flight1 = [k for k in range(50, 231, 20)]
 default_prices_flight2 = [k for k in range(50, 231, 20)]
-
+default_parameter_noise_percentage = 0
 
 class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -27,7 +27,7 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
     def __init__(self, micro_times=default_micro_times, capacity1=default_capacity_airline_1,
                  capacity2=default_capacity_airline_2, prices=[default_prices_flight1, default_prices_flight2],
                  beta=default_beta, k_airline1=default_k_airline1, k_airline2=default_k_airline2, lamb=default_lambda,
-                 nested_lamb=default_nested_lambda):
+                 nested_lamb=default_nested_lambda, parameter_noise_percentage=default_parameter_noise_percentage):
 
         super(CollaborationGlobal3DMultiDiscreteEnv, self).__init__()
 
@@ -46,11 +46,12 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.A = list(itertools.product(self.prices[0], self.prices[1]))
         self.nA = len(self.A)  # number of actions
 
-        self.beta = beta
-        self.k_airline1 = k_airline1
-        self.k_airline2 = k_airline2
+        self.parameter_noise_percentage = parameter_noise_percentage
+        self.beta = beta + np.random.normal(0, beta * self.parameter_noise_percentage, 1)[0]
+        self.k_airline1 = k_airline1 + np.random.normal(0, k_airline1 * self.parameter_noise_percentage, 1)[0]
+        self.k_airline2 = k_airline2 + np.random.normal(0, k_airline2 * self.parameter_noise_percentage, 1)[0]
 
-        self.lamb = lamb
+        self.lamb = lamb + np.random.normal(0, lamb * self.parameter_noise_percentage, 1)[0]
 
         self.observation_space = spaces.MultiDiscrete([self.T, self.C1, self.C2])
         self.action_space = spaces.Discrete(self.nA)
