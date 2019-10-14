@@ -212,8 +212,8 @@ if __name__ == '__main__':
             experience_name_DQL)
         average_DQL_revenue = mean_revenues_DQL[-1]
         DQL_percentage.append((((average_DQL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
-        DQL_min_revenues.append(min_revenues_DQL[-1])
-        DQL_max_revenues.append(max_revenues_DQL[-1])
+        DQL_min_revenues.append((((min_revenues_DQL[-1] / true_revenues) * 100) / initial_DQL_percentage) * 100)
+        DQL_max_revenues.append((((max_revenues_DQL[-1] / true_revenues) * 100) / initial_DQL_percentage) * 100)
         print("DQL percentage of true revenue = {}".format((average_DQL_revenue / true_revenues) * 100))
 
         experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
@@ -229,8 +229,8 @@ if __name__ == '__main__':
             experience_name_QL)
         average_QL_revenue = mean_revenues_QL[-1]
         QL_percentage.append((((average_QL_revenue / true_revenues) * 100) / initial_QL_percentage) * 100)
-        QL_min_revenues.append(min_revenues_QL[-1])
-        QL_max_revenues.append(max_revenues_QL[-1])
+        QL_min_revenues.append((((min_revenues_QL[-1] / true_revenues) * 100) / initial_QL_percentage) * 100)
+        QL_max_revenues.append((((max_revenues_QL[-1] / true_revenues) * 100) / initial_QL_percentage) * 100)
         print("QL percentage of true revenue = {}".format((average_QL_revenue / true_revenues) * 100))
 
     plt.figure()
@@ -243,6 +243,7 @@ if __name__ == '__main__':
                      color="c", alpha=0.2)
     plt.fill_between(total_capacities, DQL_min_revenues, DQL_max_revenues, label='95% confidence interval',
                      color="y", alpha=0.2)
+    plt.legend()
     plt.savefig("../Results/" + "scaling_as_a_function_of_C_and_T.png")
 
     # # DQL
