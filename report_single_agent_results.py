@@ -131,14 +131,14 @@ if __name__ == '__main__':
         experience_name_QL)
     average_initial_QL_revenue = np.mean(mean_revenues_QL[-1])
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
-    print("DQL percentage of true revenue = {}".format(initial_QL_percentage))
+    print("QL percentage of true revenue = {}".format(initial_QL_percentage))
 
     capacities = [k for k in range(10, 151, 10)]
     action_offsets = [100, 70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
     number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
     DQL_percentage = [100]
     DQL_min_revenues = [100]
-    DQL_max_revenues = [0]
+    DQL_max_revenues = [100]
     QL_percentage = [100]
     QL_min_revenues = [100]
     QL_max_revenues = [100]
