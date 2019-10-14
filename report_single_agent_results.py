@@ -90,6 +90,12 @@ def run_once_QL(env_builder, env_parameters_dict, parameters_dict, nb_episodes, 
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenues_QL)
 
 
+def run_once_random(env_builder, env_parameters_dict, experience_name, k):
+    env = env_builder(env_parameters_dict)
+    random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
+    np.save(experience_name / ("Run" + str(k) + ".npy"), average_n_episodes(env, random_P, 10000))
+
+
 if __name__ == '__main__':
     nb_runs = 20
     callback_frequency = 2
@@ -102,8 +108,16 @@ if __name__ == '__main__':
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
-    random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
-    random_revenues, random_bookings = average_n_episodes(env, random_P, 10000)
+    experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
+    experience_name_random.mkdir(parents=True, exist_ok=True)
+    f = partial(run_once_random, env_builder, env_param, experience_name_random)
+    with Pool(nb_runs) as pool:
+        pool.map(f, range(nb_runs))
+    list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
+        experience_name_random)
+    average_initial_random_revenue = mean_revenues_random[-1]
+    initial_random_percentage = (average_initial_random_revenue / initial_true_revenues) * 100
+    print("Random percentage of true revenue = {}".format(initial_random_percentage))
 
     nb_timesteps = 80001
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
@@ -118,7 +132,7 @@ if __name__ == '__main__':
     #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
         experience_name_DQL)
-    average_initial_DQL_revenue = np.mean(mean_revenues_DQL[-1])
+    average_initial_DQL_revenue = mean_revenues_DQL[-1]
     initial_DQL_percentage = (average_initial_DQL_revenue / initial_true_revenues) * 100
     print("DQL percentage of true revenue = {}".format(initial_DQL_percentage))
 
@@ -133,7 +147,7 @@ if __name__ == '__main__':
     #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
         experience_name_QL)
-    average_initial_QL_revenue = np.mean(mean_revenues_QL[-1])
+    average_initial_QL_revenue = mean_revenues_QL[-1]
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
     print("QL percentage of true revenue = {}".format(initial_QL_percentage))
 
@@ -141,11 +155,14 @@ if __name__ == '__main__':
     action_offsets = [100, 70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
     number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
     DQL_percentage = [100]
-    DQL_min_revenues = [100]
-    DQL_max_revenues = [100]
+    DQL_min_revenues = [(min_revenues_DQL[-1] / initial_true_revenues) * 100]
+    DQL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
     QL_percentage = [100]
-    QL_min_revenues = [100]
-    QL_max_revenues = [100]
+    QL_min_revenues = [(min_revenues_QL[-1] / initial_true_revenues) * 100]
+    QL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
+    random_percentage = [100]
+    random_min_revenues = [(min_revenues_random[-1] / initial_true_revenues) * 100]
+    random_max_revenues = [(max_revenues_random[-1] / initial_true_revenues) * 100]
 
     # for action_offset in action_offsets:
     #     env_param = env_parameters()
@@ -165,10 +182,10 @@ if __name__ == '__main__':
     #     #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     #     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
     #         experience_name_DQL)
-    #     average_DQL_revenue = np.mean(mean_revenues_DQL[-1])
+    #     average_DQL_revenue = mean_revenues_DQL[-1]
     #     DQL_percentage.append((((average_DQL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
-    #     DQL_min_revenues.append(min_revenues_DQL[-1])
-    #     DQL_max_revenues.append(max_revenues_DQL[-1])
+    #     DQL_min_revenues.append((((min_revenues_DQL[-1] / true_revenues) * 100) / initial_DQL_percentage) * 100)
+    #     DQL_max_revenues.append((((max_revenues_DQL[-1] / true_revenues) * 100) / initial_DQL_percentage) * 100)
     #
     #     experience_name_QL = Path("../Results/QL_action_offset_" + str(env_param["action_offset"]))
     #     experience_name_QL.mkdir(parents=True, exist_ok=True)
@@ -181,10 +198,10 @@ if __name__ == '__main__':
     #     #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
     #     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
     #         experience_name_QL)
-    #     average_QL_revenue = np.mean(mean_revenues_QL[-1])
-    #     QL_percentage.append((((average_QL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
-    #     QL_min_revenues.append(min_revenues_QL[-1])
-    #     QL_max_revenues.append(max_revenues_QL[-1])
+    #     average_QL_revenue = mean_revenues_QL[-1]
+    #     QL_percentage.append((((average_QL_revenue / true_revenues) * 100) / initial_QL_percentage) * 100)
+    #     QL_min_revenues.append((((min_revenues_QL[-1] / true_revenues) * 100) / initial_QL_percentage) * 100)
+    #     QL_max_revenues.append((((max_revenues_QL[-1] / true_revenues) * 100) / initial_QL_percentage) * 100)
     # plt.figure()
     # plt.plot(number_of_actions, QL_percentage, label="QL", color="c")
     # plt.plot(number_of_actions, DQL_percentage, label="DQL", color="y")
@@ -202,6 +219,21 @@ if __name__ == '__main__':
         env = env_builder(env_param)
         true_V, true_P = dynamic_programming_env_DCP(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
+
+        experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
+        experience_name_random.mkdir(parents=True, exist_ok=True)
+        f = partial(run_once_random, env_builder, env_param, experience_name_random)
+        with Pool(nb_runs) as pool:
+            pool.map(f, range(nb_runs))
+        list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
+            experience_name_random)
+        average_random_revenue = mean_revenues_random[-1]
+        random_percentage.append((((average_random_revenue / true_revenues) * 100) / initial_random_percentage) * 100)
+        random_min_revenues.append(
+            (((min_revenues_random[-1] / true_revenues) * 100) / initial_random_percentage) * 100)
+        random_min_revenues.append(
+            (((max_revenues_random[-1] / true_revenues) * 100) / initial_random_percentage) * 100)
+        print("Random percentage of true revenue = {}".format((average_random_revenue / true_revenues) * 100))
 
         experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
@@ -241,10 +273,12 @@ if __name__ == '__main__':
     total_capacities = [5] + capacities
     plt.plot(total_capacities, QL_percentage, label="QL", color="c")
     plt.plot(total_capacities, DQL_percentage, label="DQL", color="y")
+    plt.plot(total_capacities, random_percentage, label="Random policy", color="r")
     plt.xlabel("Capacity")
     plt.ylabel("Percentage of performance \n on smallest capacity")
     plt.fill_between(total_capacities, QL_min_revenues, QL_max_revenues, color="c", alpha=0.2)
     plt.fill_between(total_capacities, DQL_min_revenues, DQL_max_revenues, color="y", alpha=0.2)
+    plt.fill_between(total_capacities, random_min_revenues, random_max_revenues, color="r", alpha=0.2)
     plt.legend()
     plt.savefig("../Results/" + "scaling_as_a_function_of_C_and_T.png")
 
