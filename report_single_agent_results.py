@@ -93,7 +93,7 @@ def run_once_QL(env_builder, env_parameters_dict, parameters_dict, nb_episodes, 
 def run_once_random(env_builder, env_parameters_dict, experience_name, k):
     env = env_builder(env_parameters_dict)
     random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
-    np.save(experience_name / ("Run" + str(k) + ".npy"), env.average_n_episodes(random_P, 10000))
+    np.save(experience_name / ("Run" + str(k) + ".npy"), [env.average_n_episodes(random_P, 10000)])
 
 
 if __name__ == '__main__':
