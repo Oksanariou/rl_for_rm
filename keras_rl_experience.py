@@ -1,6 +1,7 @@
 import numpy as np
 import gym
 import keras
+import random
 import matplotlib.pyplot as plt
 from pathlib import Path
 import os
@@ -29,18 +30,23 @@ import multiprocessing as mp
 
 
 def global_env_builder(parameters_dict):
-    prices_flight1 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1, parameters_dict["action_offset"])]
-    prices_flight2 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1, parameters_dict["action_offset"])]
-    lamb = parameters_dict["demand_ratio"] * (parameters_dict["capacity1"] + parameters_dict["capacity2"]) / parameters_dict["micro_times"]
+    prices_flight1 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1,
+                                       parameters_dict["action_offset"])]
+    prices_flight2 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1,
+                                       parameters_dict["action_offset"])]
+    lamb = parameters_dict["demand_ratio"] * (parameters_dict["capacity1"] + parameters_dict["capacity2"]) / \
+           parameters_dict["micro_times"]
 
     return gym.make('gym_CollaborationGlobal3DMultiDiscrete:CollaborationGlobal3DMultiDiscrete-v0',
                     micro_times=parameters_dict["micro_times"],
                     capacity1=parameters_dict["capacity1"],
                     capacity2=parameters_dict["capacity2"],
-                    prices=[prices_flight1, prices_flight2], beta=parameters_dict["beta"], k_airline1=parameters_dict["k_airline1"],
+                    prices=[prices_flight1, prices_flight2], beta=parameters_dict["beta"],
+                    k_airline1=parameters_dict["k_airline1"],
                     k_airline2=parameters_dict["k_airline2"],
                     lamb=lamb,
-                    nested_lamb=parameters_dict["nested_lamb"], parameter_noise_percentage=parameters_dict["parameter_noise_percentage"])
+                    nested_lamb=parameters_dict["nested_lamb"],
+                    parameter_noise_percentage=parameters_dict["parameter_noise_percentage"])
 
 
 def env_builder():
@@ -137,6 +143,7 @@ def agent_parameters_dict():
     parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
+
 def multiagent_env_parameters_dict():
     parameters_dict = {}
     parameters_dict["micro_times"] = 100
@@ -153,9 +160,11 @@ def multiagent_env_parameters_dict():
     parameters_dict["parameter_noise_percentage"] = 0
     return parameters_dict
 
+
 def run_once(env_builder, env_parameters_dict, parameters_dict, nb_timesteps, experience_name, period, k):
     env = env_builder(env_parameters_dict)
-    model = build_model(env.nA, env.observation_space.shape, parameters_dict["hidden_layer_size"], parameters_dict["layers_nb"])
+    model = build_model(env.nA, env.observation_space.shape, parameters_dict["hidden_layer_size"],
+                        parameters_dict["layers_nb"])
     memory = SequentialMemory(limit=parameters_dict["memory_buffer_size"], window_length=1)
     policy = EpsGreedyQPolicy(eps=parameters_dict["epsilon"])
     dqn = DQNAgent(model=model, nb_actions=env.action_space.n, memory=memory,
@@ -168,9 +177,12 @@ def run_once(env_builder, env_parameters_dict, parameters_dict, nb_timesteps, ex
     history = dqn.fit(env, nb_steps=nb_timesteps, visualize=False, verbose=2, callbacks=[rewards])
     np.save(experience_name / ("Run" + str(k) + ".npy"), rewards.rewards)
 
-def run_once_multiagent(env_parameters, agent_parameter_dict, configuration_name, nb_timesteps, experience_name, callback_frequency, k):
+
+def run_once_multiagent(env_parameters, agent_parameter_dict, configuration_name, nb_timesteps, experience_name,
+                        callback_frequency, k):
     env = global_env_builder(env_parameters)
-    model1 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"], agent_parameter_dict["hidden_layer_size"],
+    model1 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"],
+                         agent_parameter_dict["hidden_layer_size"],
                          agent_parameter_dict["layers_nb"])
     memory1 = SequentialMemory(limit=agent_parameter_dict["memory_buffer_size"], window_length=1)
     policy1 = EpsGreedyQPolicy(eps=agent_parameter_dict["epsilon"])
@@ -183,7 +195,8 @@ def run_once_multiagent(env_parameters, agent_parameter_dict, configuration_name
 
     memory2 = SequentialMemory(limit=agent_parameter_dict["memory_buffer_size"], window_length=1)
     policy2 = EpsGreedyQPolicy(eps=agent_parameter_dict["epsilon"])
-    model2 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"], agent_parameter_dict["hidden_layer_size"],
+    model2 = build_model(len(env.prices[0]), parameters[configuration_name]["shape"],
+                         agent_parameter_dict["hidden_layer_size"],
                          agent_parameter_dict["layers_nb"])
     dqn2 = DQNAgent(model=model2, nb_actions=len(env.prices[1]), memory=memory2,
                     nb_steps_warmup=agent_parameter_dict["nb_steps_warmup"],
@@ -226,13 +239,13 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     plt.xlabel("Number of episodes")
     plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
-def multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs):
 
+def multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs):
     for dr in demand_ratios:
         env_param = multiagent_env_parameters_dict()
         env_param["demand_ratio"] = dr
 
-        experience_name = Path("../Results/"+configuration_name+"/"+str(dr))
+        experience_name = Path("../Results/" + configuration_name + "/" + str(dr))
         (experience_name).mkdir(parents=True, exist_ok=True)
 
         agent_param = agent_parameters_dict()
@@ -240,7 +253,8 @@ def multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, call
         # for k in range(number_of_runs):
         #     run_once_multiagent(env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency,k)
 
-        f = partial(run_once_multiagent, env_param, agent_param, configuration_name, nb_timesteps, experience_name, callback_frequency)
+        f = partial(run_once_multiagent, env_param, agent_param, configuration_name, nb_timesteps, experience_name,
+                    callback_frequency)
 
         with Pool(number_of_runs) as pool:
             pool.map(f, range(number_of_runs))
@@ -261,6 +275,12 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
         env_builder().plot_collected_data(mean_revenues, list_of_rewards, absc, true_revenues)
         plt.title(parameter_name + " = " + str(parameter_value))
         plt.savefig(str(parameter_value_name) + "/" + parameter_name + " = " + parameter_value_name.name + '.png')
+
+
+def run_once_random(env_builder, env_parameters_dict, experience_name, real_env, k):
+    env = env_builder(env_parameters_dict)
+    V, P = dynamic_programming_collaboration(env)
+    np.save(experience_name / ("Run" + str(k) + ".npy"), real_env.average_n_episodes(P, 10000))
 
 
 if __name__ == '__main__':
@@ -298,16 +318,15 @@ if __name__ == '__main__':
     # plt.xlabel("Number of steps")
     # plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
-
     parameters = {}
     parameters["2D_individual_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
                                            "fully_collaborative": False, "action_merge": action_merge, "color": "c"}
     parameters["2D_shared_rewards"] = {"shape": (2,), "observation_split": observation_split_2D,
-                                       "fully_collaborative": True, "action_merge": action_merge, "color":"y"}
+                                       "fully_collaborative": True, "action_merge": action_merge, "color": "y"}
     parameters["3D_individual_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
-                                           "fully_collaborative": False, "action_merge": action_merge, "color":"black"}
+                                           "fully_collaborative": False, "action_merge": action_merge, "color": "black"}
     parameters["3D_shared_rewards"] = {"shape": (3,), "observation_split": observation_split_3D,
-                                       "fully_collaborative": True, "action_merge": action_merge, "color":"m"}
+                                       "fully_collaborative": True, "action_merge": action_merge, "color": "m"}
 
     # configuration = "2D_shared_rewards"
     configuration = "2D_individual_rewards"
@@ -340,7 +359,6 @@ if __name__ == '__main__':
     #                           fully_collaborative=parameters[configuration]["fully_collaborative"],
     #                           observation_split=parameters[configuration]["observation_split"],
     #                           action_merge=parameters[configuration]["action_merge"])
-
 
     # demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
     demand_ratios = [0.5, 0.6]
@@ -405,16 +423,24 @@ if __name__ == '__main__':
             env = global_env_builder(env_param)
             true_V, true_P = dynamic_programming_collaboration(env)
             true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
-                    true_P, 10000)
+                true_P, 10000)
 
             env_param["parameter_noise_percentage"] = 0.2
             differences_to_true_revenue_parameter_noise = []
+
+            f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
+            with Pool(20) as pool:
+                pool.map(f, range(20))
+            revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.collect_revenues(
+                experience_name_noise)
+
             for k in range(20):
                 env_parameter_noise = global_env_builder(env_param)
                 V, P = dynamic_programming_collaboration(env_parameter_noise)
                 revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
                     P, 10000)
-                differences_to_true_revenue_parameter_noise.append(((revenue1 + revenue2) / (true_revenue1 + true_revenue2)) * 100)
+                differences_to_true_revenue_parameter_noise.append(
+                    ((revenue1 + revenue2) / (true_revenue1 + true_revenue2)) * 100)
 
             env_param["nested_lamb"] = 1.
             differences_to_true_revenue_parameter_noise_mnl = []
@@ -423,25 +449,34 @@ if __name__ == '__main__':
                 V, P = dynamic_programming_collaboration(env_mnl)
                 revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
                     P, 10000)
-                differences_to_true_revenue_parameter_noise_mnl.append(((revenue1 + revenue2)/(true_revenue1 + true_revenue2))*100)
+                differences_to_true_revenue_parameter_noise_mnl.append(
+                    ((revenue1 + revenue2) / (true_revenue1 + true_revenue2)) * 100)
 
-            experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
-            list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
-            difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
+            experience_name = Path("../Results/" + configuration_name + "/" + str(demand_ratios[dr_idx]))
+            list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(
+                experience_name)
+            difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1]) / (
+                        true_revenue1 + true_revenue2)) * 100
 
             list_mean_final_revenues.append(difference_to_true_revenue)
             list_of_rewards = np.array(list_of_rewards)
-            list_difference_to_true_revenue_parameter_noise_mnl.append(np.mean(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise_min_mnl.append(np.min(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise_max_mnl.append(np.max(differences_to_true_revenue_parameter_noise_mnl))
+            list_difference_to_true_revenue_parameter_noise_mnl.append(
+                np.mean(differences_to_true_revenue_parameter_noise_mnl))
+            list_difference_to_true_revenue_parameter_noise_min_mnl.append(
+                np.min(differences_to_true_revenue_parameter_noise_mnl))
+            list_difference_to_true_revenue_parameter_noise_max_mnl.append(
+                np.max(differences_to_true_revenue_parameter_noise_mnl))
             list_difference_to_true_revenue_parameter_noise.append(np.mean(differences_to_true_revenue_parameter_noise))
-            list_difference_to_true_revenue_parameter_noise_min.append(np.min(differences_to_true_revenue_parameter_noise))
-            list_difference_to_true_revenue_parameter_noise_max.append(np.max(differences_to_true_revenue_parameter_noise))
+            list_difference_to_true_revenue_parameter_noise_min.append(
+                np.min(differences_to_true_revenue_parameter_noise))
+            list_difference_to_true_revenue_parameter_noise_max.append(
+                np.max(differences_to_true_revenue_parameter_noise))
             # plt.figure()
             # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
 
             for reward in list_of_rewards:
-                list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+                list_final_revenues[dr_idx].append(
+                    ((reward[:, 0][-1] + reward[:, 1][-1]) / (true_revenue1 + true_revenue2)) * 100)
                 # plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
                 #          color=parameters[configuration_name]["color"])
 
@@ -472,12 +507,18 @@ if __name__ == '__main__':
                                range(nb_collection_points)]
         min_revenues = [list_mean_final_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
         max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
-        plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
-        plt.fill_between(demand_ratios, min_revenues, max_revenues, color=parameters[configuration_name]["color"], alpha=0.2)
-    plt.plot(demand_ratios, list_difference_to_true_revenue_parameter_noise, color="orange", label="Model-based with 20% \n noise in parameters")
-    plt.fill_between(demand_ratios, list_difference_to_true_revenue_parameter_noise_min, list_difference_to_true_revenue_parameter_noise_max, color="orange", alpha=0.2)
-    plt.plot(demand_ratios, list_difference_to_true_revenue_parameter_noise_mnl, color="red", label="Model-based with 20% \n noise in parameters and \n MNL CCM assumption")
-    plt.fill_between(demand_ratios, list_difference_to_true_revenue_parameter_noise_min_mnl, list_difference_to_true_revenue_parameter_noise_max_mnl, color="red", alpha=0.2)
+        plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"],
+                 label=configuration_name)
+        plt.fill_between(demand_ratios, min_revenues, max_revenues, color=parameters[configuration_name]["color"],
+                         alpha=0.2)
+    plt.plot(demand_ratios, list_difference_to_true_revenue_parameter_noise, color="orange",
+             label="Model-based with 20% \n noise in parameters")
+    plt.fill_between(demand_ratios, list_difference_to_true_revenue_parameter_noise_min,
+                     list_difference_to_true_revenue_parameter_noise_max, color="orange", alpha=0.2)
+    plt.plot(demand_ratios, list_difference_to_true_revenue_parameter_noise_mnl, color="red",
+             label="Model-based with 20% \n noise in parameters and \n MNL CCM assumption")
+    plt.fill_between(demand_ratios, list_difference_to_true_revenue_parameter_noise_min_mnl,
+                     list_difference_to_true_revenue_parameter_noise_max_mnl, color="red", alpha=0.2)
     plt.legend(loc='best')
     plt.xlabel("Demand ratio")
     plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
@@ -504,8 +545,6 @@ if __name__ == '__main__':
     # plt.ylabel("Percentage of the optimal revenue \n average on {} flights".format(10000))
     # # axes.set_ylim([0, 265])
     # plt.savefig('../Results/multiagent_strategies_as_function_of_demand_ratios.png')
-
-
 
     # run_n_times(experience_name, env_builder, param_dict, nb_timesteps, nb_runs, callback_frequency)
 
