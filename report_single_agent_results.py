@@ -2,6 +2,7 @@ import gym
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import glob
 
 from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from visualization_and_metrics import average_n_episodes, visualizing_epsilon_decay
@@ -93,7 +94,8 @@ def run_once_QL(env_builder, env_parameters_dict, parameters_dict, nb_episodes, 
 def run_once_random(env_builder, env_parameters_dict, experience_name, k):
     env = env_builder(env_parameters_dict)
     random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
-    np.save(experience_name / ("Run" + str(k) + ".npy"), [env.average_n_episodes(random_P, 10000)])
+    revenue = env.average_n_episodes(random_P, 10000)
+    np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0])
 
 
 if __name__ == '__main__':
@@ -225,18 +227,20 @@ if __name__ == '__main__':
         f = partial(run_once_random, env_builder, env_param, experience_name_random)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
-        list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
-            experience_name_random)
+        list_of_rewards_random = []
+        for np_name in glob.glob(str(experience_name_random) + '/*.np[yz]'):
+                list_of_rewards_random.append(list(np.load(np_name, allow_pickle=True)))
+        # list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
+        #     experience_name_random)
         print(len(list_of_rewards_random))
         print(len(list_of_rewards_random[0]))
         print(list_of_rewards_random[0])
-        average_random_revenue = mean_revenues_random[-1]
-        random_percentage.append((((average_random_revenue / true_revenues) * 100) / initial_random_percentage) * 100)
+        random_percentage.append((((np.mean(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         random_min_revenues.append(
-            (((min_revenues_random[-1] / true_revenues) * 100) / initial_random_percentage) * 100)
+            (((np.min(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         random_min_revenues.append(
-            (((max_revenues_random[-1] / true_revenues) * 100) / initial_random_percentage) * 100)
-        print("Random percentage of true revenue = {}".format((average_random_revenue / true_revenues) * 100))
+            (((np.max(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
+        print("Random percentage of true revenue = {}".format((np.mean(list_of_rewards_random) / true_revenues) * 100))
 
         experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
