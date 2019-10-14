@@ -236,7 +236,7 @@ if __name__ == '__main__':
         random_percentage.append((((np.mean(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         random_min_revenues.append(
             (((np.min(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
-        random_min_revenues.append(
+        random_max_revenues.append(
             (((np.max(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         print("Random percentage of true revenue = {}".format((np.mean(list_of_rewards_random) / true_revenues) * 100))
 
