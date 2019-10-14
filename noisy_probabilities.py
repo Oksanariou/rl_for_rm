@@ -32,10 +32,9 @@ def singleagent_env_parameters_dict():
     parameters_dict["action_offset"] = 30
     parameters_dict["lambda"] = 0.8
     parameters_dict["alpha"] = 0.7
-    parameters_dict["noise_average"] = 0
-    parameters_dict["noise_std_deviation"] = 0
     parameters_dict["compute_P_matrix"] = True
-    parameters_dict["noise_percentage"] = 0
+    parameters_dict["transition_noise_percentage"] = 0
+    parameters_dict["parameter_noise_percentage"] = 0
     return parameters_dict
 
 
@@ -64,15 +63,13 @@ def singleagent_env_builder(parameters_dict):
     return gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=parameters_dict["data_collection_points"],
                     capacity=parameters_dict["capacity"],
                     micro_times=parameters_dict["micro_times"], actions=actions, alpha=parameters_dict["alpha"],
-                    lamb=parameters_dict["lambda"], noise_average=parameters_dict["noise_average"],
-                    noise_std_deviation=parameters_dict["noise_std_deviation"],
-                    compute_P_matrix=parameters_dict["compute_P_matrix"],
-                    noise_percentage=parameters_dict["noise_percentage"])
+                    lamb=parameters_dict["lambda"], compute_P_matrix=parameters_dict["compute_P_matrix"],
+                    transition_noise_percentage=parameters_dict["transition_noise_percentage"],
+                    parameter_noise_percentage=parameters_dict["parameter_noise_percentage"])
 
 
 if __name__ == '__main__':
     env_param = singleagent_env_parameters_dict()
-    env_param["noise_percentage"] = 0
     real_env = singleagent_env_builder(env_param)
 
     if real_env.observation_space.shape[0] == 2:
@@ -83,25 +80,38 @@ if __name__ == '__main__':
         true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = real_env.average_n_episodes(
             true_P, 10000)
 
-    noise_percentages = np.array([0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8])
-    average_error_percentage_on_parameters = (noise_percentages / 2) * 100
-    percents_of_optimal_revenue = []
-    average_nb = 10
+    noise_percentages = np.array([k for k in range(0, 40, 5)]) / 100
+    mean_percents_of_optimal_revenue = []
+    max_percents_of_optimal_revenue = []
+    min_percents_of_optimal_revenue = []
+    mean_error = []
+    average_nb = 20
     for noise_percentage in noise_percentages:
         print(noise_percentage)
         temporary_percents = []
+        temporary_error = []
         for k in range(average_nb):
-            env_param["noise_percentage"] = noise_percentage
+            env_param = singleagent_env_parameters_dict()
+            # env_param["transition_noise_percentage"] = noise_percentage
+            env_param["parameter_noise_percentage"] = noise_percentage
             env = singleagent_env_builder(env_param)
 
             V, P = dynamic_programming_env_DCP(env)
             revenues, bookings = average_n_episodes(real_env, P, 10000)
             temporary_percents.append((revenues / true_revenues) * 100)
-        percents_of_optimal_revenue.append(np.mean(temporary_percents))
+            # error = np.mean(abs(np.array(real_env.probas) - np.array(env.probas)) / np.array(real_env.probas))
+            error = np.mean([abs(real_env.lamb - env.lamb)/real_env.lamb, abs(real_env.alpha - env.alpha)/real_env.alpha])
+            temporary_error.append(error)
+        mean_percents_of_optimal_revenue.append(np.mean(temporary_percents))
+        max_percents_of_optimal_revenue.append(np.max(temporary_percents))
+        min_percents_of_optimal_revenue.append(np.min(temporary_percents))
+        mean_error.append(np.mean(temporary_error))
 
     plt.figure()
-    plt.plot(average_error_percentage_on_parameters, percents_of_optimal_revenue)
-    plt.xlabel("Average percentage error on the transition probabilities")
+    plt.plot(noise_percentages, mean_percents_of_optimal_revenue)
+    plt.fill_between(noise_percentages, min_percents_of_optimal_revenue, max_percents_of_optimal_revenue,
+                     label='95% confidence interval', alpha=0.2)
+    plt.xlabel("Average percentage error on the parameters")
+    # plt.xlabel("Noise")
     plt.ylabel("Percentage of the optimal revenue")
     plt.show()
-

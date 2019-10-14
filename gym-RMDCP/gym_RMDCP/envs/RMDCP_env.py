@@ -14,10 +14,9 @@ default_actions = tuple(k for k in range(50, 231, 20))
 default_alpha = 0.66
 default_lambda = 0.2
 default_micro_times = 20
-default_noise_average = 0
-default_noise_std_deviation = 0
 default_compute_P_matrix = True
-default_noise_percentage = 0
+default_transition_noise_percentage = 0
+default_parameter_noise_percentage = 0
 
 
 class RMDCPEnv(gym.Env):
@@ -25,9 +24,9 @@ class RMDCPEnv(gym.Env):
 
     def __init__(self, data_collection_points=default_data_collection_points, capacity=default_capacity,
                  micro_times=default_micro_times, actions=default_actions,
-                 alpha=default_alpha, lamb=default_lambda, noise_average=default_noise_average,
-                 noise_std_deviation=default_noise_std_deviation, compute_P_matrix=default_compute_P_matrix,
-                 noise_percentage=default_noise_percentage):
+                 alpha=default_alpha, lamb=default_lambda, compute_P_matrix=default_compute_P_matrix,
+                 transition_noise_percentage=default_transition_noise_percentage,
+                 parameter_noise_percentage=default_parameter_noise_percentage):
 
         super(RMDCPEnv, self).__init__()
 
@@ -41,13 +40,12 @@ class RMDCPEnv(gym.Env):
         self.A = actions
         self.nA = len(self.A)  # number of actions
 
-        self.alpha = alpha
-        self.lamb = lamb
-
-        self.noise_average = noise_average
-        self.noise_std_deviation = noise_std_deviation
         self.compute_P_matrix = compute_P_matrix
-        self.noise_percentage = noise_percentage
+        self.transition_noise_percentage = transition_noise_percentage
+        self.parameter_noise_percentage = parameter_noise_percentage
+
+        self.alpha = alpha + np.random.normal(0, alpha * self.parameter_noise_percentage, 1)[0]
+        self.lamb = lamb + np.random.normal(0, lamb * self.parameter_noise_percentage, 1)[0]
 
         # self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
         self.observation_space = spaces.MultiDiscrete([self.T, self.C])
@@ -169,8 +167,9 @@ class RMDCPEnv(gym.Env):
             - the probability that a person will buy the ticket at the price p
             - the reward that the agent gets if the person buys the ticket"""
         proba = self.lamb * np.exp(-self.alpha * ((a / self.A[0]) - 1))
-        # proba += np.random.normal(self.noise_average, self.noise_std_deviation, 1)[0]
-        proba += self.noise_percentage * proba * np.random.random([1]) * [-1, 1][random.randrange(2)]
+        proba += np.random.normal(0, proba * self.transition_noise_percentage, 1)[0]
+        # proba += self.noise_percentage * proba * np.random.normal(self.noise_average, self.noise_std_deviation, 1)[0]
+        # proba += self.noise_percentage * proba * np.random.random([1]) * [-1, 1][random.randrange(2)]
         reward = a
         return proba, reward
 
@@ -244,23 +243,23 @@ class RMDCPEnv(gym.Env):
         nb_collection_points = len(list_of_rewards[0])
 
         all_rewards_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
-        # all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
+        all_bookings_combined_at_each_collection_point = [[] for i in range(nb_collection_points)]
 
         for k in range(len(list_of_rewards)):
             rewards = list_of_rewards[k]
             for i in range(nb_collection_points):
                 all_rewards_combined_at_each_collection_point[i].append(rewards[i][0])
-                # all_bookings_combined_at_each_collection_point[i].append(rewards[i][3])
+                all_bookings_combined_at_each_collection_point[i].append(rewards[i][3])
 
         mean_revenues = [np.mean(list) for list in all_rewards_combined_at_each_collection_point]
-        # mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
-        # std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
-        # confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
-        #                        range(nb_collection_points)]
-        # min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
-        # max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+        mean_bookings = [np.mean(list, axis=0) for list in all_bookings_combined_at_each_collection_point]
+        std_revenues = [sem(list) for list in all_rewards_combined_at_each_collection_point]
+        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+                               range(nb_collection_points)]
+        min_revenues = [mean_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+        max_revenues = [mean_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
 
-        return list_of_rewards, mean_revenues
+        return list_of_rewards, mean_revenues, mean_bookings, min_revenues, max_revenues
 
     def plot_collected_data(self, mean_revenues, list_of_revenues, absc, optimal_revenue):
         fig = plt.figure()
