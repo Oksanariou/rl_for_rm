@@ -60,12 +60,12 @@ def agent_parameters_dict_QL(nb_steps):
     parameters_dict["alpha_min"] = 0.0001
     parameters_dict["nb_steps"] = nb_steps
     parameters_dict["alpha_decay"] = 10 ** (np.log(parameters_dict["alpha_min"] / parameters_dict["alpha"]) / (
-                3 * parameters_dict["nb_steps"]))  # 0.99999
+            3 * parameters_dict["nb_steps"]))  # 0.99999
     parameters_dict["gamma"] = 0.99
     parameters_dict["epsilon"] = 1
     parameters_dict["epsilon_min"] = 0.01
     parameters_dict["epsilon_decay"] = 10 ** (np.log(parameters_dict["epsilon_min"] / parameters_dict["epsilon"]) / (
-                3 * parameters_dict["nb_steps"]))  # 0.99999
+            3 * parameters_dict["nb_steps"]))  # 0.99999
     return parameters_dict
 
 
@@ -106,9 +106,9 @@ if __name__ == '__main__':
     experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
     experience_name_DQL.mkdir(parents=True, exist_ok=True)
     param_dict_DQL = agent_parameters_dict_DQL()
-    f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
-    with Pool(nb_runs) as pool:
-        pool.map(f, range(nb_runs))
+    # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
+    # with Pool(nb_runs) as pool:
+    #     pool.map(f, range(nb_runs))
     # for k in range(nb_runs):
     #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
@@ -119,10 +119,10 @@ if __name__ == '__main__':
     experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
     experience_name_QL.mkdir(parents=True, exist_ok=True)
     param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
-    f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
-                callback_frequency)
-    with Pool(nb_runs) as pool:
-        pool.map(f, range(nb_runs))
+    # f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
+    #             callback_frequency)
+    # with Pool(nb_runs) as pool:
+    #     pool.map(f, range(nb_runs))
     # for k in range(nb_runs):
     #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
@@ -131,12 +131,62 @@ if __name__ == '__main__':
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
 
     capacities = [k for k in range(10, 151, 10)]
+    action_offsets = [100, 70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
+    number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
     DQL_percentage = [100]
     DQL_min_revenues = [0]
     DQL_max_revenues = [0]
     QL_percentage = [100]
     QL_min_revenues = [0]
     QL_max_revenues = [0]
+
+    # for action_offset in action_offsets:
+    #     env_param = env_parameters()
+    #     env_param["action_offset"] = action_offset
+    #     env = env_builder(env_param)
+    #     true_V, true_P = dynamic_programming_env_DCP(env)
+    #     true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
+    #
+    #     experience_name_DQL = Path("../Results/DQL_action_offset_" + str(env_param["action_offset"]))
+    #     experience_name_DQL.mkdir(parents=True, exist_ok=True)
+    #     param_dict_DQL = agent_parameters_dict_DQL()
+    #     f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
+    #                 callback_frequency)
+    #     with Pool(nb_runs) as pool:
+    #         pool.map(f, range(nb_runs))
+    #     # for k in range(nb_runs):
+    #     #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
+    #     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
+    #         experience_name_DQL)
+    #     average_DQL_revenue = np.mean(mean_revenues_DQL[-1])
+    #     DQL_percentage.append((((average_DQL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
+    #     DQL_min_revenues.append(min_revenues_DQL[-1])
+    #     DQL_max_revenues.append(max_revenues_DQL[-1])
+    #
+    #     experience_name_QL = Path("../Results/QL_action_offset_" + str(env_param["action_offset"]))
+    #     experience_name_QL.mkdir(parents=True, exist_ok=True)
+    #     param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
+    #     f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
+    #                 callback_frequency)
+    #     with Pool(nb_runs) as pool:
+    #         pool.map(f, range(nb_runs))
+    #     # for k in range(nb_runs):
+    #     #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
+    #     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
+    #         experience_name_QL)
+    #     average_QL_revenue = np.mean(mean_revenues_QL[-1])
+    #     QL_percentage.append((((average_QL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
+    #     QL_min_revenues.append(min_revenues_QL[-1])
+    #     QL_max_revenues.append(max_revenues_QL[-1])
+    # plt.figure()
+    # plt.plot(number_of_actions, QL_percentage, label="QL", color="c")
+    # plt.plot(number_of_actions, DQL_percentage, label="DQL", color="y")
+    # plt.xlabel("Number of actions")
+    # plt.ylabel("Percentage of performance \n on smallest number of actions")
+    # plt.fill_between(number_of_actions, min_revenues_QL, max_revenues_QL, color="c", alpha=0.2)
+    # plt.fill_between(number_of_actions, min_revenues_DQL, max_revenues_DQL, color="y", alpha=0.2)
+    # plt.savefig("../Results/"+"scaling_as_a_function_of_actions_nb.png")
+
     for capacity in capacities:
         env_param = env_parameters()
         env_param["data_collection_points"] = (2 * capacity) + 1
@@ -148,10 +198,10 @@ if __name__ == '__main__':
         experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
         param_dict_DQL = agent_parameters_dict_DQL()
-        f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
-                    callback_frequency)
-        with Pool(nb_runs) as pool:
-            pool.map(f, range(nb_runs))
+        # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
+        #             callback_frequency)
+        # with Pool(nb_runs) as pool:
+        #     pool.map(f, range(nb_runs))
         # for k in range(nb_runs):
         #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
         list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
@@ -164,10 +214,10 @@ if __name__ == '__main__':
         experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
         experience_name_QL.mkdir(parents=True, exist_ok=True)
         param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
-        f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
-                    callback_frequency)
-        with Pool(nb_runs) as pool:
-            pool.map(f, range(nb_runs))
+        # f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
+        #             callback_frequency)
+        # with Pool(nb_runs) as pool:
+        #     pool.map(f, range(nb_runs))
         # for k in range(nb_runs):
         #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
         list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
@@ -183,10 +233,11 @@ if __name__ == '__main__':
     plt.plot(total_capacities, DQL_percentage, label="DQL", color="y")
     plt.xlabel("Capacity")
     plt.ylabel("Percentage of performance \n on smallest capacity")
-    plt.fill_between(total_capacities, min_revenues_QL, max_revenues_QL, label='95% confidence interval',
+    plt.fill_between(total_capacities, QL_min_revenues, QL_max_revenues, label='95% confidence interval',
                      color="c", alpha=0.2)
-    plt.fill_between(total_capacities, min_revenues_DQL, max_revenues_DQL, label='95% confidence interval',
+    plt.fill_between(total_capacities, DQL_min_revenues, DQL_max_revenues, label='95% confidence interval',
                      color="y", alpha=0.2)
+    plt.savefig("../Results/" + "scaling_as_a_function_of_C_and_T.png")
 
     # # DQL
     # nb_timesteps_DQL = 80001
