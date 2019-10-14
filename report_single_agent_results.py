@@ -137,11 +137,11 @@ if __name__ == '__main__':
     action_offsets = [100, 70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
     number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
     DQL_percentage = [100]
-    DQL_min_revenues = [0]
+    DQL_min_revenues = [100]
     DQL_max_revenues = [0]
     QL_percentage = [100]
-    QL_min_revenues = [0]
-    QL_max_revenues = [0]
+    QL_min_revenues = [100]
+    QL_max_revenues = [100]
 
     # for action_offset in action_offsets:
     #     env_param = env_parameters()
@@ -239,10 +239,8 @@ if __name__ == '__main__':
     plt.plot(total_capacities, DQL_percentage, label="DQL", color="y")
     plt.xlabel("Capacity")
     plt.ylabel("Percentage of performance \n on smallest capacity")
-    plt.fill_between(total_capacities, QL_min_revenues, QL_max_revenues, label='95% confidence interval',
-                     color="c", alpha=0.2)
-    plt.fill_between(total_capacities, DQL_min_revenues, DQL_max_revenues, label='95% confidence interval',
-                     color="y", alpha=0.2)
+    plt.fill_between(total_capacities, QL_min_revenues, QL_max_revenues, color="c", alpha=0.2)
+    plt.fill_between(total_capacities, DQL_min_revenues, DQL_max_revenues, color="y", alpha=0.2)
     plt.legend()
     plt.savefig("../Results/" + "scaling_as_a_function_of_C_and_T.png")
 
