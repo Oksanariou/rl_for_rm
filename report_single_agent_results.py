@@ -96,7 +96,7 @@ if __name__ == '__main__':
     env_param = env_parameters()
     env_param["data_collection_points"] = 13
     env_param["capacity"] = 6
-    print("capacity = ".format(env_param["capacity"] - 1))
+    print("capacity = {}".format(env_param["capacity"] - 1))
     env = env_builder(env_param)
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
         experience_name_DQL)
     average_initial_DQL_revenue = np.mean(mean_revenues_DQL[-1])
     initial_DQL_percentage = (average_initial_DQL_revenue / initial_true_revenues) * 100
-    print("DQL percentage of true revenue = ".format(initial_DQL_percentage))
+    print("DQL percentage of true revenue = {}".format(initial_DQL_percentage))
 
     experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
     experience_name_QL.mkdir(parents=True, exist_ok=True)
@@ -131,7 +131,7 @@ if __name__ == '__main__':
         experience_name_QL)
     average_initial_QL_revenue = np.mean(mean_revenues_QL[-1])
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
-    print("DQL percentage of true revenue = ".format(initial_QL_percentage))
+    print("DQL percentage of true revenue = {}".format(initial_QL_percentage))
 
     capacities = [k for k in range(10, 151, 10)]
     action_offsets = [100, 70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     # plt.savefig("../Results/"+"scaling_as_a_function_of_actions_nb.png")
 
     for capacity in capacities:
-        print("capacity = ".format(capacity))
+        print("capacity = {}".format(capacity))
         env_param = env_parameters()
         env_param["data_collection_points"] = (2 * capacity) + 1
         env_param["capacity"] = capacity + 1
@@ -214,7 +214,7 @@ if __name__ == '__main__':
         DQL_percentage.append((((average_DQL_revenue / true_revenues) * 100) / initial_DQL_percentage) * 100)
         DQL_min_revenues.append(min_revenues_DQL[-1])
         DQL_max_revenues.append(max_revenues_DQL[-1])
-        print("DQL percentage of true revenue = ".format((average_DQL_revenue / true_revenues) * 100))
+        print("DQL percentage of true revenue = {}".format((average_DQL_revenue / true_revenues) * 100))
 
         experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
         experience_name_QL.mkdir(parents=True, exist_ok=True)
@@ -231,7 +231,7 @@ if __name__ == '__main__':
         QL_percentage.append((((average_QL_revenue / true_revenues) * 100) / initial_QL_percentage) * 100)
         QL_min_revenues.append(min_revenues_QL[-1])
         QL_max_revenues.append(max_revenues_QL[-1])
-        print("QL percentage of true revenue = ".format((average_QL_revenue / true_revenues) * 100))
+        print("QL percentage of true revenue = {}".format((average_QL_revenue / true_revenues) * 100))
 
     plt.figure()
     total_capacities = [5] + capacities
