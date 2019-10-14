@@ -342,8 +342,8 @@ if __name__ == '__main__':
     #                           action_merge=parameters[configuration]["action_merge"])
 
 
-    demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
-    # demand_ratios = [0.5, 0.6]
+    # demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
+    demand_ratios = [0.5, 0.6]
     configuration_names = ["2D_individual_rewards", "2D_shared_rewards"]
     nb_timesteps = 100001
     callback_frequency = 10
