@@ -103,7 +103,7 @@ if __name__ == '__main__':
     nb_timesteps = 80001
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
 
-    experience_name_DQL = Path("../Results/DQL_capacity_" + str(env["capacity"]))
+    experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
     experience_name_DQL.mkdir(parents=True, exist_ok=True)
     param_dict_DQL = agent_parameters_dict_DQL()
     f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     average_initial_DQL_revenue = np.mean(mean_revenues_DQL[-1])
     initial_DQL_percentage = (average_initial_DQL_revenue / initial_true_revenues) * 100
 
-    experience_name_QL = Path("../Results/QL_" + str(env["capacity"]))
+    experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
     experience_name_QL.mkdir(parents=True, exist_ok=True)
     param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
     f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
@@ -145,7 +145,7 @@ if __name__ == '__main__':
         true_V, true_P = dynamic_programming_env_DCP(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
-        experience_name_DQL = Path("../Results/DQL_capacity_" + str(env["capacity"]))
+        experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
         param_dict_DQL = agent_parameters_dict_DQL()
         f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         DQL_min_revenues.append(min_revenues_DQL[-1])
         DQL_max_revenues.append(max_revenues_DQL[-1])
 
-        experience_name_QL = Path("../Results/QL_" + str(env["capacity"]))
+        experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
         experience_name_QL.mkdir(parents=True, exist_ok=True)
         param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
         f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
