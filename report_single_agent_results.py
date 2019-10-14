@@ -227,7 +227,7 @@ if __name__ == '__main__':
             pool.map(f, range(nb_runs))
         list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
             experience_name_random)
-        print(list_of_rewards_random)
+        print(len(list_of_rewards_random))
         average_random_revenue = mean_revenues_random[-1]
         random_percentage.append((((average_random_revenue / true_revenues) * 100) / initial_random_percentage) * 100)
         random_min_revenues.append(
