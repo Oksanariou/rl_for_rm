@@ -188,6 +188,7 @@ if __name__ == '__main__':
     # plt.savefig("../Results/"+"scaling_as_a_function_of_actions_nb.png")
 
     for capacity in capacities:
+        print(capacity)
         env_param = env_parameters()
         env_param["data_collection_points"] = (2 * capacity) + 1
         env_param["capacity"] = capacity + 1
