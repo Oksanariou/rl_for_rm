@@ -277,26 +277,26 @@ if __name__ == '__main__':
         true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
             true_P, 10000)
 
-    nb_timesteps = 80001
-    callback_frequency = 10
-    absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
-    nb_runs = 20
-    experience_name = Path("../Results/Best_run")
-    experience_name.mkdir(parents=True, exist_ok=True)
-    param_dict = agent_parameters_dict()
-    for k in range(nb_runs):
-        run_once(env_builder, param_dict, nb_timesteps, experience_name, callback_frequency, k)
-
-    list_of_rewards, mean_revenues, mean_bookings, min_revenues, max_revenues = env.collect_revenues(experience_name)
-    fig = plt.figure()
-    plt.plot(absc, mean_revenues, label="DQN revenue")
-    plt.legend()
-    plt.title(experience_name.name)
-    plt.plot(absc, [true_revenues] * len(absc), label="Optimal solution")
-    plt.fill_between(absc, min_revenues, max_revenues, label='95% confidence interval', alpha=0.2)
-    plt.ylabel("Average revenue on 10000 flights")
-    plt.xlabel("Number of steps")
-    plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
+    # nb_timesteps = 80001
+    # callback_frequency = 10
+    # absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
+    # nb_runs = 20
+    # experience_name = Path("../Results/Best_run")
+    # experience_name.mkdir(parents=True, exist_ok=True)
+    # param_dict = agent_parameters_dict()
+    # for k in range(nb_runs):
+    #     run_once(env_builder, param_dict, nb_timesteps, experience_name, callback_frequency, k)
+    #
+    # list_of_rewards, mean_revenues, mean_bookings, min_revenues, max_revenues = env.collect_revenues(experience_name)
+    # fig = plt.figure()
+    # plt.plot(absc, mean_revenues, label="DQN revenue")
+    # plt.legend()
+    # plt.title(experience_name.name)
+    # plt.plot(absc, [true_revenues] * len(absc), label="Optimal solution")
+    # plt.fill_between(absc, min_revenues, max_revenues, label='95% confidence interval', alpha=0.2)
+    # plt.ylabel("Average revenue on 10000 flights")
+    # plt.xlabel("Number of steps")
+    # plt.savefig(str(experience_name) + "/" + experience_name.name + '.png')
 
 
     parameters = {}
@@ -399,6 +399,7 @@ if __name__ == '__main__':
         list_difference_to_true_revenue_parameter_noise_max_mnl = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
         for dr_idx in range(len(demand_ratios)):
+            print(dr_idx)
             env_param = multiagent_env_parameters_dict()
             env_param["demand_ratio"] = demand_ratios[dr_idx]
             env = global_env_builder(env_param)

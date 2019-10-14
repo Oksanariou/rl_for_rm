@@ -7,6 +7,7 @@ from dynamic_programming_env_DCP import dynamic_programming_env_DCP
 from visualization_and_metrics import average_n_episodes, visualizing_epsilon_decay
 from keras_rl_experience import run_once
 from q_learning import q_learning
+import random
 
 from functools import partial
 from multiprocessing import Pool
@@ -100,6 +101,9 @@ if __name__ == '__main__':
     env = env_builder(env_param)
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
+
+    random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
+    random_revenues, random_bookings = average_n_episodes(env, random_P, 10000)
 
     nb_timesteps = 80001
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
