@@ -233,9 +233,6 @@ if __name__ == '__main__':
                 list_of_rewards_random.append(np.load(np_name, allow_pickle=True))
         # list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
         #     experience_name_random)
-        print(len(list_of_rewards_random))
-        print(len(list_of_rewards_random[0]))
-        print(list_of_rewards_random[0])
         random_percentage.append((((np.mean(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         random_min_revenues.append(
             (((np.min(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
