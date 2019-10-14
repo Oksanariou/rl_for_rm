@@ -229,7 +229,7 @@ if __name__ == '__main__':
             pool.map(f, range(nb_runs))
         list_of_rewards_random = []
         for np_name in glob.glob(str(experience_name_random) + '/*.np[yz]'):
-                list_of_rewards_random.append(list(np.load(np_name, allow_pickle=True)))
+                list_of_rewards_random.append(np.load(np_name, allow_pickle=True))
         # list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
         #     experience_name_random)
         print(len(list_of_rewards_random))
