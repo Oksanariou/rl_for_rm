@@ -280,7 +280,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 def run_once_random(env_builder, env_parameters_dict, experience_name, real_env, k):
     env = env_builder(env_parameters_dict)
     V, P = dynamic_programming_collaboration(env)
-    np.save(experience_name / ("Run" + str(k) + ".npy"), real_env.average_n_episodes(P, 10000))
+    np.save(experience_name / ("Run" + str(k) + ".npy"), [real_env.average_n_episodes(P, 10000)])
 
 
 if __name__ == '__main__':
@@ -428,29 +428,24 @@ if __name__ == '__main__':
             env_param["parameter_noise_percentage"] = 0.2
             differences_to_true_revenue_parameter_noise = []
 
+            experience_name_noise = Path("../Results/Noise_on_parameters")
             f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
             with Pool(20) as pool:
                 pool.map(f, range(20))
-            revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.collect_revenues(
+            revenue1_noise, revenue2_noise, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.collect_revenues(
                 experience_name_noise)
-
-            for k in range(20):
-                env_parameter_noise = global_env_builder(env_param)
-                V, P = dynamic_programming_collaboration(env_parameter_noise)
-                revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
-                    P, 10000)
-                differences_to_true_revenue_parameter_noise.append(
-                    ((revenue1 + revenue2) / (true_revenue1 + true_revenue2)) * 100)
+            differences_to_true_revenue_parameter_noise.append(
+                ((revenue1_noise + revenue2_noise) / (true_revenue1 + true_revenue2)) * 100)
 
             env_param["nested_lamb"] = 1.
             differences_to_true_revenue_parameter_noise_mnl = []
-            for k in range(20):
-                env_mnl = global_env_builder(env_param)
-                V, P = dynamic_programming_collaboration(env_mnl)
-                revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
-                    P, 10000)
-                differences_to_true_revenue_parameter_noise_mnl.append(
-                    ((revenue1 + revenue2) / (true_revenue1 + true_revenue2)) * 100)
+            f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
+            with Pool(20) as pool:
+                pool.map(f, range(20))
+            revenue1_noise_mnl, revenue2_noise_mnl, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.collect_revenues(
+                experience_name_noise)
+            differences_to_true_revenue_parameter_noise.append(
+                ((revenue1_noise_mnl + revenue2_noise_mnl) / (true_revenue1 + true_revenue2)) * 100)
 
             experience_name = Path("../Results/" + configuration_name + "/" + str(demand_ratios[dr_idx]))
             list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(
@@ -466,7 +461,7 @@ if __name__ == '__main__':
                 np.min(differences_to_true_revenue_parameter_noise_mnl))
             list_difference_to_true_revenue_parameter_noise_max_mnl.append(
                 np.max(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise.append(np.mean(differences_to_true_revenue_parameter_noise))
+            list_difference_to_true_revenue_parameter_noise.append(((revenue1_noise + revenue2_noise) / (true_revenue1 + true_revenue2)) * 100)
             list_difference_to_true_revenue_parameter_noise_min.append(
                 np.min(differences_to_true_revenue_parameter_noise))
             list_difference_to_true_revenue_parameter_noise_max.append(
