@@ -115,9 +115,10 @@ if __name__ == '__main__':
     f = partial(run_once_random, env_builder, env_param, experience_name_random)
     with Pool(nb_runs) as pool:
         pool.map(f, range(nb_runs))
-    list_of_rewards_random, mean_revenues_random, mean_bookings_random, min_revenues_random, max_revenues_random = env.collect_revenues(
-        experience_name_random)
-    average_initial_random_revenue = mean_revenues_random[-1]
+    list_of_rewards_random = []
+    for np_name in glob.glob(str(experience_name_random) + '/*.np[yz]'):
+        list_of_rewards_random.append(np.load(np_name, allow_pickle=True))
+    average_initial_random_revenue = np.mean(list_of_rewards_random)
     initial_random_percentage = (average_initial_random_revenue / initial_true_revenues) * 100
     print("Random percentage of true revenue = {}".format(initial_random_percentage))
 
@@ -163,8 +164,8 @@ if __name__ == '__main__':
     QL_min_revenues = [(min_revenues_QL[-1] / initial_true_revenues) * 100]
     QL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
     random_percentage = [100]
-    random_min_revenues = [(min_revenues_random[-1] / initial_true_revenues) * 100]
-    random_max_revenues = [(max_revenues_random[-1] / initial_true_revenues) * 100]
+    random_min_revenues = [(np.min(list_of_rewards_random) / initial_true_revenues) * 100]
+    random_max_revenues = [(np.max(list_of_rewards_random) / initial_true_revenues) * 100]
 
     # for action_offset in action_offsets:
     #     env_param = env_parameters()
