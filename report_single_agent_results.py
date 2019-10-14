@@ -27,9 +27,9 @@ def env_builder(parameters_dict):
 
 def env_parameters():
     parameters_dict = {}
-    parameters_dict["data_collection_points"] = 13
+    parameters_dict["data_collection_points"] = 101
     parameters_dict["micro_times"] = 1
-    parameters_dict["capacity"] = 6
+    parameters_dict["capacity"] = 51
     parameters_dict["action_min"] = 50
     parameters_dict["action_max"] = 231
     parameters_dict["action_offset"] = 20
