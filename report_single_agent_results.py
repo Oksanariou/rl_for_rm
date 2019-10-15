@@ -110,11 +110,11 @@ if __name__ == '__main__':
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
-    experience_name_random = Path("../Results2/Random_capacity_" + str(env_param["capacity"]))
+    experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
     experience_name_random.mkdir(parents=True, exist_ok=True)
-    f = partial(run_once_random, env_builder, env_param, experience_name_random)
-    with Pool(nb_runs) as pool:
-        pool.map(f, range(nb_runs))
+    # f = partial(run_once_random, env_builder, env_param, experience_name_random)
+    # with Pool(nb_runs) as pool:
+    #     pool.map(f, range(nb_runs))
     list_of_rewards_random = []
     for np_name in glob.glob(str(experience_name_random) + '/*.np[yz]'):
         list_of_rewards_random.append(np.load(np_name, allow_pickle=True))
@@ -125,36 +125,36 @@ if __name__ == '__main__':
     nb_timesteps = 80001
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
 
-    experience_name_DQL = Path("../Results2/DQL_capacity_" + str(env_param["capacity"]))
+    experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
     experience_name_DQL.mkdir(parents=True, exist_ok=True)
     param_dict_DQL = agent_parameters_dict_DQL()
-    f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
-    with Pool(nb_runs) as pool:
-        pool.map(f, range(nb_runs))
-    for k in range(nb_runs):
-        run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
+    # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
+    # with Pool(nb_runs) as pool:
+    #     pool.map(f, range(nb_runs))
+    # for k in range(nb_runs):
+    #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
         experience_name_DQL)
     average_initial_DQL_revenue = mean_revenues_DQL[-1]
     initial_DQL_percentage = (average_initial_DQL_revenue / initial_true_revenues) * 100
     print("DQL percentage of true revenue = {}".format(initial_DQL_percentage))
 
-    experience_name_QL = Path("../Results2/QL_capacity_" + str(env_param["capacity"]))
+    experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
     experience_name_QL.mkdir(parents=True, exist_ok=True)
     param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
     f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
                 callback_frequency)
-    with Pool(nb_runs) as pool:
-        pool.map(f, range(nb_runs))
-    for k in range(nb_runs):
-        run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
+    # with Pool(nb_runs) as pool:
+    #     pool.map(f, range(nb_runs))
+    # for k in range(nb_runs):
+    #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
         experience_name_QL)
     average_initial_QL_revenue = mean_revenues_QL[-1]
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
     print("QL percentage of true revenue = {}".format(initial_QL_percentage))
 
-    capacities = [k for k in range(30, 441, 30)]
+    capacities = [k for k in range(180, 441, 30)]
     DQL_percentage = [100]
     DQL_min_revenues = [(min_revenues_DQL[-1] / initial_true_revenues) * 100]
     DQL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         true_V, true_P = dynamic_programming_env_DCP(env)
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
-        experience_name_random = Path("../Results2/Random_capacity_" + str(env_param["capacity"]))
+        experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
         experience_name_random.mkdir(parents=True, exist_ok=True)
         f = partial(run_once_random, env_builder, env_param, experience_name_random)
         with Pool(nb_runs) as pool:
@@ -189,15 +189,15 @@ if __name__ == '__main__':
             (((np.max(list_of_rewards_random) / true_revenues) * 100) / initial_random_percentage) * 100)
         print("Random percentage of true revenue = {}".format((np.mean(list_of_rewards_random) / true_revenues) * 100))
 
-        experience_name_DQL = Path("../Results2/DQL_capacity_" + str(env_param["capacity"]))
+        experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
         param_dict_DQL = agent_parameters_dict_DQL()
         f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
                     callback_frequency)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
-        for k in range(nb_runs):
-            run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
+        # for k in range(nb_runs):
+        #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
         list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
             experience_name_DQL)
         average_DQL_revenue = mean_revenues_DQL[-1]
@@ -206,15 +206,15 @@ if __name__ == '__main__':
         DQL_max_revenues.append((((max_revenues_DQL[-1] / true_revenues) * 100) / initial_DQL_percentage) * 100)
         print("DQL percentage of true revenue = {}".format((average_DQL_revenue / true_revenues) * 100))
 
-        experience_name_QL = Path("../Results2/QL_capacity_" + str(env_param["capacity"]))
+        experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
         experience_name_QL.mkdir(parents=True, exist_ok=True)
         param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
         f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
                     callback_frequency)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
-        for k in range(nb_runs):
-            run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
+        # for k in range(nb_runs):
+        #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
         list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
             experience_name_QL)
         average_QL_revenue = mean_revenues_QL[-1]
@@ -263,8 +263,8 @@ if __name__ == '__main__':
     f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
     with Pool(nb_runs) as pool:
         pool.map(f, range(nb_runs))
-    for k in range(nb_runs):
-        run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
+    # for k in range(nb_runs):
+    #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
         experience_name_DQL)
     average_initial_DQL_revenue = mean_revenues_DQL[-1]
@@ -278,8 +278,8 @@ if __name__ == '__main__':
                 callback_frequency)
     with Pool(nb_runs) as pool:
         pool.map(f, range(nb_runs))
-    for k in range(nb_runs):
-        run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
+    # for k in range(nb_runs):
+    #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
     list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
         experience_name_QL)
     average_initial_QL_revenue = mean_revenues_QL[-1]
