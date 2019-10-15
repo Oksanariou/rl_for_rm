@@ -310,18 +310,25 @@ def q_to_policy_FL(Q):
 
 
 def visualizing_epsilon_decay(nb_episodes, epsilon, epsilon_min, epsilon_decay):
+    fig, ax = plt.subplots(1)
     X = [k for k in range(nb_episodes)]
     Y = []
+    A = []
     for k in range(nb_episodes):
-
         if epsilon > epsilon_min:
             epsilon *= epsilon_decay
+        if alpha > alpha_min:
+            alpha *= alpha_decay
         Y.append(epsilon)
-    plt.plot(X, Y, 'b')
-    plt.title("Decaying alpha over the number of episodes")
-    plt.xlabel("Number of episodes")
-    plt.ylabel("Alpha")
+        A.append(alpha)
+    plt.plot(X, Y, label="Epsilon")
+    plt.plot(X, A, label="Alpha")
+    plt.title("Decaying epsilon and alpha over the number of steps")
+    plt.xlabel("Number of steps")
+    ax.set_xticklabels([""] * 9+ ["Max nb \n of steps"])
     plt.grid()
+    plt.legend()
+    plt.show()
     return plt.show()
 
 

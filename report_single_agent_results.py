@@ -154,16 +154,16 @@ if __name__ == '__main__':
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
     print("QL percentage of true revenue = {}".format(initial_QL_percentage))
 
-    capacities = [k for k in range(180, 441, 30)]
+    capacities = [k for k in range(10, 151, 10)] + [k for k in range(180, 271, 30)]
     DQL_percentage = [100]
-    DQL_min_revenues = [(min_revenues_DQL[-1] / initial_true_revenues) * 100]
-    DQL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
+    DQL_min_revenues = [(min_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
+    DQL_max_revenues = [(max_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
     QL_percentage = [100]
-    QL_min_revenues = [(min_revenues_QL[-1] / initial_true_revenues) * 100]
-    QL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
+    QL_min_revenues = [(min_revenues_QL[-1] / average_initial_QL_revenue) * 100]
+    QL_max_revenues = [(max_revenues_QL[-1] / average_initial_QL_revenue) * 100]
     random_percentage = [100]
-    random_min_revenues = [(np.min(list_of_rewards_random) / initial_true_revenues) * 100]
-    random_max_revenues = [(np.max(list_of_rewards_random) / initial_true_revenues) * 100]
+    random_min_revenues = [(np.min(list_of_rewards_random) / average_initial_random_revenue) * 100]
+    random_max_revenues = [(np.max(list_of_rewards_random) / average_initial_random_revenue) * 100]
 
     for capacity in capacities:
         print("capacity = {}".format(capacity))
@@ -177,8 +177,8 @@ if __name__ == '__main__':
         experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
         experience_name_random.mkdir(parents=True, exist_ok=True)
         f = partial(run_once_random, env_builder, env_param, experience_name_random)
-        with Pool(nb_runs) as pool:
-            pool.map(f, range(nb_runs))
+        # with Pool(nb_runs) as pool:
+        #     pool.map(f, range(nb_runs))
         list_of_rewards_random = []
         for np_name in glob.glob(str(experience_name_random) + '/*.np[yz]'):
                 list_of_rewards_random.append(np.load(np_name, allow_pickle=True))
@@ -194,8 +194,8 @@ if __name__ == '__main__':
         param_dict_DQL = agent_parameters_dict_DQL()
         f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
                     callback_frequency)
-        with Pool(nb_runs) as pool:
-            pool.map(f, range(nb_runs))
+        # with Pool(nb_runs) as pool:
+        #     pool.map(f, range(nb_runs))
         # for k in range(nb_runs):
         #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
         list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
@@ -211,8 +211,8 @@ if __name__ == '__main__':
         param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
         f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
                     callback_frequency)
-        with Pool(nb_runs) as pool:
-            pool.map(f, range(nb_runs))
+        # with Pool(nb_runs) as pool:
+        #     pool.map(f, range(nb_runs))
         # for k in range(nb_runs):
         #     run_once_QL(env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL, callback_frequency, k)
         list_of_rewards_QL, mean_revenues_QL, mean_bookings_QL, min_revenues_QL, max_revenues_QL = env.collect_revenues(
@@ -290,14 +290,14 @@ if __name__ == '__main__':
     action_offsets = [70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
     number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
     DQL_percentage = [100]
-    DQL_min_revenues = [(min_revenues_DQL[-1] / initial_true_revenues) * 100]
-    DQL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
+    DQL_min_revenues = [(min_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
+    DQL_max_revenues = [(max_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
     QL_percentage = [100]
-    QL_min_revenues = [(min_revenues_QL[-1] / initial_true_revenues) * 100]
-    QL_max_revenues = [(max_revenues_DQL[-1] / initial_true_revenues) * 100]
+    QL_min_revenues = [(min_revenues_QL[-1] / average_initial_QL_revenue) * 100]
+    QL_max_revenues = [(max_revenues_QL[-1] / average_initial_QL_revenue) * 100]
     random_percentage = [100]
-    random_min_revenues = [(np.min(list_of_rewards_random) / initial_true_revenues) * 100]
-    random_max_revenues = [(np.max(list_of_rewards_random) / initial_true_revenues) * 100]
+    random_min_revenues = [(np.min(list_of_rewards_random) / average_initial_random_revenue) * 100]
+    random_max_revenues = [(np.max(list_of_rewards_random) / average_initial_random_revenue) * 100]
 
     for action_offset in action_offsets:
         print("action offset :{}".format(action_offset))
