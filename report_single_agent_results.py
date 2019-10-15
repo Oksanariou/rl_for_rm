@@ -97,6 +97,12 @@ def run_once_random(env_builder, env_parameters_dict, experience_name, real_env,
     revenue = real_env.average_n_episodes(random_P, 10000)
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0])
 
+def run_once_noise(env_builder, env_parameters_dict, experience_name, real_env, k):
+    env = env_builder(env_parameters_dict)
+    V, P = dynamic_programming_env_DCP(env)
+    revenue = real_env.average_n_episodes(P, 10000)
+    np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0])
+
 
 if __name__ == '__main__':
     nb_runs = 20
@@ -110,10 +116,10 @@ if __name__ == '__main__':
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
-    env_param["parameter_noise_percentage"] = 0
+    env_param["parameter_noise_percentage"] = 0.2
     experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
     experience_name_noise.mkdir(parents=True, exist_ok=True)
-    f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
+    f = partial(run_once_noise, env_builder, env_param, experience_name_noise, env)
     with Pool(nb_runs) as pool:
         pool.map(f, range(nb_runs))
     list_of_rewards_noise = []
@@ -193,10 +199,10 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
         optimal_revenues.append(true_revenues)
 
-        env_param["parameter_noise_percentage"] = 0
+        env_param["parameter_noise_percentage"] = 0.2
         experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
         experience_name_noise.mkdir(parents=True, exist_ok=True)
-        f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
+        f = partial(run_once_noise, env_builder, env_param, experience_name_noise, env)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
         list_of_rewards_noise = []
