@@ -91,7 +91,7 @@ def run_once_QL(env_builder, env_parameters_dict, parameters_dict, nb_episodes, 
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenues_QL)
 
 
-def run_once_random(env_builder, env_parameters_dict, experience_name, k, real_env):
+def run_once_random(env_builder, env_parameters_dict, experience_name, real_env, k):
     env = env_builder(env_parameters_dict)
     random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
     revenue = real_env.average_n_episodes(random_P, 10000)
