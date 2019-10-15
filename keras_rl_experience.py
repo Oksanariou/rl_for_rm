@@ -279,7 +279,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 
 
 def run_once_random(env_builder, env_parameters_dict, experience_name, real_env, k):
-    env = env_builder(env_parameters_dict)
+    env = env_builder()
     V, P = dynamic_programming_collaboration(env)
     revenue = real_env.average_n_episodes(P, 10000)
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0] + revenue[1])
