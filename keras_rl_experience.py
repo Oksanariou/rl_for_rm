@@ -27,8 +27,6 @@ from multiprocessing import Pool
 from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent, combine_two_policies, observation_split_2D, \
     action_merge, observation_split_3D
 from scipy.stats import sem, t
-import multiprocessing as mp
-
 
 def global_env_builder(parameters_dict):
     prices_flight1 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1,
@@ -286,6 +284,7 @@ def run_once_random(env_builder, env_parameters_dict, experience_name, real_env,
 
 
 if __name__ == '__main__':
+    nb_runs = 20
     # mp.set_start_method('spawn')
     env_parameters_dict = multiagent_env_parameters_dict()
     env = global_env_builder(env_parameters_dict)
@@ -406,7 +405,6 @@ if __name__ == '__main__':
     #         plt.legend()
     #         plt.xticks(env.prices_flight1)
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
-
     plt.figure()
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
@@ -432,9 +430,8 @@ if __name__ == '__main__':
 
             experience_name_noise = Path("../Results/Noise_on_parameters")
             experience_name_noise.mkdir(parents=True, exist_ok=True)
-            f = partial(run_once_random, global_env_builder, env_param, experience_name_noise, env)
-            with Pool(20) as pool:
-                pool.map(f, range(20))
+            for k in range(nb_runs):
+                run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
             for np_name in glob.glob(str(experience_name_noise) + '/*.np[yz]'):
                 differences_to_true_revenue_parameter_noise.append((np.load(np_name, allow_pickle=True)/ (true_revenue1 + true_revenue2)) * 100)
 
@@ -442,9 +439,8 @@ if __name__ == '__main__':
             experience_name_noise_mnl = Path("../Results/Noise_on_parameters_mnl")
             experience_name_noise_mnl.mkdir(parents=True, exist_ok=True)
             differences_to_true_revenue_parameter_noise_mnl = []
-            f = partial(run_once_random, global_env_builder, env_param, experience_name_noise_mnl, env)
-            with Pool(20) as pool:
-                pool.map(f, range(20))
+            for k in range(nb_runs):
+                run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
             for np_name in glob.glob(str(experience_name_noise_mnl) + '/*.np[yz]'):
                 differences_to_true_revenue_parameter_noise_mnl.append((np.load(np_name, allow_pickle=True)/ (true_revenue1 + true_revenue2)) * 100)
 
