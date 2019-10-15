@@ -44,8 +44,8 @@ class RMDCPEnv(gym.Env):
         self.transition_noise_percentage = transition_noise_percentage
         self.parameter_noise_percentage = parameter_noise_percentage
 
-        self.alpha = alpha + np.random.normal(0, alpha * self.parameter_noise_percentage, 1)[0]
-        self.lamb = lamb + np.random.normal(0, lamb * self.parameter_noise_percentage, 1)[0]
+        self.alpha = alpha + alpha * self.parameter_noise_percentage * [-1, 1][random.randrange(2)]
+        self.lamb = lamb + lamb * self.parameter_noise_percentage * [-1, 1][random.randrange(2)]
 
         # self.observation_space = spaces.Tuple((spaces.Discrete(self.T), spaces.Discrete(self.C)))
         self.observation_space = spaces.MultiDiscrete([self.T, self.C])
