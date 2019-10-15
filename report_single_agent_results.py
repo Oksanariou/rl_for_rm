@@ -154,7 +154,7 @@ if __name__ == '__main__':
     initial_QL_percentage = (average_initial_QL_revenue / initial_true_revenues) * 100
     print("QL percentage of true revenue = {}".format(initial_QL_percentage))
 
-    capacities = [k for k in range(10, 151, 10)] + [k for k in range(180, 271, 30)]
+    capacities = [k for k in range(10, 151, 10)] + [k for k in range(180, 241, 30)]
     DQL_percentage = [100]
     DQL_min_revenues = [(min_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
     DQL_max_revenues = [(max_revenues_DQL[-1] / average_initial_DQL_revenue) * 100]
