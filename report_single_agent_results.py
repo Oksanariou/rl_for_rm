@@ -206,6 +206,7 @@ if __name__ == '__main__':
         noise_min_revenues.append(np.min(list_of_rewards_noise))
         noise_max_revenues.append(np.max(list_of_rewards_noise))
         env_param["parameter_noise_percentage"] = 0
+        print("Noise percentage of true revenue = {}".format((np.mean(list_of_rewards_noise) / true_revenues) * 100))
 
         experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
         experience_name_random.mkdir(parents=True, exist_ok=True)
