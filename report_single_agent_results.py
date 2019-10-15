@@ -194,6 +194,7 @@ if __name__ == '__main__':
 
         env_param["parameter_noise_percentage"] = 0.2
         experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
+        experience_name_noise.mkdir(parents=True, exist_ok=True)
         f = partial(run_once_random, env_builder, env_param, experience_name_noise)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
