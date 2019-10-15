@@ -110,7 +110,7 @@ if __name__ == '__main__':
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
-    env_param["parameter_noise_percentage"] = 0.1
+    env_param["parameter_noise_percentage"] = 0
     experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
     experience_name_noise.mkdir(parents=True, exist_ok=True)
     f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
         optimal_revenues.append(true_revenues)
 
-        env_param["parameter_noise_percentage"] = 0.1
+        env_param["parameter_noise_percentage"] = 0
         experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
         experience_name_noise.mkdir(parents=True, exist_ok=True)
         f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
