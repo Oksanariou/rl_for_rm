@@ -5,6 +5,7 @@ from gym.utils import seeding
 from scipy.stats import sem, t
 import glob
 import itertools
+import random
 from gym.envs.toy_text import discrete
 import scipy.special
 
@@ -47,9 +48,9 @@ class CollaborationGlobal3DMultiDiscreteEnv(gym.Env):
         self.nA = len(self.A)  # number of actions
 
         self.parameter_noise_percentage = parameter_noise_percentage
-        self.beta = beta + np.random.normal(0, beta * self.parameter_noise_percentage, 1)[0]
-        self.k_airline1 = k_airline1 + np.random.normal(0, k_airline1 * self.parameter_noise_percentage, 1)[0]
-        self.k_airline2 = k_airline2 + np.random.normal(0, k_airline2 * self.parameter_noise_percentage, 1)[0]
+        self.beta = beta + beta * self.parameter_noise_percentage * [-1, 1][random.randrange(2)]
+        self.k_airline1 = k_airline1 + k_airline1 * self.parameter_noise_percentage * [-1, 1][random.randrange(2)]
+        self.k_airline2 = k_airline2 + k_airline2 * self.parameter_noise_percentage * [-1, 1][random.randrange(2)]
 
         self.lamb = lamb + np.random.normal(0, lamb * self.parameter_noise_percentage, 1)[0]
 

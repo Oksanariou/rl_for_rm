@@ -362,8 +362,8 @@ if __name__ == '__main__':
     #                           observation_split=parameters[configuration]["observation_split"],
     #                           action_merge=parameters[configuration]["action_merge"])
 
-    # demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
-    demand_ratios = [0.5, 0.6]
+    demand_ratios = [0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8]
+    # demand_ratios = [0.5, 0.6]
     configuration_names = ["2D_individual_rewards", "2D_shared_rewards"]
     nb_timesteps = 100001
     callback_frequency = 10
@@ -431,6 +431,7 @@ if __name__ == '__main__':
             differences_to_true_revenue_parameter_noise = []
 
             experience_name_noise = Path("../Results/Noise_on_parameters")
+            experience_name_noise.mkdir(parents=True, exist_ok=True)
             f = partial(run_once_random, global_env_builder, env_param, experience_name_noise, env)
             with Pool(20) as pool:
                 pool.map(f, range(20))
@@ -439,14 +440,16 @@ if __name__ == '__main__':
 
             env_param["nested_lamb"] = 1.
             experience_name_noise_mnl = Path("../Results/Noise_on_parameters_mnl")
+            experience_name_noise_mnl.mkdir(parents=True, exist_ok=True)
             differences_to_true_revenue_parameter_noise_mnl = []
-            f = partial(run_once_random, env_builder, env_param, experience_name_noise_mnl, env)
+            f = partial(run_once_random, global_env_builder, env_param, experience_name_noise_mnl, env)
             with Pool(20) as pool:
                 pool.map(f, range(20))
             for np_name in glob.glob(str(experience_name_noise_mnl) + '/*.np[yz]'):
                 differences_to_true_revenue_parameter_noise_mnl.append((np.load(np_name, allow_pickle=True)/ (true_revenue1 + true_revenue2)) * 100)
 
             experience_name = Path("../Results/" + configuration_name + "/" + str(demand_ratios[dr_idx]))
+            experience_name.mkdir(parents=True, exist_ok=True)
             list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(
                 experience_name)
             difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1]) / (
