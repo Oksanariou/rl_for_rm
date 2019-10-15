@@ -110,7 +110,7 @@ if __name__ == '__main__':
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
-    env_param["parameter_noise_percentage"] = 0.2
+    env_param["parameter_noise_percentage"] = 0.1
     experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
     experience_name_noise.mkdir(parents=True, exist_ok=True)
     f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
         optimal_revenues.append(true_revenues)
 
-        env_param["parameter_noise_percentage"] = 0.2
+        env_param["parameter_noise_percentage"] = 0.1
         experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
         experience_name_noise.mkdir(parents=True, exist_ok=True)
         f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     plt.plot(total_capacities, (QL_percentage / optimal_revenues) * 100, label="QL", color="c")
     plt.plot(total_capacities, (DQL_percentage / optimal_revenues) * 100, label="DQL", color="y")
     plt.plot(total_capacities, (random_percentage / optimal_revenues) * 100, label="Random policy", color="r")
-    plt.plot(total_capacities, (noise_percentage / optimal_revenues) * 100, label="Optimal policy \n with 20% noise", color="m")
+    plt.plot(total_capacities, (noise_percentage / optimal_revenues) * 100, label="Optimal policy \n with 10% noise", color="m")
     plt.xlabel("Capacity")
     plt.ylabel("Percentage of optimal policy")
     plt.fill_between(total_capacities, (QL_min_revenues / optimal_revenues) * 100,
