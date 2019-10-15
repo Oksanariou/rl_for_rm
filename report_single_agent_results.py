@@ -122,6 +122,7 @@ if __name__ == '__main__':
     average_initial_noise_revenue = np.mean(list_of_rewards_noise)
     initial_noise_percentage = (average_initial_noise_revenue / initial_true_revenues) * 100
     env_param["parameter_noise_percentage"] = 0
+    print("Noise percentage of true revenue = {}".format(initial_noise_percentage))
 
     experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
     experience_name_random.mkdir(parents=True, exist_ok=True)
