@@ -91,10 +91,10 @@ def run_once_QL(env_builder, env_parameters_dict, parameters_dict, nb_episodes, 
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenues_QL)
 
 
-def run_once_random(env_builder, env_parameters_dict, experience_name, k):
+def run_once_random(env_builder, env_parameters_dict, experience_name, k, real_env):
     env = env_builder(env_parameters_dict)
     random_P = np.array([random.randint(0, env.nA - 1) for k in range(env.nS)]).reshape(env.T, env.C)
-    revenue = env.average_n_episodes(random_P, 10000)
+    revenue = real_env.average_n_episodes(random_P, 10000)
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0])
 
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     env_param["parameter_noise_percentage"] = 0.2
     experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
     experience_name_noise.mkdir(parents=True, exist_ok=True)
-    f = partial(run_once_random, env_builder, env_param, experience_name_noise)
+    f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
     with Pool(nb_runs) as pool:
         pool.map(f, range(nb_runs))
     list_of_rewards_noise = []
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
     experience_name_random.mkdir(parents=True, exist_ok=True)
-    # f = partial(run_once_random, env_builder, env_param, experience_name_random)
+    # f = partial(run_once_random, env_builder, env_param, experience_name_random, env)
     # with Pool(nb_runs) as pool:
     #     pool.map(f, range(nb_runs))
     list_of_rewards_random = []
@@ -196,7 +196,7 @@ if __name__ == '__main__':
         env_param["parameter_noise_percentage"] = 0.2
         experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
         experience_name_noise.mkdir(parents=True, exist_ok=True)
-        f = partial(run_once_random, env_builder, env_param, experience_name_noise)
+        f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
         with Pool(nb_runs) as pool:
             pool.map(f, range(nb_runs))
         list_of_rewards_noise = []
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
         experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
         experience_name_random.mkdir(parents=True, exist_ok=True)
-        f = partial(run_once_random, env_builder, env_param, experience_name_random)
+        f = partial(run_once_random, env_builder, env_param, experience_name_random, env)
         # with Pool(nb_runs) as pool:
         #     pool.map(f, range(nb_runs))
         list_of_rewards_random = []
