@@ -279,7 +279,7 @@ def parameter_experience(experience_name, parameter_name, parameter_values, env_
 
 
 def run_once_random(env_builder, env_parameters_dict, experience_name, real_env, k):
-    env = env_builder()
+    env = env_builder(env_parameters_dict)
     V, P = dynamic_programming_collaboration(env)
     revenue = real_env.average_n_episodes(P, 10000)
     np.save(experience_name / ("Run" + str(k) + ".npy"), revenue[0] + revenue[1])
@@ -431,7 +431,7 @@ if __name__ == '__main__':
             differences_to_true_revenue_parameter_noise = []
 
             experience_name_noise = Path("../Results/Noise_on_parameters")
-            f = partial(run_once_random, env_builder, env_param, experience_name_noise, env)
+            f = partial(run_once_random, global_env_builder, env_param, experience_name_noise, env)
             with Pool(20) as pool:
                 pool.map(f, range(20))
             for np_name in glob.glob(str(experience_name_noise) + '/*.np[yz]'):
