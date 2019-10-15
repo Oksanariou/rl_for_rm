@@ -108,22 +108,22 @@ if __name__ == '__main__':
     nb_runs = 20
     callback_frequency = 2
 
-    # env_param = env_parameters()
-    # env_param["action_offset"] = 100
-    # env = env_builder(env_param)
-    # initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
-    # initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
     env_param = env_parameters()
-    env_param["data_collection_points"] = 13
-    env_param["capacity"] = 6
-    print("capacity = {}".format(env_param["capacity"] - 1))
+    env_param["action_offset"] = 100
     env = env_builder(env_param)
     initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
     initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
+    # env_param = env_parameters()
+    # env_param["data_collection_points"] = 13
+    # env_param["capacity"] = 6
+    # print("capacity = {}".format(env_param["capacity"] - 1))
+    # env = env_builder(env_param)
+    # initial_true_V, initial_true_P = dynamic_programming_env_DCP(env)
+    # initial_true_revenues, initial_true_bookings = average_n_episodes(env, initial_true_P, 10000)
 
     env_param["parameter_noise_percentage"] = 0.2
-    experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
-    # experience_name_noise = Path("../Results3/Noise_action_offset_" + str(env_param["action_offset"]))
+    # experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
+    experience_name_noise = Path("../Results3/Noise_action_offset_" + str(env_param["action_offset"]))
     experience_name_noise.mkdir(parents=True, exist_ok=True)
     # f = partial(run_once_noise, env_builder, env_param, experience_name_noise, env)
     # with Pool(nb_runs) as pool:
@@ -136,8 +136,8 @@ if __name__ == '__main__':
     env_param["parameter_noise_percentage"] = 0
     print("Noise percentage of true revenue = {}".format(initial_noise_percentage))
 
-    experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
-    # experience_name_random = Path("../Results3/Random_action_offset_" + str(env_param["action_offset"]))
+    # experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
+    experience_name_random = Path("../Results3/Random_action_offset_" + str(env_param["action_offset"]))
     experience_name_random.mkdir(parents=True, exist_ok=True)
     # f = partial(run_once_random, env_builder, env_param, experience_name_random, env)
     # with Pool(nb_runs) as pool:
@@ -152,8 +152,8 @@ if __name__ == '__main__':
     nb_timesteps = 80001
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
 
-    experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
-    # experience_name_DQL = Path("../Results3/DQL_action_offset_" + str(env_param["action_offset"]))
+    # experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
+    experience_name_DQL = Path("../Results3/DQL_action_offset_" + str(env_param["action_offset"]))
     experience_name_DQL.mkdir(parents=True, exist_ok=True)
     param_dict_DQL = agent_parameters_dict_DQL()
     # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
@@ -167,8 +167,8 @@ if __name__ == '__main__':
     initial_DQL_percentage = (average_initial_DQL_revenue / initial_true_revenues) * 100
     print("DQL percentage of true revenue = {}".format(initial_DQL_percentage))
 
-    experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
-    # experience_name_QL = Path("../Results3/QL_action_offset_" + str(env_param["action_offset"]))
+    # experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
+    experience_name_QL = Path("../Results3/QL_action_offset_" + str(env_param["action_offset"]))
     experience_name_QL.mkdir(parents=True, exist_ok=True)
     param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
     # f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
@@ -200,15 +200,15 @@ if __name__ == '__main__':
 
     action_offsets = [70, 50, 40, 30, 20, 15, 12, 10, 9, 7]
     number_of_actions = [(env_param["action_max"] - env_param["action_min"]) // k + 1 for k in action_offsets]
-    for capacity in capacities:
-        print("capacity = {}".format(capacity))
-        env_param = env_parameters()
-        env_param["data_collection_points"] = (2 * capacity) + 1
-        env_param["capacity"] = capacity + 1
-    # for action_offset in action_offsets:
-    #     print("action offset :{}".format(action_offset))
+    # for capacity in capacities:
+    #     print("capacity = {}".format(capacity))
     #     env_param = env_parameters()
-    #     env_param["action_offset"] = action_offset
+    #     env_param["data_collection_points"] = (2 * capacity) + 1
+    #     env_param["capacity"] = capacity + 1
+    for action_offset in action_offsets:
+        print("action offset :{}".format(action_offset))
+        env_param = env_parameters()
+        env_param["action_offset"] = action_offset
 
         env = env_builder(env_param)
         true_V, true_P = dynamic_programming_env_DCP(env)
@@ -216,8 +216,8 @@ if __name__ == '__main__':
         optimal_revenues.append(true_revenues)
 
         env_param["parameter_noise_percentage"] = 0.2
-        experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
-        # experience_name_noise = Path("../Results3/Noise_action_offset_" + str(env_param["action_offset"]))
+        # experience_name_noise = Path("../Results/Noise_capacity_" + str(env_param["capacity"]))
+        experience_name_noise = Path("../Results3/Noise_action_offset_" + str(env_param["action_offset"]))
         experience_name_noise.mkdir(parents=True, exist_ok=True)
         # f = partial(run_once_noise, env_builder, env_param, experience_name_noise, env)
         # with Pool(nb_runs) as pool:
@@ -231,8 +231,8 @@ if __name__ == '__main__':
         env_param["parameter_noise_percentage"] = 0
         print("Noise percentage of true revenue = {}".format((np.mean(list_of_rewards_noise) / true_revenues) * 100))
 
-        experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
-        # experience_name_random = Path("../Results3/Random_action_offset_" + str(env_param["action_offset"]))
+        # experience_name_random = Path("../Results/Random_capacity_" + str(env_param["capacity"]))
+        experience_name_random = Path("../Results3/Random_action_offset_" + str(env_param["action_offset"]))
         experience_name_random.mkdir(parents=True, exist_ok=True)
         # f = partial(run_once_random, env_builder, env_param, experience_name_random, env)
         # with Pool(nb_runs) as pool:
@@ -245,8 +245,8 @@ if __name__ == '__main__':
         random_max_revenues.append(np.max(list_of_rewards_random))
         print("Random percentage of true revenue = {}".format((np.mean(list_of_rewards_random) / true_revenues) * 100))
 
-        experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
-        # experience_name_DQL = Path("../Results3/DQL_action_offset_" + str(env_param["action_offset"]))
+        # experience_name_DQL = Path("../Results/DQL_capacity_" + str(env_param["capacity"]))
+        experience_name_DQL = Path("../Results3/DQL_action_offset_" + str(env_param["action_offset"]))
         experience_name_DQL.mkdir(parents=True, exist_ok=True)
         param_dict_DQL = agent_parameters_dict_DQL()
         # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL,
@@ -263,8 +263,8 @@ if __name__ == '__main__':
         DQL_max_revenues.append(max_revenues_DQL[-1])
         print("DQL percentage of true revenue = {}".format((average_DQL_revenue / true_revenues) * 100))
 
-        experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
-        # experience_name_QL = Path("../Results3/QL_action_offset_" + str(env_param["action_offset"]))
+        # experience_name_QL = Path("../Results/QL_capacity_" + str(env_param["capacity"]))
+        experience_name_QL = Path("../Results3/QL_action_offset_" + str(env_param["action_offset"]))
         experience_name_QL.mkdir(parents=True, exist_ok=True)
         param_dict_QL = agent_parameters_dict_QL(nb_timesteps)
         # f = partial(run_once_QL, env_builder, env_param, param_dict_QL, nb_timesteps, experience_name_QL,
@@ -292,41 +292,41 @@ if __name__ == '__main__':
     total_number_of_actions = [2] + number_of_actions
     plt.figure()
     total_capacities = [5] + capacities
-    plt.plot(total_capacities, (QL_percentage / optimal_revenues) * 100, label="QL", color="c")
-    plt.plot(total_capacities, (DQL_percentage / optimal_revenues) * 100, label="DQL", color="y")
-    plt.plot(total_capacities, (random_percentage / optimal_revenues) * 100, label="Random policy", color="r")
-    plt.plot(total_capacities, (noise_percentage / optimal_revenues) * 100, label="Optimal policy \n with 20% noise", color="m")
-    plt.xlabel("Capacity")
-    # plt.xlabel("Number of actions")
+    plt.plot(total_number_of_actions, (QL_percentage / optimal_revenues) * 100, label="QL", color="c")
+    plt.plot(total_number_of_actions, (DQL_percentage / optimal_revenues) * 100, label="DQL", color="y")
+    plt.plot(total_number_of_actions, (random_percentage / optimal_revenues) * 100, label="Random policy", color="r")
+    plt.plot(total_number_of_actions, (noise_percentage / optimal_revenues) * 100, label="Optimal policy \n with 20% noise", color="m")
+    # plt.xlabel("Capacity")
+    plt.xlabel("Number of actions")
     plt.ylabel("Percentage of optimal policy")
-    plt.fill_between(total_capacities, (QL_min_revenues / optimal_revenues) * 100,
+    plt.fill_between(total_number_of_actions, (QL_min_revenues / optimal_revenues) * 100,
                      (QL_max_revenues / optimal_revenues) * 100, color="c", alpha=0.2)
-    plt.fill_between(total_capacities, (DQL_min_revenues / optimal_revenues) * 100,
+    plt.fill_between(total_number_of_actions, (DQL_min_revenues / optimal_revenues) * 100,
                      (DQL_max_revenues / optimal_revenues) * 100, color="y", alpha=0.2)
-    plt.fill_between(total_capacities, (random_min_revenues / optimal_revenues) * 100,
+    plt.fill_between(total_number_of_actions, (random_min_revenues / optimal_revenues) * 100,
                      (random_max_revenues / optimal_revenues) * 100, color="r", alpha=0.2)
-    plt.fill_between(total_capacities, (noise_min_revenues / optimal_revenues) * 100,
+    plt.fill_between(total_number_of_actions, (noise_min_revenues / optimal_revenues) * 100,
                      (noise_max_revenues / optimal_revenues) * 100, color="m", alpha=0.2)
     plt.legend()
-    plt.savefig("../Results2/" + "precision_as_a_function_of_C_and_T.png")
-    # plt.savefig("../Results2/" + "precision_as_a_function_of_A.png")
+    # plt.savefig("../Results2/" + "precision_as_a_function_of_C_and_T.png")
+    plt.savefig("../Results2/" + "precision_as_a_function_of_A.png")
 
     plt.figure()
     total_capacities = [5] + capacities
-    plt.plot(total_capacities, (((QL_percentage / optimal_revenues) * 100) / initial_QL_percentage) * 100, label="QL",
+    plt.plot(total_number_of_actions, (((QL_percentage / optimal_revenues) * 100) / initial_QL_percentage) * 100, label="QL",
              color="c")
-    plt.plot(total_capacities, (((DQL_percentage / optimal_revenues) * 100) / initial_DQL_percentage) * 100,
+    plt.plot(total_number_of_actions, (((DQL_percentage / optimal_revenues) * 100) / initial_DQL_percentage) * 100,
              label="DQL",
              color="y")
     # plt.plot(total_capacities, (((random_percentage / optimal_revenues) * 100) / initial_random_percentage) * 100,
     #          label="Random policy", color="r")
-    plt.xlabel("Capacity")
-    # plt.xlabel("Number of actions")
-    plt.ylabel("Percentage of performance \n on smallest capacity")
-    # plt.ylabel("Percentage of performance on \n smallest number of actions")
-    plt.fill_between(total_capacities, (((QL_min_revenues / optimal_revenues) * 100) / initial_QL_percentage) * 100,
+    # plt.xlabel("Capacity")
+    plt.xlabel("Number of actions")
+    # plt.ylabel("Percentage of performance \n on smallest capacity")
+    plt.ylabel("Percentage of performance on \n smallest number of actions")
+    plt.fill_between(total_number_of_actions, (((QL_min_revenues / optimal_revenues) * 100) / initial_QL_percentage) * 100,
                      (((QL_max_revenues / optimal_revenues) * 100) / initial_QL_percentage) * 100, color="c", alpha=0.2)
-    plt.fill_between(total_capacities, (((DQL_min_revenues / optimal_revenues) * 100) / initial_DQL_percentage) * 100,
+    plt.fill_between(total_number_of_actions, (((DQL_min_revenues / optimal_revenues) * 100) / initial_DQL_percentage) * 100,
                      (((DQL_max_revenues / optimal_revenues) * 100) / initial_DQL_percentage) * 100, color="y",
                      alpha=0.2)
     # plt.fill_between(total_capacities,
@@ -334,8 +334,8 @@ if __name__ == '__main__':
     #                  (((random_max_revenues / optimal_revenues) * 100) / initial_random_percentage) * 100, color="r",
     #                  alpha=0.2)
     plt.legend()
-    plt.savefig("../Results2/" + "scaling_as_a_function_of_C_and_T.png")
-    # plt.savefig("../Results2/" + "scaling_as_a_function_of_A.png")
+    # plt.savefig("../Results2/" + "scaling_as_a_function_of_C_and_T.png")
+    plt.savefig("../Results2/" + "scaling_as_a_function_of_A.png")
 
     # # DQL
     # nb_timesteps_DQL = 80001
