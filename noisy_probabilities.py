@@ -80,7 +80,7 @@ if __name__ == '__main__':
         true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = real_env.average_n_episodes(
             true_P, 10000)
 
-    noise_percentages = np.array([k for k in range(0, 40, 5)]) / 100
+    noise_percentages = np.array([k for k in range(0, 60, 5)]) / 100
     mean_percents_of_optimal_revenue = []
     max_percents_of_optimal_revenue = []
     min_percents_of_optimal_revenue = []

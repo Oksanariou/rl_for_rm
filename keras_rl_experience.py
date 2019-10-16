@@ -409,8 +409,8 @@ if __name__ == '__main__':
     plt.figure()
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
+        list_mean_final_revenues = []
         if configuration_name == "2D_individual_rewards":
-            list_mean_final_revenues = []
             list_difference_to_true_revenue_parameter_noise = []
             list_difference_to_true_revenue_parameter_noise_min = []
             list_difference_to_true_revenue_parameter_noise_max = []
@@ -433,8 +433,8 @@ if __name__ == '__main__':
 
                 experience_name_noise = Path("../Results/Noise_on_parameters_"+str(dr_idx))
                 experience_name_noise.mkdir(parents=True, exist_ok=True)
-                for k in range(nb_runs):
-                    run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
+                # for k in range(nb_runs):
+                #     run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
                 for np_name in glob.glob(str(experience_name_noise) + '/*.np[yz]'):
                     differences_to_true_revenue_parameter_noise.append(
                         (np.load(np_name, allow_pickle=True) / (true_revenue1 + true_revenue2)) * 100)
@@ -443,8 +443,8 @@ if __name__ == '__main__':
                 experience_name_noise_mnl = Path("../Results/Noise_on_parameters_mnl_"+str(dr_idx))
                 experience_name_noise_mnl.mkdir(parents=True, exist_ok=True)
                 differences_to_true_revenue_parameter_noise_mnl = []
-                for k in range(nb_runs):
-                    run_once_random(global_env_builder, env_param, experience_name_noise_mnl, env, k)
+                # for k in range(nb_runs):
+                #     run_once_random(global_env_builder, env_param, experience_name_noise_mnl, env, k)
                 for np_name in glob.glob(str(experience_name_noise_mnl) + '/*.np[yz]'):
                     differences_to_true_revenue_parameter_noise_mnl.append(
                         (np.load(np_name, allow_pickle=True) / (true_revenue1 + true_revenue2)) * 100)
