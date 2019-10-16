@@ -28,6 +28,7 @@ from Collaboration_Competition.keras_rl_multi_agent import fit_multi_agent, comb
     action_merge, observation_split_3D
 from scipy.stats import sem, t
 
+
 def global_env_builder(parameters_dict):
     prices_flight1 = [k for k in range(parameters_dict["action_min"], parameters_dict["action_max"] + 1,
                                        parameters_dict["action_offset"])]
@@ -408,14 +409,15 @@ if __name__ == '__main__':
     plt.figure()
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
-        list_mean_final_revenues = []
-        list_difference_to_true_revenue_parameter_noise = []
-        list_difference_to_true_revenue_parameter_noise_min = []
-        list_difference_to_true_revenue_parameter_noise_max = []
-        list_difference_to_true_revenue_parameter_noise_mnl = []
-        list_difference_to_true_revenue_parameter_noise_min_mnl = []
-        list_difference_to_true_revenue_parameter_noise_max_mnl = []
-        list_final_revenues = [[] for k in range(len(demand_ratios))]
+        if configuration_name == "2D_individual_rewards":
+            list_mean_final_revenues = []
+            list_difference_to_true_revenue_parameter_noise = []
+            list_difference_to_true_revenue_parameter_noise_min = []
+            list_difference_to_true_revenue_parameter_noise_max = []
+            list_difference_to_true_revenue_parameter_noise_mnl = []
+            list_difference_to_true_revenue_parameter_noise_min_mnl = []
+            list_difference_to_true_revenue_parameter_noise_max_mnl = []
+            list_final_revenues = [[] for k in range(len(demand_ratios))]
         for dr_idx in range(len(demand_ratios)):
             print(dr_idx)
             env_param = multiagent_env_parameters_dict()
@@ -425,45 +427,51 @@ if __name__ == '__main__':
             true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
                 true_P, 10000)
 
-            env_param["parameter_noise_percentage"] = 0.2
-            differences_to_true_revenue_parameter_noise = []
+            if configuration_name == "2D_individual_rewards":
+                env_param["parameter_noise_percentage"] = 0.2
+                differences_to_true_revenue_parameter_noise = []
 
-            experience_name_noise = Path("../Results/Noise_on_parameters")
-            experience_name_noise.mkdir(parents=True, exist_ok=True)
-            for k in range(nb_runs):
-                run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
-            for np_name in glob.glob(str(experience_name_noise) + '/*.np[yz]'):
-                differences_to_true_revenue_parameter_noise.append((np.load(np_name, allow_pickle=True)/ (true_revenue1 + true_revenue2)) * 100)
+                experience_name_noise = Path("../Results/Noise_on_parameters_"+str(dr_idx))
+                experience_name_noise.mkdir(parents=True, exist_ok=True)
+                for k in range(nb_runs):
+                    run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
+                for np_name in glob.glob(str(experience_name_noise) + '/*.np[yz]'):
+                    differences_to_true_revenue_parameter_noise.append(
+                        (np.load(np_name, allow_pickle=True) / (true_revenue1 + true_revenue2)) * 100)
 
-            env_param["nested_lamb"] = 1.
-            experience_name_noise_mnl = Path("../Results/Noise_on_parameters_mnl")
-            experience_name_noise_mnl.mkdir(parents=True, exist_ok=True)
-            differences_to_true_revenue_parameter_noise_mnl = []
-            for k in range(nb_runs):
-                run_once_random(global_env_builder, env_param, experience_name_noise, env, k)
-            for np_name in glob.glob(str(experience_name_noise_mnl) + '/*.np[yz]'):
-                differences_to_true_revenue_parameter_noise_mnl.append((np.load(np_name, allow_pickle=True)/ (true_revenue1 + true_revenue2)) * 100)
+                env_param["nested_lamb"] = 1.
+                experience_name_noise_mnl = Path("../Results/Noise_on_parameters_mnl_"+str(dr_idx))
+                experience_name_noise_mnl.mkdir(parents=True, exist_ok=True)
+                differences_to_true_revenue_parameter_noise_mnl = []
+                for k in range(nb_runs):
+                    run_once_random(global_env_builder, env_param, experience_name_noise_mnl, env, k)
+                for np_name in glob.glob(str(experience_name_noise_mnl) + '/*.np[yz]'):
+                    differences_to_true_revenue_parameter_noise_mnl.append(
+                        (np.load(np_name, allow_pickle=True) / (true_revenue1 + true_revenue2)) * 100)
+
+                list_difference_to_true_revenue_parameter_noise_mnl.append(
+                    np.mean(differences_to_true_revenue_parameter_noise_mnl))
+                list_difference_to_true_revenue_parameter_noise_min_mnl.append(
+                    np.min(differences_to_true_revenue_parameter_noise_mnl))
+                list_difference_to_true_revenue_parameter_noise_max_mnl.append(
+                    np.max(differences_to_true_revenue_parameter_noise_mnl))
+                list_difference_to_true_revenue_parameter_noise.append(
+                    np.mean(differences_to_true_revenue_parameter_noise))
+                list_difference_to_true_revenue_parameter_noise_min.append(
+                    np.min(differences_to_true_revenue_parameter_noise))
+                list_difference_to_true_revenue_parameter_noise_max.append(
+                    np.max(differences_to_true_revenue_parameter_noise))
 
             experience_name = Path("../Results/" + configuration_name + "/" + str(demand_ratios[dr_idx]))
             experience_name.mkdir(parents=True, exist_ok=True)
             list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(
                 experience_name)
             difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1]) / (
-                        true_revenue1 + true_revenue2)) * 100
+                    true_revenue1 + true_revenue2)) * 100
 
             list_mean_final_revenues.append(difference_to_true_revenue)
             list_of_rewards = np.array(list_of_rewards)
-            list_difference_to_true_revenue_parameter_noise_mnl.append(
-                np.mean(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise_min_mnl.append(
-                np.min(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise_max_mnl.append(
-                np.max(differences_to_true_revenue_parameter_noise_mnl))
-            list_difference_to_true_revenue_parameter_noise.append(np.mean(differences_to_true_revenue_parameter_noise))
-            list_difference_to_true_revenue_parameter_noise_min.append(
-                np.min(differences_to_true_revenue_parameter_noise))
-            list_difference_to_true_revenue_parameter_noise_max.append(
-                np.max(differences_to_true_revenue_parameter_noise))
+
             # plt.figure()
             # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
 
