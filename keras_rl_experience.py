@@ -417,13 +417,14 @@ if __name__ == '__main__':
         env_param = multiagent_env_parameters_dict()
         env_param["demand_ratio"] = demand_ratios[dr_idx]
         env = global_env_builder(env_param)
+        param_dict = agent_parameters_dict()
         true_V, true_P = dynamic_programming_collaboration(env)
         true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
             true_P, 10000)
         true_revenues.append(true_revenue1+true_revenue2)
         experience_name = Path("../Results/single_global_agent_" + str(dr_idx))
         experience_name.mkdir(parents=True, exist_ok=True)
-        run_n_times(env_param, experience_name, global_env_builder, env_param, nb_timesteps, number_of_runs, callback_frequency)
+        run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
         list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
         list_of_rewards = np.array(list_of_rewards)
         for reward in list_of_rewards:
