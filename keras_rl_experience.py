@@ -214,10 +214,10 @@ def run_once_multiagent(env_parameters, agent_parameter_dict, configuration_name
     np.save(experience_name / ("Run" + str(k) + ".npy"), callback.rewards)
 
 
-def run_n_times(experience_name, env_builder, parameters_dict, nb_timesteps, number_of_runs, period):
+def run_n_times(env_parameters_dict, experience_name, env_builder, parameters_dict, nb_timesteps, number_of_runs, period):
     (experience_name).mkdir(parents=True, exist_ok=True)
 
-    f = partial(run_once, env_builder, parameters_dict, nb_timesteps, experience_name, period)
+    f = partial(run_once, env_builder, env_parameters_dict, parameters_dict, nb_timesteps, experience_name, period)
 
     with Pool(number_of_runs) as pool:
         pool.map(f, range(number_of_runs))
@@ -422,7 +422,8 @@ if __name__ == '__main__':
             true_P, 10000)
         true_revenues.append(true_revenue1+true_revenue2)
         experience_name = Path("../Results/single_global_agent_" + str(dr_idx))
-        run_n_times(experience_name, env_builder, env_param, nb_timesteps, number_of_runs, callback_frequency)
+        experience_name.mkdir(parents=True, exist_ok=True)
+        run_n_times(env_param, experience_name, env_builder, env_param, nb_timesteps, number_of_runs, callback_frequency)
         list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
         list_of_rewards = np.array(list_of_rewards)
         for reward in list_of_rewards:
