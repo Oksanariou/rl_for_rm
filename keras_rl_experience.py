@@ -368,6 +368,7 @@ if __name__ == '__main__':
     nb_timesteps = 100001
     callback_frequency = 10
     number_of_runs = 20
+
     # for configuration_name in configuration_names:
     #     multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
 
@@ -407,45 +408,39 @@ if __name__ == '__main__':
     #         plt.xticks(env.prices_flight1)
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
     nb_collection_points = len(demand_ratios)
-    true_revenues = []
-    list_final_revenues = []
-    list_mean_final_revenues = []
+
     single_agent_min_revenues = []
     single_agent_max_revenues = []
-    for dr_idx in range(len(demand_ratios)):
-        print(dr_idx)
-        env_param = multiagent_env_parameters_dict()
-        env_param["demand_ratio"] = demand_ratios[dr_idx]
-        env = global_env_builder(env_param)
-        param_dict = agent_parameters_dict()
-        true_V, true_P = dynamic_programming_collaboration(env)
-        true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+
+    dr_idx = 9
+
+    env_param = multiagent_env_parameters_dict()
+    env_param["demand_ratio"] = demand_ratios[dr_idx]
+    absc = [k for k in range(0, (nb_timesteps // env_param["micro_times"]) + 1, nb_timesteps // (callback_frequency))]
+    env = global_env_builder(env_param)
+    param_dict = agent_parameters_dict()
+    true_V, true_P = dynamic_programming_collaboration(env)
+    true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
             true_P, 10000)
-        true_revenues.append(true_revenue1+true_revenue2)
-        experience_name = Path("../Results/single_global_agent_" + str(dr_idx))
-        experience_name.mkdir(parents=True, exist_ok=True)
-        run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
-        list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
-        list_of_rewards = np.array(list_of_rewards)
-        for reward in list_of_rewards:
-            list_final_revenues[dr_idx].append(
-                ((reward[:, 0][-1] + reward[:, 1][-1]) / (true_revenue1 + true_revenue2)) * 100)
 
-        difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1]) / (
-                true_revenue1 + true_revenue2)) * 100
-        list_mean_final_revenues.append(difference_to_true_revenue)
+    experience_name = Path("../Results/single_global_agent_" + str(dr_idx))
+    experience_name.mkdir(parents=True, exist_ok=True)
+    # run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
+    list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+    list_of_rewards = np.array(list_of_rewards)
+    mean_revenues1 = np.array(mean_revenues1)
+    mean_revenues2 = np.array(mean_revenues2)
+    for reward in list_of_rewards:
+        single_agent_min_revenues.append(np.min(reward))
+        single_agent_max_revenues.append(np.max(reward))
 
-    std_revenues = [sem(list) for list in list_final_revenues]
-    confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
-                           range(nb_collection_points)]
-    min_revenues = [list_mean_final_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
-    max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
     plt.figure()
-    plt.plot(demand_ratios, list_mean_final_revenues, color="r",)
-    plt.fill_between(demand_ratios, min_revenues, max_revenues, color="r", alpha=0.2)
+    plt.plot(absc, [true_revenue2 + true_revenue1] * len(absc), color="r", label="Optimal")
+    plt.plot(absc, mean_revenues1 + mean_revenues2, color="orange", label="Single agent DQL")
+    plt.fill_between(absc, single_agent_min_revenues, single_agent_max_revenues, color="orange", alpha=0.2)
     plt.legend(loc='best')
-    plt.xlabel("Demand ratio")
-    plt.ylabel("Percentage of optimal revenue \n average on {} flights".format(10000))
+    plt.xlabel("Departures")
+    plt.ylabel("Revenue \n average on {} flights".format(10000))
     plt.savefig('../Results/single_agent_multi_flights.png')
     # axes.set_ylim([0, 265])
 
