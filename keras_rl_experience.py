@@ -416,7 +416,7 @@ if __name__ == '__main__':
 
     env_param = multiagent_env_parameters_dict()
     env_param["demand_ratio"] = demand_ratios[dr_idx]
-    absc = [k for k in range(0, (nb_timesteps // env_param["micro_times"]) + 1, nb_timesteps // (callback_frequency))]
+    absc = [k for k in range(0, (nb_timesteps // env_param["micro_times"]) + 1, ((nb_timesteps // env_param["micro_times"]) + 1) // (callback_frequency))]
     env = global_env_builder(env_param)
     param_dict = agent_parameters_dict()
     true_V, true_P = dynamic_programming_collaboration(env)
