@@ -425,14 +425,14 @@ if __name__ == '__main__':
 
     experience_name = Path("../Results/single_global_agent_" + str(dr_idx))
     experience_name.mkdir(parents=True, exist_ok=True)
-    run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
+    # run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
     list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
     list_of_rewards = np.array(list_of_rewards)
     mean_revenues1 = np.array(mean_revenues1)
     mean_revenues2 = np.array(mean_revenues2)
     for reward in list_of_rewards:
-        single_agent_min_revenues.append(np.min(reward))
-        single_agent_max_revenues.append(np.max(reward))
+        single_agent_min_revenues.append(np.min(np.array(reward[:, 0]) + np.array(reward[:, 1])))
+        single_agent_max_revenues.append(np.max(np.array(reward[:, 0]) + np.array(reward[:, 1])))
 
     plt.figure()
     plt.plot(absc, [true_revenue2 + true_revenue1] * len(absc), color="r", label="Optimal")
