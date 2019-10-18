@@ -407,7 +407,6 @@ if __name__ == '__main__':
     #         plt.legend()
     #         plt.xticks(env.prices_flight1)
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
-    nb_collection_points = len(demand_ratios)
 
     single_agent_min_revenues = []
     single_agent_max_revenues = []
@@ -417,6 +416,7 @@ if __name__ == '__main__':
     env_param = multiagent_env_parameters_dict()
     env_param["demand_ratio"] = demand_ratios[dr_idx]
     absc = [k for k in range(0, (nb_timesteps // env_param["micro_times"]) + 1, ((nb_timesteps // env_param["micro_times"]) + 1) // (callback_frequency))]
+    nb_collection_points = len(absc)
     env = global_env_builder(env_param)
     param_dict = agent_parameters_dict()
     true_V, true_P = dynamic_programming_collaboration(env)
@@ -430,15 +430,21 @@ if __name__ == '__main__':
     list_of_rewards = np.array(list_of_rewards)
     mean_revenues1 = np.array(mean_revenues1)
     mean_revenues2 = np.array(mean_revenues2)
-    for reward in list_of_rewards:
-        reward = np.array(reward)
-        print(np.array(reward[:, 0]) + np.array(reward[:, 1]))
-        single_agent_min_revenues.append(np.min(np.array(reward[:, 0]) + np.array(reward[:, 1])))
-        single_agent_max_revenues.append(np.max(np.array(reward[:, 0]) + np.array(reward[:, 1])))
+    list_final_revenues = np.zeros(len(absc))
+    for k in range(len(absc)):
+        for reward in list_of_rewards:
+            reward = np.array(reward)
+            list_final_revenues[k].append(reward[:, 0][k] + reward[:, 1][k])
+
+    std_revenues = [sem(list) for list in list_final_revenues]
+    confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in range(nb_collection_points)]
+    min_revenues = [mean_revenues1[k] + mean_revenues2[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+    max_revenues = [mean_revenues1[k] + mean_revenues2[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+
     plt.figure()
     plt.plot(absc, [true_revenue2 + true_revenue1] * len(absc), color="r", label="Optimal")
     plt.plot(absc, mean_revenues1 + mean_revenues2, color="orange", label="Single agent DQL")
-    plt.fill_between(absc, single_agent_min_revenues, single_agent_max_revenues, color="orange", alpha=0.2)
+    plt.fill_between(absc, min_revenues, max_revenues, color="orange", alpha=0.2)
     plt.legend(loc='best')
     plt.xlabel("Departures")
     plt.ylabel("Revenue \n average on {} flights".format(10000))
