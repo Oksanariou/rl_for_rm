@@ -430,9 +430,9 @@ if __name__ == '__main__':
     list_of_rewards = np.array(list_of_rewards)
     mean_revenues1 = np.array(mean_revenues1)
     mean_revenues2 = np.array(mean_revenues2)
-    for reward in list_of_rewards:
-        single_agent_min_revenues.append(np.min(np.array(reward[:, 0]) + np.array(reward[:, 1])))
-        single_agent_max_revenues.append(np.max(np.array(reward[:, 0]) + np.array(reward[:, 1])))
+
+    single_agent_min_revenues.append(np.min(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
+    single_agent_max_revenues.append(np.max(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
 
     plt.figure()
     plt.plot(absc, [true_revenue2 + true_revenue1] * len(absc), color="r", label="Optimal")
