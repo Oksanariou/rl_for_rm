@@ -430,7 +430,7 @@ if __name__ == '__main__':
     list_of_rewards = np.array(list_of_rewards)
     mean_revenues1 = np.array(mean_revenues1)
     mean_revenues2 = np.array(mean_revenues2)
-    list_final_revenues = np.zeros(len(absc))
+    list_final_revenues = [[] for k in range(nb_collection_points)]
     for k in range(len(absc)):
         for reward in list_of_rewards:
             reward = np.array(reward)
