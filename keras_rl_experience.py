@@ -432,6 +432,8 @@ if __name__ == '__main__':
     mean_revenues2 = np.array(mean_revenues2)
 
     single_agent_min_revenues.append(np.min(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
+    print(single_agent_min_revenues)
+    print(np.array(list_of_rewards[:, 0]))
     single_agent_max_revenues.append(np.max(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
 
     plt.figure()
