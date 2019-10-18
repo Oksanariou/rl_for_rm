@@ -430,12 +430,9 @@ if __name__ == '__main__':
     list_of_rewards = np.array(list_of_rewards)
     mean_revenues1 = np.array(mean_revenues1)
     mean_revenues2 = np.array(mean_revenues2)
-
+    print(list_of_rewards[:, 0])
     single_agent_min_revenues.append(np.min(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
-    print(single_agent_min_revenues)
-    print(np.array(list_of_rewards[:, 0]))
     single_agent_max_revenues.append(np.max(np.array(list_of_rewards[:, 0]) + np.array(list_of_rewards[:, 1])))
-
     plt.figure()
     plt.plot(absc, [true_revenue2 + true_revenue1] * len(absc), color="r", label="Optimal")
     plt.plot(absc, mean_revenues1 + mean_revenues2, color="orange", label="Single agent DQL")
