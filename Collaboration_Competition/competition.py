@@ -57,15 +57,18 @@ def visualize_MNL_VS_nested(price_flight1, prices_flight2, values_of_lambda, glo
                                      actions=actions, beta=beta, k_airline1=k_airline1, k_airline2=k_airline2,
                                      lamb=lamb,
                                      nested_lamb=nested_lamb)
+        probas_not_go = []
         probas_buy_price_2 = []
         for price_2 in prices_flight2:
             action_tuple = (price_flight1, price_2)
             action_idx = collaboration_env.A.index(action_tuple)
             proba_buy_price_2 = collaboration_env.P[0][action_idx][2][0]
             probas_buy_price_2.append(proba_buy_price_2)
-        plt.plot(prices_flight2, probas_buy_price_2, label="Mu = {}".format(nested_lamb))
+            probas_not_go.append(collaboration_env.P[0][action_idx][0][0])
+        plt.plot(prices_flight2, probas_buy_price_2, label="Proba of flight 2 - Mu = {}".format(nested_lamb))
+        plt.plot(prices_flight2, probas_not_go, label="Proba of nogo - Mu = {}".format(nested_lamb))
     plt.axvline(x=price_flight1, color='g', label="Price of Flight 1", linestyle='--')
-    plt.xticks(prices_flight2.A)
+    plt.xticks(prices_flight2)
     plt.xlabel("Prices of Flight 2")
     plt.ylabel("Probability to buy ticket from Flight 2")
     plt.title("Evolution of the probability to buy the ticket from Flight 2 \n when the price of Flight 1 is fixed")
@@ -219,9 +222,9 @@ if __name__ == '__main__':
     micro_times = 100
     capacity1 = 20
     capacity2 = 20
-    action_min = 50
+    action_min = 10
     action_max = 231
-    action_offset = 30
+    action_offset = 20
     fixed_action = 90
     actions_global = tuple((k, m) for k in range(action_min, action_max + 1, action_offset) for m in
                            range(action_min, action_max + 1, action_offset))
@@ -233,8 +236,8 @@ if __name__ == '__main__':
     arrival_rate = demand_ratio * (capacity1 + capacity2) / micro_times
 
     beta = 0.04
-    k_airline1 = 5.
-    k_airline2 = 5.
+    k_airline1 = 5
+    k_airline2 = 5
     nested_lamb = 0.3
 
     global_env = gym.make('gym_CollaborationGlobal3D:CollaborationGlobal3D-v0', micro_times=micro_times,
@@ -245,10 +248,10 @@ if __name__ == '__main__':
                           nested_lamb=nested_lamb)
 
     # Customer choice models : Visualizing MNL VS nested
-    # price_1 = 90
-    # prices_2 = [k for k in range(10, 231, 20)]
-    # values_of_lambda = [1, 0.3]
-    # visualize_MNL_VS_nested(price_1, prices_2, values_of_lambda, global_env)
+    price_1 = 90
+    prices_2 = [k for k in range(10, 231, 20)]
+    values_of_lambda = [1, 0.1]
+    visualize_MNL_VS_nested(price_1, prices_2, values_of_lambda, global_env)
 
     # Dynamic Programming on the global environment
     V_global, P_global = dynamic_programming_collaboration(global_env)
