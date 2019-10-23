@@ -49,7 +49,7 @@ def agent_parameters_dict_DQL():
     parameters_dict["target_model_update"] = 100
     parameters_dict["batch_size"] = 128
     parameters_dict["hidden_layer_size"] = 100
-    parameters_dict["layers_nb"] = 3
+    parameters_dict["layers_nb"] = 2
     parameters_dict["memory_buffer_size"] = 50000
     parameters_dict["epsilon"] = 0.2
     parameters_dict["learning_rate"] = 1e-4
@@ -159,8 +159,8 @@ if __name__ == '__main__':
     # f = partial(run_once, env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency)
     # with Pool(nb_runs) as pool:
     #     pool.map(f, range(nb_runs))
-    # for k in range(nb_runs):
-    #     run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
+    for k in range(nb_runs):
+        run_once(env_builder, env_param, param_dict_DQL, nb_timesteps, experience_name_DQL, callback_frequency, k)
     list_of_rewards_DQL, mean_revenues_DQL, mean_bookings_DQL, min_revenues_DQL, max_revenues_DQL = env.collect_revenues(
         experience_name_DQL)
     average_initial_DQL_revenue = mean_revenues_DQL[-1]
