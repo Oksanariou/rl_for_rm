@@ -57,17 +57,17 @@ def global_env_builder():
 
 def env_builder():
     # Parameters of the environment
-    data_collection_points = 100
+    data_collection_points = 601
     micro_times = 1
-    capacity = 50
+    capacity = 101
 
     action_min = 50
     action_max = 231
     action_offset = 20
 
     actions = tuple(k for k in range(action_min, action_max, action_offset))
-    alpha = 0.7
-    lamb = 0.8
+    alpha = 0.63
+    lamb = 0.2
 
     return gym.make('gym_RMDCP:RMDCP-v0', data_collection_points=data_collection_points, capacity=capacity,
                     micro_times=micro_times, actions=actions, alpha=alpha, lamb=lamb)
@@ -111,10 +111,10 @@ def parameters_dict():
     parameters_dict["target_model_update"] = 100
     parameters_dict["batch_size"] = 128
     parameters_dict["hidden_layer_size"] = 100
-    parameters_dict["layers_nb"] = 3
+    parameters_dict["layers_nb"] = 2
     parameters_dict["memory_buffer_size"] = 50000
     parameters_dict["epsilon"] = 0.2
-    parameters_dict["learning_rate"] = 1e-3
+    parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
     nb_timesteps = 100001
-    callback_frequency = 10
+    callback_frequency = 50
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 20
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         pass
     try:
         parameter_name = "layers_nb"
-        parameter_values = [1, 2, 3, 4, 5]
+        parameter_values = [0, 1, 2, 3, 4]
         experience_name = Path("../Results/03_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
@@ -244,7 +244,7 @@ if __name__ == '__main__':
         pass
     try:
         parameter_name = "epsilon"
-        parameter_values = [0.05, 0.1, 0.2, 0.3, 0.4]
+        parameter_values = [0.05, 0.1, 0.2, 0.3, 0.4, 1.]
         experience_name = Path("../Results/03_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
