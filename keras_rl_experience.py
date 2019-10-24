@@ -114,7 +114,7 @@ def parameters_dict():
     parameters_dict["layers_nb"] = 2
     parameters_dict["memory_buffer_size"] = 50000
     parameters_dict["epsilon"] = 0.2
-    parameters_dict["learning_rate"] = 1e-4
+    parameters_dict["learning_rate"] = 1e-3
     return parameters_dict
 
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         parameter_values = [True, False]
         experience_name = Path("../Results/23_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
-        # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+        parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
     except Exception:
         pass
