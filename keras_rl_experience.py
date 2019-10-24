@@ -725,7 +725,7 @@ if __name__ == '__main__':
     plt.title("Overall load factor: {:.2}".format((np.sum(true_bookings_flight1) + np.sum(true_bookings_flight2)) / (env.C1 + env.C2)))
     plt.legend()
     plt.xticks(env.prices_flight1)
-    plt.savefig('../Results/single_agent_multi_flights_bookings.png')
+    plt.savefig('../Results/single_agent_multi_flights_true_bookings.png')
 
     plt.figure()
     width = 5
@@ -738,4 +738,4 @@ if __name__ == '__main__':
     plt.title("Overall load factor: {:.2}".format((np.sum(true_prices_proposed_flight2) + np.sum(true_prices_proposed_flight1)) / (env.C1 + env.C2)))
     plt.legend()
     plt.xticks(env.prices_flight1)
-    plt.savefig('../Results/single_agent_multi_flights_proposed_fares.png')
+    plt.savefig('../Results/single_agent_multi_flights_true_proposed_fares.png')
