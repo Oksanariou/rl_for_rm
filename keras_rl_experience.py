@@ -686,16 +686,32 @@ if __name__ == '__main__':
     # # prices_proposed2 = revenues[:, 6][indx_nb]
     # prices_proposed1 = true_prices_proposed_flight1
     # prices_proposed2 = true_prices_proposed_flight2
-    #
-    # plt.figure()
-    # width = 5
-    # plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Bookings flight 2")
-    # plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Bookings flight 1", bottom=bookings2)
-    # plt.bar(np.array(env.prices_flight2) - 2*width/3, prices_proposed2, width, color="blue", alpha = 0.3, label="Prices proposed flight 2")
-    # plt.bar(np.array(env.prices_flight1) - 2*width/3, prices_proposed1, width, color="orange", alpha = 0.3, label="Prices proposed flight 1", bottom=prices_proposed2)
-    # plt.xlabel("Prices")
-    # plt.ylabel("Average computed on 10000 flights")
-    # plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
-    # plt.legend()
-    # plt.xticks(env.prices_flight1)
-    # plt.show()
+
+    bookings2 = mean_bookings2[-1]
+    bookings1 = mean_bookings1[-1]
+    prices_proposed1 = mean_prices_proposed1
+    prices_proposed2 = mean_prices_proposed2
+
+    plt.figure()
+    width = 5
+    plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Flight 2")
+    plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Flight 1", bottom=bookings2)
+    plt.xlabel("Fares")
+    plt.ylabel("Bookings made")
+    plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
+    plt.legend()
+    plt.xticks(env.prices_flight1)
+    plt.savefig('../Results/single_agent_multi_flights_bookings.png')
+
+    plt.figure()
+    width = 5
+    plt.bar(np.array(env.prices_flight2) - 2 * width / 3, prices_proposed2, width, color="blue", alpha=0.3,
+            label="Prices proposed flight 2")
+    plt.bar(np.array(env.prices_flight1) - 2 * width / 3, prices_proposed1, width, color="orange", alpha=0.3,
+            label="Prices proposed flight 1", bottom=prices_proposed2)
+    plt.xlabel("Fares")
+    plt.ylabel("Proposed fares")
+    plt.title("Overall load factor: {:.2}".format((np.sum(bookings2) + np.sum(bookings2)) / (env.C1 + env.C2)))
+    plt.legend()
+    plt.xticks(env.prices_flight1)
+    plt.savefig('../Results/single_agent_multi_flights_proposed_fares.png')
