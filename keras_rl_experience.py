@@ -144,7 +144,7 @@ def plot_comparison(experience_name, parameters, env, absc, optimal_revenue):
     comparison_mean_revenues = []
     for parameter in parameters:
         parameter_name = experience_name / Path(str(parameter))
-        list_of_rewards, mean_revenues = env.collect_revenues(parameter_name)
+        list_of_rewards, mean_revenues, mean_bookings, min_revenues, max_revenues = env.collect_revenues(parameter_name)
         comparison_mean_revenues.append(mean_revenues)
     fig = plt.figure()
     for k in range(len(parameters)):
@@ -193,13 +193,13 @@ if __name__ == '__main__':
         parameter_values = [False]
         experience_name = Path("../Results/23_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
-        parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+        # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
     except Exception:
         pass
     try:
         parameter_name = "batch_size"
-        parameter_values = [128, 512, 1024]
+        parameter_values = [512, 1024]
         experience_name = Path("../Results/23_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
