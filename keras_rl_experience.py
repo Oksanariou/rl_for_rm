@@ -190,22 +190,22 @@ if __name__ == '__main__':
 
     try:
         parameter_name = "enable_double_dqn"
-        parameter_values = [False]
+        parameter_values = [True, False]
         experience_name = Path("../Results/23_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         # parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
     except Exception:
         pass
-    try:
-        parameter_name = "batch_size"
-        parameter_values = [512, 1024]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
-        experience_name.mkdir(parents=True, exist_ok=True)
-        parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
-        plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
-    except Exception:
-        pass
+    # try:
+    #     parameter_name = "batch_size"
+    #     parameter_values = [512, 1024]
+    #     experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+    #     experience_name.mkdir(parents=True, exist_ok=True)
+    #     parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
+    #     plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
+    # except Exception:
+    #     pass
     try:
         parameter_name = "hidden_layer_size"
         parameter_values = [10, 50, 100, 200]
