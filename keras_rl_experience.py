@@ -735,7 +735,7 @@ if __name__ == '__main__':
             label="Prices proposed flight 1", bottom=true_prices_proposed_flight2)
     plt.xlabel("Fares")
     plt.ylabel("Proposed fares")
-    plt.title("Overall load factor: {:.2}".format((np.sum(true_prices_proposed_flight2) + np.sum(true_prices_proposed_flight1)) / (env.C1 + env.C2)))
+    plt.title("Overall load factor: {:.2}".format((np.sum(true_bookings_flight1) + np.sum(true_bookings_flight2)) / (env.C1 + env.C2)))
     plt.legend()
     plt.xticks(env.prices_flight1)
     plt.savefig('../Results/single_agent_multi_flights_true_proposed_fares.png')
