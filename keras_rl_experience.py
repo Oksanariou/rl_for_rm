@@ -114,7 +114,7 @@ def parameters_dict():
     parameters_dict["layers_nb"] = 2
     parameters_dict["memory_buffer_size"] = 50000
     parameters_dict["epsilon"] = 0.2
-    parameters_dict["learning_rate"] = 1e-3
+    parameters_dict["learning_rate"] = 1e-4
     return parameters_dict
 
 def run_once(env_builder, parameters_dict, nb_timesteps, experience_name, period, k):
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "enable_double_dqn"
         parameter_values = [True, False]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "hidden_layer_size"
         parameter_values = [10, 50, 100, 200]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "layers_nb"
         parameter_values = [0, 1, 2, 3]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -227,7 +227,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "enable_dueling_network"
         parameter_values = [True, False]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "target_model_update"
         parameter_values = [0.01, 0.1, 10, 100, 1000]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "epsilon"
         parameter_values = [0.05, 0.2, 0.4, 1.]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "learning_rate"
         parameter_values = [1e-1, 1e-2, 1e-3, 1e-4]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     try:
         parameter_name = "memory_buffer_size"
         parameter_values = [1000, 5000, 10000, 50000]
-        experience_name = Path("../Results/23_10_19") / Path(parameter_name)
+        experience_name = Path("../Results/24_10_19") / Path(parameter_name)
         experience_name.mkdir(parents=True, exist_ok=True)
         parameter_experience(experience_name, parameter_name, parameter_values, env_builder, nb_timesteps, true_revenues, absc, nb_runs, callback_frequency)
         plot_comparison(experience_name, parameter_values, env, absc, true_revenues)
