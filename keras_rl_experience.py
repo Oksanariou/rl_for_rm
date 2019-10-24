@@ -184,7 +184,7 @@ if __name__ == '__main__':
         true_revenues, true_bookings = average_n_episodes(env, true_P, 10000)
 
     nb_timesteps = 100001
-    callback_frequency = 50
+    callback_frequency = 30
     absc = [k for k in range(0, nb_timesteps, nb_timesteps // callback_frequency)]
     nb_runs = 20
 
