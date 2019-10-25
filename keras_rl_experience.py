@@ -665,17 +665,17 @@ if __name__ == '__main__':
     # V = q_to_v(env, Q_table).reshape(env.observation_space.nvec)
 
     # revenues = np.array(callback.rewards)
-    print(list_of_rewards[0][:,0])
-    axes = plt.gca()
-    plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal")
-    plt.plot(absc, np.array(list_of_rewards[0][:,0]) + np.array(list_of_rewards[0][:,1]), color=parameters[configuration]["color"], label="Independent agents")
-    plt.plot(absc, list_of_rewards[0][:,0], color="orange", label="Flight1")
-    plt.plot(absc, list_of_rewards[0][:,1], color="blue", label="Flight2")
-    plt.legend(loc='best')
-    plt.xlabel("Number of steps")
-    plt.ylabel("Average revenue")
-    # axes.set_ylim([0, 265])
-    plt.savefig('../Results/independent_agents_multi_flights_revenue.png')
+    for k in range(20):
+        axes = plt.gca()
+        plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal")
+        plt.plot(absc, np.array(list_of_rewards[k][:,0]) + np.array(list_of_rewards[k][:,1]), color=parameters[configuration]["color"], label="Independent agents")
+        plt.plot(absc, list_of_rewards[k][:,0], color="orange", label="Flight1")
+        plt.plot(absc, list_of_rewards[k][:,1], color="blue", label="Flight2")
+        plt.legend(loc='best')
+        plt.xlabel("Number of steps")
+        plt.ylabel("Average revenue")
+        # axes.set_ylim([0, 265])
+        plt.savefig('../Results/independent_agents_multi_flights_revenue'+str(k)+'.png')
 
     #
     # indx_nb = 6
