@@ -423,7 +423,7 @@ if __name__ == '__main__':
     true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
             true_P, 10000)
 
-    experience_name = Path("../Results/2D_independent_rewards/0.6")
+    experience_name = Path("../Results/2D_individual_rewards/0.6")
     experience_name.mkdir(parents=True, exist_ok=True)
     # run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
     list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
