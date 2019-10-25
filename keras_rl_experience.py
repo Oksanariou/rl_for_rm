@@ -423,7 +423,7 @@ if __name__ == '__main__':
     true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
             true_P, 10000)
 
-    experience_name = Path("../Results/2D_shared_rewards/0.6")
+    experience_name = Path("../Results/2D_independent_rewards/0.6")
     experience_name.mkdir(parents=True, exist_ok=True)
     # run_n_times(env_param, experience_name, global_env_builder, param_dict, nb_timesteps, number_of_runs, callback_frequency)
     list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
@@ -665,16 +665,17 @@ if __name__ == '__main__':
     # V = q_to_v(env, Q_table).reshape(env.observation_space.nvec)
 
     # revenues = np.array(callback.rewards)
-    # axes = plt.gca()
-    # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal")
-    # plt.plot(absc, mean_revenues2 + mean_revenues1, color=parameters[configuration]["color"], label="Independent agents")
-    # plt.plot(absc, mean_revenues1, color="orange", label="Flight1")
-    # plt.plot(absc, mean_revenues2, color="blue", label="Flight2")
-    # plt.legend(loc='best')
-    # plt.xlabel("Number of steps")
-    # plt.ylabel("Average revenue")
-    # # axes.set_ylim([0, 265])
-    # plt.savefig('../Results/independent_agents_multi_flights_revenue.png')
+    print(list_of_rewards[0][:,0])
+    axes = plt.gca()
+    plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal")
+    plt.plot(absc, np.array(list_of_rewards[0][:,0]) + np.array(list_of_rewards[0][:,1]), color=parameters[configuration]["color"], label="Independent agents")
+    plt.plot(absc, list_of_rewards[0][:,0], color="orange", label="Flight1")
+    plt.plot(absc, list_of_rewards[0][:,1], color="blue", label="Flight2")
+    plt.legend(loc='best')
+    plt.xlabel("Number of steps")
+    plt.ylabel("Average revenue")
+    # axes.set_ylim([0, 265])
+    plt.savefig('../Results/independent_agents_multi_flights_revenue.png')
 
     #
     # indx_nb = 6
@@ -688,38 +689,38 @@ if __name__ == '__main__':
     # prices_proposed1 = true_prices_proposed_flight1
     # prices_proposed2 = true_prices_proposed_flight2
 
-    bookings2 = mean_bookings2[-1]
-    bookings1 = mean_bookings1[-1]
-    prices_proposed1 = mean_prices_proposed1[-1]
-    prices_proposed2 = mean_prices_proposed2[-1]
-
-    plt.figure()
-    width = 5
-    plt.bar(np.array(env.prices_flight2) - 2 * width / 3, true_bookings_flight2, width, color="blue", label="Flight 2 - Optimal", alpha=0.3)
-    plt.bar(np.array(env.prices_flight1) - 2 * width / 3, true_bookings_flight1, width, color="orange",
-            label="Flight 1 - Optimal", bottom=true_bookings_flight2, alpha=0.3)
-    plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Flight 2 - DQL")
-    plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Flight 1 - DQL", bottom=bookings2)
-    plt.xlabel("Fares")
-    plt.ylabel("Bookings made")
-    plt.title("Overall load factor: {:.2}".format((np.sum(bookings1) + np.sum(bookings2)) / (env.C1 + env.C2)))
-    plt.legend()
-    plt.xticks(env.prices_flight1)
-    plt.savefig('../Results/collaborative_agents_multi_flights_bookings_low_demand.png')
-
-    plt.figure()
-    width = 5
-    plt.bar(np.array(env.prices_flight2) - 2 * width / 3, true_prices_proposed_flight2, width, color="blue", alpha=0.3,
-            label="Flight 2 - Optimal")
-    plt.bar(np.array(env.prices_flight1) - 2 * width / 3, true_prices_proposed_flight1, width, color="orange",
-            alpha=0.3,
-            label="Flight 1 - Optimal", bottom=true_prices_proposed_flight2)
-    plt.bar(np.array(env.prices_flight2) + 2 * width / 3, prices_proposed2, width, color="blue",
-            label="Flight 2 - DQL")
-    plt.bar(np.array(env.prices_flight1) + 2 * width / 3, prices_proposed1, width, color="orange",
-            label="Flight 1 - DQL", bottom=prices_proposed2)
-    plt.xlabel("Fares")
-    plt.ylabel("Proposed fares")
-    plt.legend()
-    plt.xticks(env.prices_flight1)
-    plt.savefig('../Results/collaborative_agents_multi_flights_proposed_fares_low_demand.png')
+    # bookings2 = mean_bookings2[-1]
+    # bookings1 = mean_bookings1[-1]
+    # prices_proposed1 = mean_prices_proposed1[-1]
+    # prices_proposed2 = mean_prices_proposed2[-1]
+    #
+    # plt.figure()
+    # width = 5
+    # plt.bar(np.array(env.prices_flight2) - 2 * width / 3, true_bookings_flight2, width, color="blue", label="Flight 2 - Optimal", alpha=0.3)
+    # plt.bar(np.array(env.prices_flight1) - 2 * width / 3, true_bookings_flight1, width, color="orange",
+    #         label="Flight 1 - Optimal", bottom=true_bookings_flight2, alpha=0.3)
+    # plt.bar(np.array(env.prices_flight2) + 2*width/3, bookings2, width, color="blue", label="Flight 2 - DQL")
+    # plt.bar(np.array(env.prices_flight1) + 2*width/3, bookings1, width, color="orange", label="Flight 1 - DQL", bottom=bookings2)
+    # plt.xlabel("Fares")
+    # plt.ylabel("Bookings made")
+    # plt.title("Overall load factor: {:.2}".format((np.sum(bookings1) + np.sum(bookings2)) / (env.C1 + env.C2)))
+    # plt.legend()
+    # plt.xticks(env.prices_flight1)
+    # plt.savefig('../Results/collaborative_agents_multi_flights_bookings_low_demand.png')
+    #
+    # plt.figure()
+    # width = 5
+    # plt.bar(np.array(env.prices_flight2) - 2 * width / 3, true_prices_proposed_flight2, width, color="blue", alpha=0.3,
+    #         label="Flight 2 - Optimal")
+    # plt.bar(np.array(env.prices_flight1) - 2 * width / 3, true_prices_proposed_flight1, width, color="orange",
+    #         alpha=0.3,
+    #         label="Flight 1 - Optimal", bottom=true_prices_proposed_flight2)
+    # plt.bar(np.array(env.prices_flight2) + 2 * width / 3, prices_proposed2, width, color="blue",
+    #         label="Flight 2 - DQL")
+    # plt.bar(np.array(env.prices_flight1) + 2 * width / 3, prices_proposed1, width, color="orange",
+    #         label="Flight 1 - DQL", bottom=prices_proposed2)
+    # plt.xlabel("Fares")
+    # plt.ylabel("Proposed fares")
+    # plt.legend()
+    # plt.xticks(env.prices_flight1)
+    # plt.savefig('../Results/collaborative_agents_multi_flights_proposed_fares_low_demand.png')
