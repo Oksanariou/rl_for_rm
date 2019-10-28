@@ -414,7 +414,7 @@ if __name__ == '__main__':
     plt.legend(loc='best')
     plt.xlabel("Training steps")
     plt.ylabel("Relative revenue")
-    plt.savefig("../Results/comparison_demand_ratio_0.5.png")
+    plt.savefig("../Results/comparison_demand_ratio_0.6.png")
             #
             # plt.figure()
             # width = 5
