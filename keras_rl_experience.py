@@ -333,8 +333,8 @@ if __name__ == '__main__':
     nb_timesteps = 100001
     callback_frequency = 10
     number_of_runs = 20
-    for configuration_name in configuration_names:
-        multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
+    # for configuration_name in configuration_names:
+    #     multi_agent_experience(demand_ratios, configuration_name, nb_timesteps, callback_frequency, number_of_runs)
 
     # for configuration_name in configuration_names:
     #     for dr_idx in range(len(demand_ratios)):
