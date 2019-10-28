@@ -372,46 +372,51 @@ if __name__ == '__main__':
     #         plt.xticks(env.prices_flight1)
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
-    plt.figure()
+    configuration_names = ["2D_shared_rewards", "3D_shared_rewards"]
+    # ### UNCOMMENT
+    # plt.figure()
+    # ### UNCOMMENT
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
         list_mean_final_revenues = []
         # list_difference_to_true_revenue_mnl = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
         for dr_idx in range(len(demand_ratios)):
-            env_param = multiagent_env_parameters_dict()
-            env_param["demand_ratio"] = demand_ratios[dr_idx]
-            env = global_env_builder(env_param)
-            true_V, true_P = dynamic_programming_collaboration(env)
-            true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
-                    true_P, 10000)
-            env_param["nested_lamb"] = 1.
-            # env_mnl = global_env_builder(env_param)
-            # V, P = dynamic_programming_collaboration(env_mnl)
-            # revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
-            #     P, 10000)
-            # difference_to_true_revenue_mnl = ((revenue1 + revenue2)/(true_revenue1 + true_revenue2))*100
-            experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
-            list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
-            difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
+            if dr_idx == 0.5:
+                env_param = multiagent_env_parameters_dict()
+                env_param["demand_ratio"] = demand_ratios[dr_idx]
+                env = global_env_builder(env_param)
+                true_V, true_P = dynamic_programming_collaboration(env)
+                true_revenue1, true_revenue2, true_bookings, true_bookings_flight1, true_bookings_flight2, true_prices_proposed_flight1, true_prices_proposed_flight2 = env.average_n_episodes(
+                        true_P, 10000)
+                env_param["nested_lamb"] = 1.
+                # env_mnl = global_env_builder(env_param)
+                # V, P = dynamic_programming_collaboration(env_mnl)
+                # revenue1, revenue2, bookings, bookings_flight1, bookings_flight2, prices_proposed_flight1, prices_proposed_flight2 = env.average_n_episodes(
+                #     P, 10000)
+                # difference_to_true_revenue_mnl = ((revenue1 + revenue2)/(true_revenue1 + true_revenue2))*100
+                experience_name = Path("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx]))
+                list_of_rewards, mean_revenues1, mean_revenues2, mean_bookings, mean_bookings1, mean_bookings2, mean_prices_proposed1, mean_prices_proposed2 = env.collect_list_of_mean_revenues_and_bookings(experience_name)
+                difference_to_true_revenue = ((mean_revenues1[-1] + mean_revenues2[-1])/(true_revenue1 + true_revenue2))*100
 
-            list_mean_final_revenues.append(difference_to_true_revenue)
-            list_of_rewards = np.array(list_of_rewards)
-            # list_difference_to_true_revenue_mnl.append(difference_to_true_revenue_mnl)
-            # plt.figure()
-            # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
+                list_mean_final_revenues.append(difference_to_true_revenue)
+                list_of_rewards = np.array(list_of_rewards)
+                # list_difference_to_true_revenue_mnl.append(difference_to_true_revenue_mnl)
+                # plt.figure()
+                # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
 
-            for reward in list_of_rewards:
-                list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
-                # plt.plot(absc, np.array(reward[:, 0]) + np.array(reward[:, 1]), alpha=0.2,
-                #          color=parameters[configuration_name]["color"])
+                plt.figure()
+                for reward in list_of_rewards:
+                    list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
+                    plt.plot(absc, ((np.array(reward[:, 0]) + np.array(reward[:, 1])) / (true_revenue1 + true_revenue2)) * 100, alpha=0.1,
+                             color=parameters[configuration_name]["color"])
 
-            # plt.plot(absc, np.array(mean_revenues1) + np.array(mean_revenues2),
-            #          color=parameters[configuration_name]["color"])
-            # plt.legend(loc='best')
-            # plt.xlabel("Number of steps")
-            # plt.ylabel("Average revenue on {} flights".format(10000))
-            # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_revenues.png")
+                plt.plot(absc, ((np.array(mean_revenues1) + np.array(mean_revenues2)) / (true_revenue1 + true_revenue2))*100,
+                         color=parameters[configuration_name]["color"])
+                plt.legend(loc='best')
+                plt.xlabel("Training steps")
+                plt.ylabel("Relative revenue")
+                plt.savefig("../Results/comparison_demand_ratio_0.5.png")
             #
             # plt.figure()
             # width = 5
@@ -427,20 +432,21 @@ if __name__ == '__main__':
             # plt.legend()
             # plt.xticks(env.prices_flight1)
             # plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
-
-        std_revenues = [sem(list) for list in list_final_revenues]
-        confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
-                               range(nb_collection_points)]
-        min_revenues = [list_mean_final_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
-        max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
-        plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
-        plt.fill_between(demand_ratios, min_revenues, max_revenues, label='95% confidence interval', color=parameters[configuration_name]["color"], alpha=0.2)
-    # plt.plot(demand_ratios, list_difference_to_true_revenue_mnl, color="red", label="Model-based with MNL CCM assumption")
-    plt.legend(loc='best')
-    plt.xlabel("Demand ratio")
-    plt.ylabel("Relative revenue")
-    # axes.set_ylim([0, 265])
-    plt.savefig('../Results/3Dmultiagent_strategies_as_function_of_demand_ratios_variance_mnl.png')
+    #     ### UNCOMMENT
+    #     std_revenues = [sem(list) for list in list_final_revenues]
+    #     confidence_revenues = [std_revenues[k] * t.ppf((1 + 0.95) / 2, nb_collection_points - 1) for k in
+    #                            range(nb_collection_points)]
+    #     min_revenues = [list_mean_final_revenues[k] - confidence_revenues[k] for k in range(nb_collection_points)]
+    #     max_revenues = [list_mean_final_revenues[k] + confidence_revenues[k] for k in range(nb_collection_points)]
+    #     plt.plot(demand_ratios, list_mean_final_revenues, color=parameters[configuration_name]["color"], label=configuration_name)
+    #     plt.fill_between(demand_ratios, min_revenues, max_revenues, color=parameters[configuration_name]["color"], alpha=0.2)
+    # # plt.plot(demand_ratios, list_difference_to_true_revenue_mnl, color="red", label="Model-based with MNL CCM assumption")
+    # plt.legend(loc='best')
+    # plt.xlabel("Demand ratio")
+    # plt.ylabel("Relative revenue")
+    # # axes.set_ylim([0, 265])
+    # plt.savefig('../Results/3Dmultiagent_strategies_as_function_of_demand_ratios_variance_mnl.png')
+    # ### UNCOMMENT
 
     # plt.figure()
     # for configuration_name in configuration_names:
