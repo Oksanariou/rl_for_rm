@@ -381,7 +381,7 @@ if __name__ == '__main__':
         # list_difference_to_true_revenue_mnl = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
         for dr_idx in range(len(demand_ratios)):
-            if dr_idx == 0:
+            if dr_idx == 1:
                 env_param = multiagent_env_parameters_dict()
                 env_param["demand_ratio"] = demand_ratios[dr_idx]
                 env = global_env_builder(env_param)
