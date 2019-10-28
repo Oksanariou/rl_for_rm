@@ -373,9 +373,7 @@ if __name__ == '__main__':
     #         plt.savefig("../Results/"+configuration_name+"/"+str(demand_ratios[dr_idx])+"/"+str(demand_ratios[dr_idx])+"_mean_bookings.png")
 
     configuration_names = ["2D_shared_rewards", "3D_shared_rewards"]
-    # ### UNCOMMENT
-    # plt.figure()
-    # ### UNCOMMENT
+    plt.figure()
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
         print(configuration_name)
@@ -406,18 +404,17 @@ if __name__ == '__main__':
                 # plt.figure()
                 # plt.plot(absc, [true_revenue1 + true_revenue2] * len(absc), 'g--', label="Optimal solution")
 
-                plt.figure()
                 for reward in list_of_rewards:
                     list_final_revenues[dr_idx].append(((reward[:,0][-1] + reward[:,1][-1])/(true_revenue1 + true_revenue2))*100)
                     plt.plot(absc, ((np.array(reward[:, 0]) + np.array(reward[:, 1])) / (true_revenue1 + true_revenue2)) * 100, alpha=0.1,
                              color=parameters[configuration_name]["color"])
 
                 plt.plot(absc, ((np.array(mean_revenues1) + np.array(mean_revenues2)) / (true_revenue1 + true_revenue2))*100,
-                         color=parameters[configuration_name]["color"])
-                plt.legend(loc='best')
-                plt.xlabel("Training steps")
-                plt.ylabel("Relative revenue")
-                plt.savefig("../Results/comparison_demand_ratio_0.5.png")
+                         color=parameters[configuration_name]["color"], label=configuration_name)
+    plt.legend(loc='best')
+    plt.xlabel("Training steps")
+    plt.ylabel("Relative revenue")
+    plt.savefig("../Results/comparison_demand_ratio_0.5.png")
             #
             # plt.figure()
             # width = 5
