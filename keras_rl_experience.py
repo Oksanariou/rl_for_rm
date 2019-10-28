@@ -378,6 +378,7 @@ if __name__ == '__main__':
     # ### UNCOMMENT
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
+        print(configuration_name)
         list_mean_final_revenues = []
         # list_difference_to_true_revenue_mnl = []
         list_final_revenues = [[] for k in range(len(demand_ratios))]
