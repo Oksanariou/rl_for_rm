@@ -375,7 +375,7 @@ if __name__ == '__main__':
     # configuration_names = ["2D_individual_rewards", "2D_shared_rewards", "3D_shared_rewards"]
     # training_idx = -1
     configuration_names = ["2D_individual_rewards", "2D_shared_rewards", "3D_shared_rewards"]
-    training_idx = -3
+    training_idx = 5
     plt.figure()
     nb_collection_points = len(demand_ratios)
     for configuration_name in configuration_names:
